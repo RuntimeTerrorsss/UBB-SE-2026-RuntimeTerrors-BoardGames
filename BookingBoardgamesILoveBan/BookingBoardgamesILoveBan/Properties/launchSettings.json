@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BookingBoardgamesILoveBan (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "BookingBoardgamesILoveBan (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

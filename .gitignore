@@ -1,0 +1,19 @@
+# Build artifacts
+**/bin/
+**/obj/
+
+# IDE
+**/.vs/
+**/.idea/
+
+# User-specific
+**/*.user
+**/*.suo
+**/*.cache
+
+# NuGet
+**/packages/
+
+# Config file
+**/appsettings.json 
+# you'll have to make a copy of this yourselves!!!!
