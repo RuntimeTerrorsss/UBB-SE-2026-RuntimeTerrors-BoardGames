@@ -9,9 +9,9 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
 		private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
 		private readonly GameService gameService;
 
-        public RequestService(GameService gameService)
+        public RequestService(GameService gameservice)
         {
-			gameService = gameService;
+			gameService = gameservice;
         }
         public Request GetById(int id)
 		{
