@@ -1,6 +1,6 @@
-﻿using BookingBoardgamesILoveBan.src.Enum;
-using BookingBoardgamesILoveBan.src.Model;
-using System;
+﻿using System;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.Model;
 
 public class RentalRequestMessage : Message
 {
@@ -10,8 +10,7 @@ public class RentalRequestMessage : Message
     public string Content { get; set; }
 
     public RentalRequestMessage(int id, int conversationId, int senderId, int receiverId, DateTime sentAt, string content,
-        int requestId, bool isResolved, bool isAccepted = false) :
-        base(id, conversationId, senderId, receiverId, sentAt, content, MessageType.RentalRequest)
+        int requestId, bool isResolved, bool isAccepted = false) : base(id, conversationId, senderId, receiverId, sentAt, content, MessageType.RentalRequest)
     {
         Content = content;
         RequestId = requestId;

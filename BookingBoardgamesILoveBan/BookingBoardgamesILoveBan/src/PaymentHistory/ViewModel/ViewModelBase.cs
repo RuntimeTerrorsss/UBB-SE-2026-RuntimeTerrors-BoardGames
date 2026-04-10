@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 {
     public abstract class ViewModelBase : INotifyPropertyChanged
     {

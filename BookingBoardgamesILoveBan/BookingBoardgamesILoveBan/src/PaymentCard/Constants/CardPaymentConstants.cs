@@ -1,11 +1,11 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCommon.Constants;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCard.Constants
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.Constants
 {
     public class CardPaymentConstants : PaymentConstrants
     {
@@ -14,7 +14,5 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.Constants
         public const double TimerBeforeClosingPayment = 30_000;
         public const double TimerForRefreshingBalance = 4000;
         public const int LoadingTime = 50;
-
-
     }
 }

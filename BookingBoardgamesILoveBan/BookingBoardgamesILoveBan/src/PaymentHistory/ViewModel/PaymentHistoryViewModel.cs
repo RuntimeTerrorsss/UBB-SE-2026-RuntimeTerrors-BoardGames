@@ -4,11 +4,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.src.PaymentHistory.DTO;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Enums;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Service;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 {
     public class FilterOption
     {
@@ -18,16 +18,16 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
     public class PaymentHistoryViewModel : ViewModelBase
     {
-        private readonly IServicePayment _service;
-        private FilterOption _selectedFilterOption;
-        private PaymentMethod _selectedPaymentMethod;
-        private string _searchText = string.Empty;
-        private CancellationTokenSource _searchCts;
-        private decimal _totalAmount;
+        private readonly IServicePayment service;
+        private FilterOption selectedFilterOption;
+        private PaymentMethod selectedPaymentMethod;
+        private string searchText = string.Empty;
+        private CancellationTokenSource searchCts;
+        private decimal totalAmount;
 
-        private int _currentPage = 1;
-        private int _pageSize = 10;
-        private int _totalPages = 1;
+        private int currentPage = 1;
+        private int pageSize = 10;
+        private int totalPages = 1;
 
         public ObservableCollection<PaymentDto> Payments { get; set; }
 
@@ -37,10 +37,10 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
         public int CurrentPage
         {
-            get => _currentPage;
+            get => currentPage;
             set
             {
-                if (SetProperty(ref _currentPage, value))
+                if (SetProperty(ref currentPage, value))
                 {
                     NextPageCommand?.RaiseCanExecuteChanged();
                     PreviousPageCommand?.RaiseCanExecuteChanged();
@@ -50,10 +50,10 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
         public int TotalPages
         {
-            get => _totalPages;
+            get => totalPages;
             set
             {
-                if (SetProperty(ref _totalPages, value))
+                if (SetProperty(ref totalPages, value))
                 {
                     NextPageCommand?.RaiseCanExecuteChanged();
                     PreviousPageCommand?.RaiseCanExecuteChanged();
@@ -66,14 +66,14 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
         public string SearchText
         {
-            get => _searchText;
+            get => searchText;
             set
             {
-                if (SetProperty(ref _searchText, value))
+                if (SetProperty(ref searchText, value))
                 {
-                    _searchCts?.Cancel();
-                    _searchCts = new CancellationTokenSource();
-                    DebounceSearch(_searchCts.Token);
+                    searchCts?.Cancel();
+                    searchCts = new CancellationTokenSource();
+                    DebounceSearch(searchCts.Token);
                 }
             }
         }
@@ -90,16 +90,15 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
             }
             catch (TaskCanceledException)
             {
-
             }
         }
 
         public FilterOption SelectedFilterOption
         {
-            get => _selectedFilterOption;
+            get => selectedFilterOption;
             set
             {
-                if (SetProperty(ref _selectedFilterOption, value))
+                if (SetProperty(ref selectedFilterOption, value))
                 {
                     ApplyFilter(resetPage: true);
                 }
@@ -108,10 +107,10 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
         public PaymentMethod SelectedPaymentMethod
         {
-            get => _selectedPaymentMethod;
+            get => selectedPaymentMethod;
             set
             {
-                if (SetProperty(ref _selectedPaymentMethod, value))
+                if (SetProperty(ref selectedPaymentMethod, value))
                 {
                     ApplyFilter(resetPage: true);
                 }
@@ -120,13 +119,13 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
         public decimal TotalAmount
         {
-            get => _totalAmount;
-            private set => SetProperty(ref _totalAmount, value);
+            get => totalAmount;
+            private set => SetProperty(ref totalAmount, value);
         }
 
-        public PaymentHistoryViewModel(IServicePayment service)
+        public PaymentHistoryViewModel(IServicePayment paymentService)
         {
-            _service = service;
+            service = paymentService;
             Payments = new ObservableCollection<PaymentDto>();
 
             FilterOptions = new ObservableCollection<FilterOption>
@@ -170,10 +169,13 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
         private async void OpenReceipt(PaymentDto paymentDto)
         {
-            if (paymentDto == null) return;
-            string path = _service.GetReceiptDocumentPath(paymentDto.Id);
+            if (paymentDto == null)
+            {
+                return;
+            }
+            string path = service.GetReceiptDocumentPath(paymentDto.Id);
 
-            try 
+            try
             {
                 var fileInfo = new System.IO.FileInfo(path);
                 if (fileInfo.Exists)
@@ -182,22 +184,25 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
                     var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(fileInfo.FullName);
                     await Windows.System.Launcher.LaunchFileAsync(file);
                 }
-            } 
-            catch (System.Exception) 
+            }
+            catch (System.Exception)
             {
             }
         }
 
         private void ApplyFilter(bool resetPage = false)
         {
-            if (_selectedFilterOption == null) return;
+            if (selectedFilterOption == null)
+            {
+                return;
+            }
 
             if (resetPage)
             {
                 CurrentPage = 1;
             }
 
-            var pagedResult = _service.GetFilteredPayments(_selectedFilterOption.Type, _selectedPaymentMethod, _searchText, CurrentPage, _pageSize);
+            var pagedResult = service.GetFilteredPayments(selectedFilterOption.Type, selectedPaymentMethod, searchText, CurrentPage, pageSize);
 
             Payments.Clear();
             foreach (var paymentDto in pagedResult.Items)
@@ -207,8 +212,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
             TotalPages = pagedResult.TotalPages == 0 ? 1 : pagedResult.TotalPages;
 
-           
-            TotalAmount = _service.CalculateTotalAmount(pagedResult.Items);
+            TotalAmount = service.CalculateTotalAmount(pagedResult.Items);
         }
     }
 }

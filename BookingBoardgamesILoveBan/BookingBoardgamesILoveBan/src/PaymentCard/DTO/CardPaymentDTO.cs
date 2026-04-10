@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCard.DTO
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.DTO
 {
     public class CardPaymentDTO
     {
@@ -27,5 +27,4 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.DTO
             PaymentMethod = paymentMethod;
         }
     }
-
 }

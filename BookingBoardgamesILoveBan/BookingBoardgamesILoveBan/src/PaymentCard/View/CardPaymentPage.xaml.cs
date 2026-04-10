@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using BookingBoardgamesILoveBan.src.PaymentCard.Navigation;
-using BookingBoardgamesILoveBan.src.PaymentCard.ViewModel;
-using BookingBoardgamesILoveBan.src.PaymentCard.View;
+using BookingBoardgamesILoveBan.Src.PaymentCard.Navigation;
+using BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel;
+using BookingBoardgamesILoveBan.Src.PaymentCard.View;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -16,12 +16,12 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using BookingBoardgamesILoveBan.src.View;
+using BookingBoardgamesILoveBan.Src.View;
 
 // To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+/// and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace BookingBoardgamesILoveBan.src.PaymentCard.View
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.View
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -29,7 +29,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.View
     public sealed partial class CardPaymentPage : Page
     {
         public CardPaymentViewModel ViewModel { get; set; }
-        private Window _currentWindow;
+        private Window currentWindow;
 
         public CardPaymentPage()
         {
@@ -44,23 +44,23 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.View
             ViewModel = new CardPaymentViewModel(
                 App.CardPaymentService,
                 App.UserService,
-                booking.RequestId, 
-                booking.DeliveryAddress, 
+                booking.RequestId,
+                booking.DeliveryAddress,
                 booking.BookingMessageId,
                 booking.ConversationService);
 
             DataContext = ViewModel;
-            _currentWindow = booking.CurrentWindow;
+            currentWindow = booking.CurrentWindow;
 
-            Bindings.Update();      
+            Bindings.Update();
 
             ViewModel.NavigateBack = () =>
             {
-                _currentWindow.Close(); 
+                currentWindow.Close();
             };
             ViewModel.NavigateToExit = () =>
             {
-                _currentWindow.Close();
+                currentWindow.Close();
             };
 
             ViewModel.OnActivated();

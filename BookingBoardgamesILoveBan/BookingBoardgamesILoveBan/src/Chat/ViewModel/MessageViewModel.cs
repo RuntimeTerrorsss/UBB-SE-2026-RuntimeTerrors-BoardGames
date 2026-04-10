@@ -1,11 +1,11 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.DTO;
-using BookingBoardgamesILoveBan.src.Enum;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Enum;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
+namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 public class MessageViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler PropertyChanged;
@@ -25,45 +25,58 @@ public class MessageViewModel : INotifyPropertyChanged
     public string TimestampString => SentAt.ToString("HH:mm");
 
     // Mutable fields — these change after the fact
-    private bool _isResolved;
+    private bool isResolved;
     public bool IsResolved
     {
-        get => _isResolved;
-        set { _isResolved = value; OnPropertyChanged(); }
+        get => isResolved;
+        set
+        {
+            isResolved = value;
+            OnPropertyChanged();
+        }
     }
     public bool IsAccepted { get; set; }
 
-    private int[]? _acceptedBy;
-    public int[]? AcceptedBy
+    private int[] acceptedBy = Array.Empty<int>();
+    public int[] AcceptedBy
     {
-        get => _acceptedBy;
-        set { _acceptedBy = value; OnPropertyChanged(); OnPropertyChanged(nameof(BothAccepted)); }
+        get => acceptedBy;
+        set
+        {
+            acceptedBy = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(BothAccepted));
+        }
     }
-    public bool BothAccepted => _acceptedBy?.Length == 2;
+    public bool BothAccepted => acceptedBy?.Length == 2;
 
     // Whether the other user has read this message — false by default, set to true when read receipt arrives
-    private bool _isRead;
+    private bool isRead;
     public bool IsRead
     {
-        get => _isRead;
-        set { _isRead = value; OnPropertyChanged(); }
+        get => isRead;
+        set
+        {
+            isRead = value;
+            OnPropertyChanged();
+        }
     }
 
     public MessageViewModel(MessageDTO message, int currentUserId)
     {
-        Id = message.Id;
-        ConversationId = message.ConversationId;
-        SenderId = message.SenderId;
-        Type = message.Type;
-        Content = message.Content;
-        IsMine = message.SenderId == currentUserId;
-        SentAt = message.SentAt;
-        ImageUrl = message.ImageUrl;
-        RequestId = message.RequestId;
-        IsAccepted = message.IsAccepted;
-        _isResolved = message.IsResolved;
-        _acceptedBy = new int[] { message.IsAcceptedByBuyer ? message.ReceiverId : 0, message.IsAcceptedBySeller ? message.SenderId : 0 };
-        _isRead = false;
+        Id = message.id;
+        ConversationId = message.conversationId;
+        SenderId = message.senderId;
+        Type = message.type;
+        Content = message.content;
+        IsMine = message.senderId == currentUserId;
+        SentAt = message.sentAt;
+        ImageUrl = message.imageUrl;
+        RequestId = message.requestId;
+        IsAccepted = message.isAccepted;
+        isResolved = message.isResolved;
+        acceptedBy = new int[] { message.isAcceptedByBuyer ? message.receiverId : 0, message.isAcceptedByBuyer ? message.receiverId : 0 };
+        isRead = false;
     }
 
     public HorizontalAlignment IsMineToAlignment(bool isMine)

@@ -1,11 +1,11 @@
-﻿using BookingBoardgamesILoveBan.src.Enum;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Enum;
 
-namespace BookingBoardgamesILoveBan.src.Model
+namespace BookingBoardgamesILoveBan.Src.Model
 {
     public class CashAgreementMessage : Message
     {
@@ -14,7 +14,7 @@ namespace BookingBoardgamesILoveBan.src.Model
         public bool IsAcceptedByBuyer { get; set; }
         public bool IsAcceptedBySeller { get; set; }
 
-        public CashAgreementMessage(int id, int conversationId, int sellerId, int buyerId, int paymentId,DateTime sentAt, string content,
+        public CashAgreementMessage(int id, int conversationId, int sellerId, int buyerId, int paymentId, DateTime sentAt, string content,
             bool isResolved = false, bool isAcceptedByBuyer = false, bool isAcceptedBySeller = false)
             : base(id, conversationId, sellerId, buyerId, sentAt, content, MessageType.CashAgreement)
         {

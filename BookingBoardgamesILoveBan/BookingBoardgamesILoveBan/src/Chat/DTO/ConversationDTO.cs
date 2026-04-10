@@ -1,13 +1,13 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.Model;
-using BookingBoardgamesILoveBan.src.Model;
-using BookingBoardgamesILoveBan.src.Chat.DTO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.Model;
+using BookingBoardgamesILoveBan.Src.Model;
 
-namespace BookingBoardgamesILoveBan.src.Chat.DTO
+namespace BookingBoardgamesILoveBan.Src.Chat.DTO
 {
     public class ConversationDTO
     {
@@ -40,10 +40,14 @@ namespace BookingBoardgamesILoveBan.src.Chat.DTO
             foreach (var message in MessageList)
             {
                 // ignore system message
-                if (message.ReceiverId == 0) continue;
-                if (message.SentAt >= LastRead[message.ReceiverId])
+                if (message.receiverId == 0)
                 {
-                    UnreadCount[message.ReceiverId] ++;
+                    continue;
+                }
+
+                if (message.sentAt >= LastRead[message.receiverId])
+                {
+                    UnreadCount[message.receiverId]++;
                 }
             }
         }

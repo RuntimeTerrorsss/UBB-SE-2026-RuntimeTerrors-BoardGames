@@ -1,7 +1,14 @@
-using BookingBoardgamesILoveBan.src.PaymentCard.View;
-using BookingBoardgamesILoveBan.src.Chat.DTO;
-using BookingBoardgamesILoveBan.src.Chat.ViewModel;
-using BookingBoardgamesILoveBan.src.Enum;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.PaymentCard.View;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -10,20 +17,13 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+/// and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace BookingBoardgamesILoveBan.src.Chat.View
+namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -32,31 +32,31 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
     {
         public event EventHandler<(int userId, int requestId, int messageId)>? ProceedToPaymentRequested;
 
-        private ChatViewModel _viewModel;
+        private ChatViewModel viewModel;
 
         // Holds the file name of a pasted image that is staged but not yet sent
-        private string? _pendingImageFileName = null;
+        private string? pendingImageFileName = null;
 
         public ChatViewModel ViewModel
         {
-            get => _viewModel;
+            get => viewModel;
             set
             {
                 // Unsubscribe from old viewmodel
-                if (_viewModel != null)
+                if (viewModel != null)
                 {
-                    _viewModel.Messages.CollectionChanged -= OnMessagesChanged;
-                    _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+                    viewModel.Messages.CollectionChanged -= OnMessagesChanged;
+                    viewModel.PropertyChanged -= OnViewModelPropertyChanged;
                 }
 
-                _viewModel = value;
+                viewModel = value;
 
-                if (_viewModel != null)
+                if (viewModel != null)
                 {
-                    _viewModel.Messages.CollectionChanged += OnMessagesChanged;
-                    _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+                    viewModel.Messages.CollectionChanged += OnMessagesChanged;
+                    viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
-                    BannerDisplayName.Text = _viewModel.DisplayName;
+                    BannerDisplayName.Text = viewModel.DisplayName;
                     SetupAvatar();
 
                     RebuildMessages();
@@ -74,7 +74,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
         private void RebuildMessages()
         {
             MessagesPanel.Children.Clear();
-            foreach (var vm in _viewModel.Messages)
+            foreach (var vm in viewModel.Messages)
             {
                 var itemView = new MessageItemView();
                 itemView.SetMessage(vm, CurrentUserId);
@@ -118,33 +118,40 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
         private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ChatViewModel.DisplayName))
-                BannerDisplayName.Text = _viewModel.DisplayName;
+            {
+                BannerDisplayName.Text = viewModel.DisplayName;
+            }
             else if (e.PropertyName == nameof(ChatViewModel.InputText))
-                MessageInput.Text = _viewModel.InputText;
+            {
+                MessageInput.Text = viewModel.InputText;
+            }
             else if (e.PropertyName == nameof(ChatViewModel.AvatarUrl))
+            {
                 SetupAvatar();
+            }
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_pendingImageFileName != null)
+            if (pendingImageFileName != null)
             {
-                ViewModel?.SendImage(_pendingImageFileName);
+                ViewModel?.SendImage(pendingImageFileName);
                 ClearPendingImage();
             }
-
             else if (!string.IsNullOrWhiteSpace(ViewModel?.InputText))
+            {
                 ViewModel?.SendMessage();
+            }
         }
 
         private void SetupAvatar()
         {
-            AvatarPicture.DisplayName = _viewModel.DisplayName;
-            if (!string.IsNullOrEmpty(_viewModel.AvatarUrl))
+            AvatarPicture.DisplayName = viewModel.DisplayName;
+            if (!string.IsNullOrEmpty(viewModel.AvatarUrl))
             {
                 try
                 {
-                    string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", _viewModel.AvatarUrl);
+                    string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", viewModel.AvatarUrl);
                     AvatarPicture.ProfilePicture = new BitmapImage(new Uri(fullPath));
                 }
                 catch (Exception ex)
@@ -196,13 +203,13 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                 using var fileStream = File.Create(fullPath);
                 await stream.AsStreamForRead().CopyToAsync(fileStream);
 
-                _pendingImageFileName = fileName;
+                pendingImageFileName = fileName;
             }
         }
 
         private void ClearPendingImage()
         {
-            _pendingImageFileName = null;
+            pendingImageFileName = null;
             ImagePreview.Source = null;
             ImagePreviewPanel.Visibility = Visibility.Collapsed;
         }

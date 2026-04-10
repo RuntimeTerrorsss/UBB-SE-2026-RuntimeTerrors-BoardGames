@@ -1,33 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
-using BookingBoardgamesILoveBan.src.PaymentHistory.DTO;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Enums;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Model;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Repository;
-using BookingBoardgamesILoveBan.src.Receipt.Service;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Model;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
+using BookingBoardgamesILoveBan.Src.Receipt.Service;
 
-
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
 {
     /// <summary>
     /// Service responsible for business logic, mapping, computing totals, and filtering transactions for the Payment History view.
     /// </summary>
     public class ServicePayment : IServicePayment
     {
-        private readonly IRepositoryPayment _repository;
-        private readonly ReceiptService _receiptService;
+        private readonly IRepositoryPayment repository;
+        private readonly ReceiptService receiptservice;
 
         /// <summary>
         /// Initializes a new instance of the ServiceTransactions class.
         /// </summary>
         /// <param name="repository">The transactions repository providing data access.</param>
         /// <param name="receiptService">Service to handle generating and opening receipts.</param>
-        public ServicePayment(IRepositoryPayment repository, ReceiptService receiptService)
+        public ServicePayment(IRepositoryPayment paymentRepository, ReceiptService receiptService)
         {
-            _repository = repository;
-            _receiptService = receiptService;
+            repository = paymentRepository;
+            receiptservice = receiptService;
         }
 
         /// <summary>
@@ -36,7 +35,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
         /// <returns>A list of all mapped TransactionDto objects.</returns>
         public List<PaymentDto> GetAllPaymentsForUI()
         {
-            var payments = _repository.GetAllPayments();
+            var payments = repository.GetAllPayments();
             return MapToDto(payments);
         }
 
@@ -49,7 +48,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
         /// <returns>A filtered/sorted list of mapped TransactionDto objects.</returns>
         public PagedResult<PaymentDto> GetFilteredPayments(FilterType filter, PaymentMethod paymentMethod = PaymentMethod.ALL, string searchQuery = "", int pageNumber = 1, int pageSize = 10)
         {
-            var payments = _repository.GetAllPayments().AsEnumerable();
+            var payments = repository.GetAllPayments().AsEnumerable();
 
             if (paymentMethod != PaymentMethod.ALL)
             {
@@ -59,13 +58,12 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
 
             if (!string.IsNullOrWhiteSpace(searchQuery))
             {
-                payments = payments.Where(t => 
+                payments = payments.Where(t =>
                 {
-                    string gName = t.GameName ?? "";
+                    string gName = t.GameName ?? string.Empty;
                     return gName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
                 });
             }
-
 
             DateTime now = DateTime.Now;
 
@@ -119,7 +117,10 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
         /// <returns>The total raw sum.</returns>
         public decimal CalculateTotalAmount(IEnumerable<PaymentDto> displayedPayments)
         {
-            if (displayedPayments == null) return 0;
+            if (displayedPayments == null)
+            {
+                return 0;
+            }
             return displayedPayments.Sum(t => t.Amount);
         }
 
@@ -130,18 +131,18 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
         /// <returns>The string file path to the Receipt PDF.</returns>
         public string GetReceiptDocumentPath(int paymentId)
         {
-            PaymentCommon.Model.Payment payment = _repository.GetPaymentById(paymentId);
+            PaymentCommon.Model.Payment payment = repository.GetPaymentById(paymentId);
 
             if (string.IsNullOrEmpty(payment.FilePath))
             {
-                payment.FilePath = _receiptService.GenerateReceiptRelativePath(payment.RequestId);
+                payment.FilePath = receiptservice.GenerateReceiptRelativePath(payment.RequestId);
             }
             else if (!payment.FilePath.Contains("\\"))
             {
                 payment.FilePath = "receipts\\" + payment.FilePath;
             }
 
-            return _receiptService.GetReceiptDocument(payment);
+            return receiptservice.GetReceiptDocument(payment);
         }
 
         /// <summary>
@@ -155,7 +156,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
             {
                 return new PaymentDto
                 {
-                    Id = t.tid,
+                    Id = t.Tid,
                     DateText = t.DateOfTransaction?.ToString("d") ?? "Pending",
                     ProductName = !string.IsNullOrWhiteSpace(t.GameName) ? t.GameName : "Unknown Game",
                     ReceiverName = !string.IsNullOrWhiteSpace(t.OwnerName) ? t.OwnerName : "Unknown Owner",

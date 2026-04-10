@@ -1,18 +1,18 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.DTO;
-using BookingBoardgamesILoveBan.src.Chat.Model;
-using BookingBoardgamesILoveBan.src.Enum;
-using BookingBoardgamesILoveBan.src.Model;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Collections.Generic;
-using System.Diagnostics;
-using BookingBoardgamesILoveBan.src.PaymentCard.View;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.Model;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCard.View;
 using Microsoft.UI.Xaml.Controls;
 
-namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
+namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 
 public class ChatViewModel : INotifyPropertyChanged
 {
@@ -30,35 +30,46 @@ public class ChatViewModel : INotifyPropertyChanged
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     // Bound to the banner
-    private string _displayName;
+    private string displayName;
     public string DisplayName
     {
-        get => _displayName;
-        set { _displayName = value; OnPropertyChanged(); }
+        get => displayName;
+        set
+        {
+            displayName = value;
+            OnPropertyChanged();
+        }
     }
 
-    private string _initials;
+    private string initials;
     public string Initials
     {
-        get => _initials;
-        set { _initials = value; OnPropertyChanged(); }
+        get => initials;
+        set
+        {
+            initials = value;
+            OnPropertyChanged();
+        }
     }
 
-    private string _avatarUrl;
+    private string avatarUrl;
     public string AvatarUrl
     {
-        get => _avatarUrl;
-        set { _avatarUrl = value; OnPropertyChanged(nameof(AvatarUrl)); }
+        get => avatarUrl;
+        set
+        {
+            avatarUrl = value;
+            OnPropertyChanged(nameof(AvatarUrl));
+        }
     }
 
     public int CurrentUserId { get; private set; }
     public int ConversationId { get; private set; }
 
-    public ObservableCollection<MessageViewModel> Messages { get; } = new();
-
+    public ObservableCollection<MessageViewModel> Messages { get; } = new ();
 
     /// <summary>
-    /// Loads a conversation into the chat view model, replacing any existing messages. 
+    /// Loads a conversation into the chat view model, replacing any existing messages.
     /// Called when a conversation is selected from the list.
     /// </summary>
     /// <param name="conversation"></param>
@@ -76,7 +87,7 @@ public class ChatViewModel : INotifyPropertyChanged
         {
             var msg = messages[i];
             var newMessageViewModel = new MessageViewModel(msg, CurrentUserId);
-            if(i < messages.Count- theirUnreadCount) 
+            if (i < messages.Count - theirUnreadCount)
             {
                 newMessageViewModel.IsRead = true;
             }
@@ -85,45 +96,59 @@ public class ChatViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Handles an incoming message for the active conversation. 
+    /// Handles an incoming message for the active conversation.
     /// This is called by the master view model when a new message received.
     /// </summary>
     /// <param name="message"></param>
     public void HandleIncomingMessage(MessageDTO message)
     {
-        //FIX: UGLYYYY but this avoids weird duplicates when a message is received in the active conversation
-        if (message.ConversationId != ConversationId) return;
+        // FIX: UGLYYYY but this avoids weird duplicates when a message is received in the active conversation
+        if (message.conversationId != ConversationId)
+        {
+            return;
+        }
         bool exists = Messages.Any(m =>
-        m.Content == message.Content &&
-        Math.Abs((m.SentAt - message.SentAt).TotalSeconds) < 1);
+        m.Content == message.content &&
+        Math.Abs((m.SentAt - message.sentAt).TotalSeconds) < 1);
 
-        if (exists) return;
+        if (exists)
+        {
+            return;
+        }
         Messages.Add(new MessageViewModel(message, CurrentUserId));
     }
 
-    private string _inputText = string.Empty;
+    private string inputText = string.Empty;
     public string InputText
     {
-        get => _inputText;
-        set { _inputText = value; OnPropertyChanged(); OnPropertyChanged(nameof(CanSend)); }
+        get => inputText;
+        set
+        {
+            inputText = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanSend));
+        }
     }
 
     public bool CanSend => !string.IsNullOrWhiteSpace(InputText);
 
     /// <summary>
-    /// Sends a message typed in the input box. 
-    /// This creates a new MessageDTO and raises the MessageSent event, which is handled by the master view model to actually 
-    /// send the message to the server. 
+    /// Sends a message typed in the input box.
+    /// This creates a new MessageDTO and raises the MessageSent event, which is handled by the master view model to actually
+    /// send the message to the server.
     /// </summary>
     public void SendMessage()
     {
-        if (!CanSend) return;
+        if (!CanSend)
+        {
+            return;
+        }
 
         var dto = new MessageDTO(
-            -1, 
+            -1,
             ConversationId,
             CurrentUserId,
-            -1, 
+            -1,
             DateTime.Now,
             InputText,
             MessageType.Text,
@@ -132,18 +157,17 @@ public class ChatViewModel : INotifyPropertyChanged
             false,
             false, false,
             -1,
-            -1
-        );
+            -1);
 
         var vm = new MessageViewModel(dto, CurrentUserId);
-        
+
         Messages.Add(vm);
         InputText = string.Empty;
-        MessageSent.Invoke(dto); //notify master vm
+        MessageSent.Invoke(dto); // notify master vm
     }
 
     /// <summary>
-    /// Handles accepting or rejecting a booking request. 
+    /// Handles accepting or rejecting a booking request.
     /// This is called by the booking request message when the accept/reject/cancel buttons are clicked.
     /// </summary>
     /// <param name="messageId"></param>
@@ -151,8 +175,11 @@ public class ChatViewModel : INotifyPropertyChanged
     public void ResolveBookingRequest(int messageId, bool accepted)
     {
         var msg = Messages.FirstOrDefault(m => m.Id == messageId);
-        if (msg == null) return;
-        BookingRequestUpdate?.Invoke(messageId, msg.ConversationId, accepted, accepted? false :true);
+        if (msg == null)
+        {
+            return;
+        }
+        BookingRequestUpdate?.Invoke(messageId, msg.ConversationId, accepted, accepted ? false : true);
     }
 
     /// <summary>
@@ -162,12 +189,15 @@ public class ChatViewModel : INotifyPropertyChanged
     public void UpdateCashAgreement(int messageId)
     {
         var msg = Messages.FirstOrDefault(m => m.Id == messageId);
-        if (msg == null) return;
+        if (msg == null)
+        {
+            return;
+        }
         CashAgreementAccept?.Invoke(messageId, msg.ConversationId);
     }
 
     /// <summary>
-    /// Handles proceeding to payment after a cash agreement is accepted. 
+    /// Handles proceeding to payment after a cash agreement is accepted.
     /// This is called by the cash agreement message when the proceed to payment button is clicked.
     /// </summary>
     /// <param name="messageId"></param>
@@ -175,7 +205,6 @@ public class ChatViewModel : INotifyPropertyChanged
     {
         var msg = Messages.FirstOrDefault(m => m.Id == messageId);
     }
-
 
     /// <summary>
     /// Handles sending an image message.
@@ -189,19 +218,17 @@ public class ChatViewModel : INotifyPropertyChanged
             CurrentUserId,
             -1,
             DateTime.Now,
-            "",
+            string.Empty,
             MessageType.Image,
             fileName,
             false,
             false,
             false, false,
             -1,
-            -1
-        );
+            -1);
         var vm = new MessageViewModel(dto, CurrentUserId);
-        //Messages.Add(vm);
+        // Messages.Add(vm);
         InputText = string.Empty;
-        MessageSent.Invoke(dto); 
+        MessageSent.Invoke(dto);
     }
-
 }

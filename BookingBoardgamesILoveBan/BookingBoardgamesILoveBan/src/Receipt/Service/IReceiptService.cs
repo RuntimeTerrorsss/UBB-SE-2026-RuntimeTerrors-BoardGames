@@ -1,7 +1,6 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
+﻿using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 
-
-namespace BookingBoardgamesILoveBan.src.Receipt.Service
+namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 {
 	public interface IReceiptService
 	{

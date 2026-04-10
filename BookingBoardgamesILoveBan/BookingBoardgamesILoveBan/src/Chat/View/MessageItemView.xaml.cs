@@ -1,29 +1,28 @@
-using BookingBoardgamesILoveBan.src.Chat.DTO;
-using BookingBoardgamesILoveBan.src.Chat.ViewModel;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Documents;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace BookingBoardgamesILoveBan.src.Chat.View
+namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
     public sealed partial class MessageItemView : UserControl
     {
-        private TextBlock _statusIcon;
-        public ChatViewModel ViewModel {  get; set; }
+        private TextBlock statusIcon;
+        public ChatViewModel ViewModel { get; set; }
 
         public event EventHandler<int>? AcceptRequested;
         public event EventHandler<int>? DeclineRequested;
         public event EventHandler<int>? CancelRequested;
         public event EventHandler<int>? AgreementAccepted;
         public event EventHandler<(int userId, int requestId, int messageId)>? ProceedToPaymentRequested;
-
 
         public MessageItemView()
         {
@@ -33,13 +32,15 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
         // Called externally (e.g. from ViewModel) when a read receipt arrives for this message
         public void MarkAsRead()
         {
-            if (_statusIcon != null)
-                _statusIcon.Text = "\uE73E\uE73E";
+            if (statusIcon != null)
+            {
+                statusIcon.Text = "\uE73E\uE73E";
+            }
         }
 
         private TextBlock CreateStatusIcon(bool isRead)
         {
-            _statusIcon = new TextBlock
+            statusIcon = new TextBlock
             {
                 // Single check = sent, double check = read
                 Text = isRead ? "\uE73E\uE73E" : "\uE73E",
@@ -49,7 +50,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                 FontSize = 11,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorTertiaryBrush"]
             };
-            return _statusIcon;
+            return statusIcon;
         }
 
         public void SetMessage(MessageViewModel message, int currentUserId)
@@ -98,7 +99,10 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                     hl.Click += (s, e) => System.Diagnostics.Process.Start("explorer.exe", path);
                     textBlock.Inlines.Add(hl);
                 }
-                else textBlock.Inlines.Add(new Run { Text = path });
+                else
+                {
+                    textBlock.Inlines.Add(new Run { Text = path });
+                }
             }
             MessagePresenter.Content = textBlock;
         }
@@ -129,7 +133,10 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                     hl.Inlines.Add(new Run { Text = part });
                     textBlock.Inlines.Add(hl);
                 }
-                else textBlock.Inlines.Add(new Run { Text = part });
+                else
+                {
+                    textBlock.Inlines.Add(new Run { Text = part });
+                }
             }
 
             if (isMine)
@@ -152,8 +159,9 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
 
             // Show status icon for my messages; reflects IsRead from the viewmodel
             if (isMine)
+            {
                 stackPanel.Children.Add(CreateStatusIcon(message.IsRead));
-
+            }
             MessagePresenter.Content = stackPanel;
         }
 
@@ -227,7 +235,9 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
 
             // Show status icon for my messages; reflects IsRead from the viewmodel
             if (isMine)
+            {
                 stackPanel.Children.Add(CreateStatusIcon(message.IsRead));
+            }
 
             MessagePresenter.Content = stackPanel;
         }
@@ -323,7 +333,6 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                 };
                 acceptButton.Click += (s, e) => AcceptRequested?.Invoke(this, message.Id);
                 declineButton.Click += (s, e) => DeclineRequested?.Invoke(this, message.Id);
-                
                 buttonPanel.Children.Add(acceptButton);
                 buttonPanel.Children.Add(declineButton);
                 stackPanel.Children.Add(buttonPanel);
@@ -350,7 +359,6 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                     buttonPanel.Children.Add(cancelButton);
                     stackPanel.Children.Add(buttonPanel);
                 }
-
                 else
                 {
                     var buttonPanel = new StackPanel
@@ -370,7 +378,6 @@ namespace BookingBoardgamesILoveBan.src.Chat.View
                     buttonPanel.Children.Add(cancelButton);
                     stackPanel.Children.Add(buttonPanel);
                 }
-                
             }
 
                 border.Child = stackPanel;

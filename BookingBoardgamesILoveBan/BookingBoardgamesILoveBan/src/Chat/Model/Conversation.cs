@@ -1,11 +1,11 @@
-﻿using BookingBoardgamesILoveBan.src.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Model;
 
-namespace BookingBoardgamesILoveBan.src.Chat.Model
+namespace BookingBoardgamesILoveBan.Src.Chat.Model
 {
     public class Conversation
     {
@@ -21,7 +21,5 @@ namespace BookingBoardgamesILoveBan.src.Chat.Model
             MessageList = messages;
             LastRead = lastRead;
         }
-
-
     }
 }

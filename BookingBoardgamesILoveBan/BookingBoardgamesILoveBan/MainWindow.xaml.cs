@@ -1,5 +1,5 @@
-using BookingBoardgamesILoveBan.src.Chat.View;
-using BookingBoardgamesILoveBan.src.Interface.View;
+using BookingBoardgamesILoveBan.Src.Chat.View;
+using BookingBoardgamesILoveBan.Src.Interface.View;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -7,17 +7,11 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace BookingBoardgamesILoveBan
 {
     /// <summary>
@@ -28,9 +22,8 @@ namespace BookingBoardgamesILoveBan
         public MainWindow()
         {
             InitializeComponent();
-            
-            Root.Navigate(typeof(src.View.DashboardView));
 
+            Root.Navigate(typeof(Src.View.DashboardView));
 
             var window1 = new Window();
             var frame1 = new Frame();
@@ -38,7 +31,7 @@ namespace BookingBoardgamesILoveBan
             frame1.Navigate(typeof(ChatPageView), 1);
             window1.Title = "Alice";
             window1.Activate();
-            
+
             var window2 = new Window();
             var frame2 = new Frame();
             window2.Content = frame2;

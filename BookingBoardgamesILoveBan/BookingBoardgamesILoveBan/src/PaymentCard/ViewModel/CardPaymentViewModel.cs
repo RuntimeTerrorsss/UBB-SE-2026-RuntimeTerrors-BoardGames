@@ -3,26 +3,26 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.src.PaymentCard.Commands;
-using BookingBoardgamesILoveBan.src.PaymentCard.Constants;
-using BookingBoardgamesILoveBan.src.PaymentCard.Service;
-using BookingBoardgamesILoveBan.src.Chat.Service;
-using BookingBoardgamesILoveBan.src.Mocks.RequestMock;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.PaymentCard.Commands;
+using BookingBoardgamesILoveBan.Src.PaymentCard.Constants;
+using BookingBoardgamesILoveBan.Src.PaymentCard.Service;
+using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
 {
     public class CardPaymentViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly CardPaymentService _cardPaymentService;
-        private readonly UserService _userService;
-        private readonly System.Timers.Timer _inactivityTimer;
-        private readonly System.Timers.Timer _balanceRefreshTimer;
-        private readonly SynchronizationContext _syncContext;
+        private readonly CardPaymentService cardPaymentService;
+        private readonly UserService userService;
+        private readonly System.Timers.Timer inactivityTimer;
+        private readonly System.Timers.Timer balanceRefreshTimer;
+        private readonly SynchronizationContext syncContext;
 
-        // Booking info 
+        // Booking info
         public int RequestId { get; init; }
         public int ClientId { get; init; }
         public int OwnerId { get; init; }
@@ -35,17 +35,20 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
         public string DeliveryDate { get; init; }
         public string RequestDates { get; init; }
         public decimal Price { get; init; }
-        public int BookingMessageId {  get; init; }
+        public int BookingMessageId { get; init; }
         public ConversationService ConversationService { get; init; }
 
-        // Observable state 
+        // Observable state
         private decimal balance;
         public decimal Balance
         {
             get => balance;
             set
             {
-                if (balance == value) return;
+                if (balance == value)
+                {
+                    return;
+                }
                 balance = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsPayButtonEnabled));
@@ -53,76 +56,89 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
             }
         }
 
-        private bool _termsAccepted;
+        private bool termsAccepted;
         public bool TermsAccepted
         {
-            get => _termsAccepted;
+            get => termsAccepted;
             set
             {
-                if (_termsAccepted == value) return;
-                _termsAccepted = value;
+                if (termsAccepted == value)
+                {
+                    return;
+                }
+                termsAccepted = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsPayButtonEnabled));
                 FinishPaymentCommand.NotifyCanExecuteChanged(); // add this
             }
         }
 
-        private bool _isLoading;
+        private bool isLoading;
         public bool IsLoading
         {
-            get => _isLoading;
+            get => isLoading;
             set
             {
-                if (_isLoading == value) return;
-                _isLoading = value;
+                if (isLoading == value)
+                {
+                    return;
+                }
+                isLoading = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsPayButtonEnabled));
             }
         }
 
-        private string _statusMessage = string.Empty;
+        private string statusMessage = string.Empty;
         public string StatusMessage
         {
-            get => _statusMessage;
-            set { _statusMessage = value; OnPropertyChanged(); }
+            get => statusMessage;
+            set
+            {
+                statusMessage = value;
+                OnPropertyChanged();
+            }
         }
 
-        private bool _isSuccess;
+        private bool isSuccess;
         public bool IsSuccess
         {
-            get => _isSuccess;
-            set { _isSuccess = value; OnPropertyChanged(); }
+            get => isSuccess;
+            set
+            {
+                isSuccess = value;
+                OnPropertyChanged();
+            }
         }
 
         // Properties
         public bool IsPayButtonEnabled => Balance >= Price && TermsAccepted && !IsLoading;
         public bool IsWarningVisible => Balance < Price;
 
-        //  Commands
+        // Commands
         public RelayCommand FinishPaymentCommand { get; }
         public RelayCommand ExitCommand { get; }
         public RelayCommand ResetInactivityCommand { get; }
 
-        // Navigation 
+        // Navigation
         public Action NavigateBack { get; set; }
         public Action NavigateToExit { get; set; }
 
-       
         public CardPaymentViewModel(
             CardPaymentService cardPaymentService,
             UserService userService,
             int requestId,
-            string deliveryAddress, 
+            string deliveryAddress,
             int bookingMessageId,
             ConversationService conversationService)
         {
-            this._cardPaymentService = cardPaymentService;
-            this._userService = userService;
+            this.cardPaymentService = cardPaymentService;
+            this.userService = userService;
 
-            RequestId = requestId; 
-            DeliveryAddress = deliveryAddress; 
+            RequestId = requestId;
+            DeliveryAddress = deliveryAddress;
             BookingMessageId = bookingMessageId;
-            RequestDto requestDto = this._cardPaymentService.GetRequestDto(requestId);
+            RequestDto requestDto = this.cardPaymentService.GetRequestDto(requestId);
             ConversationService = conversationService;
 
             ClientId = requestDto.ClientId;
@@ -139,34 +155,34 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
             ResetInactivityCommand = new RelayCommand(ResetInactivityTimer);
 
             // Balance refresh every 4 seconds
-            _balanceRefreshTimer = new System.Timers.Timer(CardPaymentConstants.TimerForRefreshingBalance);
-            _balanceRefreshTimer.Elapsed += (_, _) => RefreshBalance();
-            _balanceRefreshTimer.AutoReset = true;
+            balanceRefreshTimer = new System.Timers.Timer(CardPaymentConstants.TimerForRefreshingBalance);
+            balanceRefreshTimer.Elapsed += (_, _) => RefreshBalance();
+            balanceRefreshTimer.AutoReset = true;
 
             // Session timeout after 2 minutes
-            _inactivityTimer = new System.Timers.Timer(CardPaymentConstants.TimerBeforeClosingPayment);
-            _inactivityTimer.Elapsed += OnSessionExpired;
-            _inactivityTimer.AutoReset = false;
+            inactivityTimer = new System.Timers.Timer(CardPaymentConstants.TimerBeforeClosingPayment);
+            inactivityTimer.Elapsed += OnSessionExpired;
+            inactivityTimer.AutoReset = false;
 
-            _syncContext = SynchronizationContext.Current;
+            syncContext = SynchronizationContext.Current;
         }
 
-        // Lifecycle 
-        private bool _isPageActive = false;
+        // Lifecycle
+        private bool isPageActive = false;
         public void OnActivated()
         {
-            _isPageActive = true;
+            isPageActive = true;
             RefreshBalance();
-            _balanceRefreshTimer.Start();
-            _inactivityTimer.Start();
+            balanceRefreshTimer.Start();
+            inactivityTimer.Start();
         }
 
         public void OnDeactivated()
         {
-            _balanceRefreshTimer.Stop();
-            _balanceRefreshTimer?.Dispose();
-            _inactivityTimer.Stop();
-            _inactivityTimer?.Dispose();
+            balanceRefreshTimer.Stop();
+            balanceRefreshTimer?.Dispose();
+            inactivityTimer.Stop();
+            inactivityTimer?.Dispose();
         }
 
         // Helpers
@@ -177,9 +193,12 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
 
         private void RefreshBalance()
         {
-            if (!_isPageActive) return;
-            decimal newBalance = _userService.GetUserBalance(ClientId);
-            _syncContext.Post(_ =>
+            if (!isPageActive)
+            {
+                return;
+            }
+            decimal newBalance = userService.GetUserBalance(ClientId);
+            syncContext.Post(_ =>
             {
                 Balance = newBalance;
                 FinishPaymentCommand.NotifyCanExecuteChanged();
@@ -192,19 +211,19 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
             StatusMessage = string.Empty;
             FinishPaymentCommand.NotifyCanExecuteChanged();
 
-            await Task.Delay(CardPaymentConstants.LoadingTime); 
+            await Task.Delay(CardPaymentConstants.LoadingTime);
 
             try
             {
                 await Task.Run(() =>
-                    _cardPaymentService.AddCardPayment(RequestId, ClientId, OwnerId, Price));
+                    cardPaymentService.AddCardPayment(RequestId, ClientId, OwnerId, Price));
 
                 this.ConversationService.OnCardPaymentSelected(this.BookingMessageId);
                 RefreshBalance();
                 IsSuccess = true;
                 StatusMessage = "Payment successful!";
-                _balanceRefreshTimer.Stop();
-                _inactivityTimer.Stop();
+                balanceRefreshTimer.Stop();
+                inactivityTimer.Stop();
             }
             catch (Exception ex)
             {
@@ -219,20 +238,26 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.ViewModel
 
         private void OnSessionExpired(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (!_isPageActive) return;
-            _balanceRefreshTimer.Stop();
-            StatusMessage = "Session expired due to inactivity.";
-            _syncContext.Post(_ =>
+            if (!isPageActive)
             {
-                if (!_isPageActive) return;
+                return;
+            }
+            balanceRefreshTimer.Stop();
+            StatusMessage = "Session expired due to inactivity.";
+            syncContext.Post(_ =>
+            {
+                if (!isPageActive)
+                {
+                    return;
+                }
                 NavigateToExit?.Invoke();
             }, null);
         }
 
         private void ResetInactivityTimer()
         {
-            _inactivityTimer.Stop();
-            _inactivityTimer.Start();
+            inactivityTimer.Stop();
+            inactivityTimer.Start();
         }
     }
 }

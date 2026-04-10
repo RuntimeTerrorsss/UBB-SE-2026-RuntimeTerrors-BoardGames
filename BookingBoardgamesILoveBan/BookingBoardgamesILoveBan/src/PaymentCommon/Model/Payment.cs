@@ -1,10 +1,11 @@
 ﻿using System;
-using BookingBoardgamesILoveBan.src.PaymentCommon.Constants;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCommon.Model {
+namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Model
+{
 	public class Payment
 	{
-		public int tid { get; set; }
+		public int Tid { get; set; }
 		public int RequestId { get; set; }
 		public int ClientId { get; set; }
 		public int OwnerId { get; set; }
@@ -17,9 +18,9 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Model {
 		public int State;
 		public string? FilePath { get; set; }
 
-
-		public Payment(int id, int requestId, int clientId, int ownerId, decimal amount, string method) {
-			tid = id;
+		public Payment(int id, int requestId, int clientId, int ownerId, decimal amount, string method)
+		{
+			Tid = id;
 			RequestId = requestId;
 			ClientId = clientId;
 			OwnerId = ownerId;
@@ -34,6 +35,8 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Model {
 
 			FilePath = null;
 		}
-        public Payment() { }
+        public Payment()
+		{
+		}
     }
 }

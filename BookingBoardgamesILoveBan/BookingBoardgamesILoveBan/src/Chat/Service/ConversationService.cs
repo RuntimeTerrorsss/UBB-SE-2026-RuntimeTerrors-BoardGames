@@ -1,42 +1,38 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.DTO;
-using BookingBoardgamesILoveBan.src.Chat.Model;
-using BookingBoardgamesILoveBan.src.Chat.Repository;
-using BookingBoardgamesILoveBan.src.Enum;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
-using BookingBoardgamesILoveBan.src.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.Model;
+using BookingBoardgamesILoveBan.Src.Chat.Repository;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.Model;
 
-namespace BookingBoardgamesILoveBan.src.Chat.Service
+namespace BookingBoardgamesILoveBan.Src.Chat.Service
 {
-    public class ConversationService : MessageObserver
+    public class ConversationService : IMessageObserver
     {
-        private ConversationRepository _conversationRepository { get; set; }
-        private UserService _userService = App.UserService;
-        private int _userId { get; set; }
-        public int UserId
-        {
-            get => _userId;
-        }
+        private ConversationRepository ConversationRepository { get; set; }
+        private UserService userService = App.UserService;
+        private int UserId { get; set; }
 
         public event Action<MessageDTO, string> MessageProcessed;
         public event Action<ConversationDTO, string> ConversationProcessed;
         public event Action<ReadReceiptDTO> ReadReceiptProcessed;
         public event Action<MessageDTO, string> MessageUpdateProcessed;
 
-        public ConversationService(ConversationRepository conversationRepository, int userId)
+        public ConversationService(ConversationRepository conversationRepo, int userIdInput)
         {
-            _userId = userId;
-            _conversationRepository = conversationRepository;
-            _conversationRepository.Subscribe(userId, this);
+            UserId = userIdInput;
+            ConversationRepository = conversationRepo;
+            ConversationRepository.Subscribe(UserId, this);
         }
 
         /// <summary>
-        /// Fetches all conversations for the user and translates them to ConversationDTOs. 
+        /// Fetches all conversations for the user and translates them to ConversationDTOs.
         /// Should only be called once on app startup, as after that conversations and messages
         /// will be pushed by the repository through the OnConversationReceived and OnMessageReceived callbacks.
         /// </summary>
@@ -45,7 +41,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         {
             List<ConversationDTO> convList = new List<ConversationDTO>();
 
-            foreach (var conv in _conversationRepository.GetConversationsForUser(_userId))
+            foreach (var conv in ConversationRepository.GetConversationsForUser(UserId))
             {
                 convList.Add(ConversationToConversationDTO(conv));
             }
@@ -59,7 +55,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// <returns></returns>
         public string GetOtherUserNameByConversationDTO(ConversationDTO conversation)
         {
-            return _userService.GetById(conversation.Participants[0] == _userId ? conversation.Participants[1] : conversation.Participants[0]).Username ?? "Unknown User";
+            return userService.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]).Username ?? "Unknown User";
         }
 
         /// <summary>
@@ -69,7 +65,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// <returns></returns>
         public string GetOtherUserNameByMessageDTO(MessageDTO message)
         {
-            return _userService.GetById(message.SenderId == _userId ? message.ReceiverId : message.SenderId).Username ?? "Unknown User";
+            return userService.GetById(message.senderId == UserId ? message.receiverId : message.senderId).Username ?? "Unknown User";
         }
 
         /// <summary>
@@ -79,8 +75,8 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// <param name="message"></param>
         public void SendMessage(MessageDTO message)
         {
-            Debug.WriteLine("im sedingin a message: " + message.ImageUrl);
-            _conversationRepository.HandleNewMessage(MessageDTOToMessage(message));
+            Debug.WriteLine("im sedingin a message: " + message.imageUrl);
+            ConversationRepository.HandleNewMessage(MessageDTOToMessage(message));
         }
 
         /// <summary>
@@ -89,27 +85,25 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// <param name="message"></param>
         public void UpdateMessage(MessageDTO message)
         {
-            _conversationRepository.HandleMessageUpdate(MessageDTOToMessage(message));
+            ConversationRepository.HandleMessageUpdate(MessageDTOToMessage(message));
         }
 
         /// <summary>
-        /// Sends a read receipt by creating a new ReadReceipt object and passing it to the repository's HandleReadReceipt method, 
+        /// Sends a read receipt by creating a new ReadReceipt object and passing it to the repository's HandleReadReceipt method,
         /// which will update the conversation's last read timestamp for the user and push the update to the other participant.
         /// </summary>
         /// <param name="conversation"></param>
         public void SendReadReceipt(ConversationDTO conversation)
         {
-            _conversationRepository.HandleReadReceipt(new ReadReceipt
-            (
+            ConversationRepository.HandleReadReceipt(new ReadReceipt(
                 conversation.Id,
-                _userId,
-                conversation.Participants.First(p => p != _userId),
-                DateTime.Now
-            ));
+                UserId,
+                conversation.Participants.First(p => p != UserId),
+                DateTime.Now));
         }
 
         /// <summary>
-        /// Handles the selection of the card payment option for a rental request by finalizing the rental request in the 
+        /// Handles the selection of the card payment option for a rental request by finalizing the rental request in the
         /// repository, which will update the corresponding RentalRequestMessage and push the update to the other participant.
         /// </summary>
         /// <param name="messageId"></param>
@@ -125,7 +119,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// <param name="paymentId"></param>
         public void OnCashPaymentSelected(int messageId, int paymentId)
         {
-            FinalizeRentalRequest(messageId); 
+            FinalizeRentalRequest(messageId);
             SendCashAgreementMessage(messageId, paymentId);
         }
 
@@ -136,23 +130,23 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// <param name="messageId"></param>
         private void FinalizeRentalRequest(int messageId)
         {
-            _conversationRepository.HandleRentalRequestFinalization(messageId);
+            ConversationRepository.HandleRentalRequestFinalization(messageId);
         }
 
         /// <summary>
-        /// Helper method to send a cash agreement message by calling the repository's CreateCashAgreementMessage method, 
-        /// which will create a new CashAgreementMessage linked to the original RentalRequestMessage and push it to the other 
+        /// Helper method to send a cash agreement message by calling the repository's CreateCashAgreementMessage method,
+        /// which will create a new CashAgreementMessage linked to the original RentalRequestMessage and push it to the other
         /// participant.
         /// </summary>
         /// <param name="messageIdOfParentRentalRequestMessage"></param>
         /// <param name="paymentId"></param>
         private void SendCashAgreementMessage(int messageIdOfParentRentalRequestMessage, int paymentId)
         {
-            _conversationRepository.CreateCashAgreementMessage(messageIdOfParentRentalRequestMessage, paymentId);
+            ConversationRepository.CreateCashAgreementMessage(messageIdOfParentRentalRequestMessage, paymentId);
         }
 
         /// <summary>
-        /// Callback method invoked by the repository when a new message is 
+        /// Callback method invoked by the repository when a new message is
         /// received for this user. Translates the Message to a MessageDTO,
         /// </summary>
         /// <param name="message"></param>
@@ -164,7 +158,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         }
 
         /// <summary>
-        /// Callback method invoked by the repository when a new conversation is created for this user. 
+        /// Callback method invoked by the repository when a new conversation is created for this user.
         /// Translates the Conversation to a ConversationDTO,
         /// </summary>
         /// <param name="conversation"></param>
@@ -186,7 +180,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         }
 
         /// <summary>
-        /// Callback method invoked by the repository when a message update is received for this user 
+        /// Callback method invoked by the repository when a message update is received for this user
         /// (e.g. rental request finalization, cash agreement acceptance).
         /// </summary>
         /// <param name="message"></param>
@@ -194,67 +188,62 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         {
             MessageDTO messageDTO = MessageToMessageDTO(message);
             string userName = GetOtherUserNameByMessageDTO(messageDTO);
-            MessageUpdateProcessed?.Invoke(messageDTO,userName);
+            MessageUpdateProcessed?.Invoke(messageDTO, userName);
         }
 
         #region domain-to-dto translations
 
         /// <summary>
-        /// Helper method to translate a Message object to a MessageDTO. 
-        /// Uses pattern matching to determine the specific type of the 
+        /// Helper method to translate a Message object to a MessageDTO.
+        /// Uses pattern matching to determine the specific type of the
         /// message and populate the relevant fields in the DTO accordingly.
         /// </summary>
         /// <param name="messageDto"></param>
         /// <returns></returns>
         public Message MessageDTOToMessage(MessageDTO messageDto)
         {
-            Message toReturn = messageDto.Type switch
+            Message toReturn = messageDto.type switch
             {
                 MessageType.Text => new TextMessage(
-                    id: messageDto.Id,
-                    conversationId: messageDto.ConversationId,
-                    senderId: messageDto.SenderId,
-                    receiverId: messageDto.ReceiverId,
-                    sentAt: messageDto.SentAt,
-                    content: messageDto.Content
-                ),
+                    id: messageDto.id,
+                    conversationId: messageDto.conversationId,
+                    senderId: messageDto.senderId,
+                    receiverId: messageDto.receiverId,
+                    sentAt: messageDto.sentAt,
+                    content: messageDto.content),
                 MessageType.Image => new ImageMessage(
-                    id: messageDto.Id,
-                    conversationId: messageDto.ConversationId,
-                    senderId: messageDto.SenderId,
-                    receiverId: messageDto.ReceiverId,
-                    sentAt: messageDto.SentAt,
-                    imageUrl: messageDto.ImageUrl
-                ),
+                    id: messageDto.id,
+                    conversationId: messageDto.conversationId,
+                    senderId: messageDto.senderId,
+                    receiverId: messageDto.receiverId,
+                    sentAt: messageDto.sentAt,
+                    imageUrl: messageDto.imageUrl),
                 MessageType.RentalRequest => new RentalRequestMessage(
-                    id: messageDto.Id,
-                    conversationId: messageDto.ConversationId,
-                    senderId: messageDto.SenderId,
-                    receiverId: messageDto.ReceiverId,
-                    sentAt: messageDto.SentAt,
-                    content: messageDto.Content,
-                    requestId: messageDto.RequestId,
-                    isResolved: messageDto.IsResolved,
-                    isAccepted: messageDto.IsAccepted
-                ),
+                    id: messageDto.id,
+                    conversationId: messageDto.conversationId,
+                    senderId: messageDto.senderId,
+                    receiverId: messageDto.receiverId,
+                    sentAt: messageDto.sentAt,
+                    content: messageDto.content,
+                    requestId: messageDto.requestId,
+                    isResolved: messageDto.isResolved,
+                    isAccepted: messageDto.isAccepted),
                 MessageType.CashAgreement => new CashAgreementMessage(
-                    id: messageDto.Id,
-                    conversationId: messageDto.ConversationId,
-                    sellerId: messageDto.SenderId,
-                    buyerId: messageDto.ReceiverId,
-                    paymentId: messageDto.PaymentId,
-                    sentAt: messageDto.SentAt,
-                    content: messageDto.Content,
-                    isResolved: messageDto.IsResolved,
-                    isAcceptedByBuyer: messageDto.IsAcceptedByBuyer,
-                    isAcceptedBySeller: messageDto.IsAcceptedBySeller
-                ),
+                    id: messageDto.id,
+                    conversationId: messageDto.conversationId,
+                    sellerId: messageDto.senderId,
+                    buyerId: messageDto.receiverId,
+                    paymentId: messageDto.paymentId,
+                    sentAt: messageDto.sentAt,
+                    content: messageDto.content,
+                    isResolved: messageDto.isResolved,
+                    isAcceptedByBuyer: messageDto.isAcceptedByBuyer,
+                    isAcceptedBySeller: messageDto.isAcceptedBySeller),
                 MessageType.System => new SystemMessage(
-                    id: messageDto.Id,
-                    conversationId: messageDto.ConversationId,
-                    sentAt: messageDto.SentAt,
-                    content: messageDto.Content
-                ),
+                    id: messageDto.id,
+                    conversationId: messageDto.conversationId,
+                    sentAt: messageDto.sentAt,
+                    content: messageDto.content),
             };
             return toReturn;
         }
@@ -264,31 +253,30 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public MessageDTO MessageToMessageDTO(Message message) 
+        public MessageDTO MessageToMessageDTO(Message message)
         {
             MessageDTO toReturn = new MessageDTO(
-                Id: message.Id,
-                ConversationId: message.ConversationId,
-                SenderId: message.SenderId,
-                ReceiverId: message.ReceiverId,
-                SentAt: message.SentAt,
-                Content: message.ContentAsString,
-                Type: message.Type,
-                ImageUrl: message is ImageMessage img ? img.ImageUrl : "",
-                IsResolved: message is RentalRequestMessage brm ? brm.IsResolved
+                id: message.Id,
+                conversationId: message.ConversationId,
+                senderId: message.SenderId,
+                receiverId: message.ReceiverId,
+                sentAt: message.SentAt,
+                content: message.ContentAsString,
+                type: message.Type,
+                imageUrl: message is ImageMessage img ? img.ImageUrl : string.Empty,
+                isResolved: message is RentalRequestMessage brm ? brm.IsResolved
                           : message is CashAgreementMessage cam ? cam.IsResolved
                           : false,
-                IsAccepted: message is RentalRequestMessage brm2 ? brm2.IsAccepted : false,
-                IsAcceptedByBuyer: message is CashAgreementMessage cam3 ? cam3.IsAcceptedByBuyer : false,
-                IsAcceptedBySeller: message is CashAgreementMessage cam4 ? cam4.IsAcceptedBySeller : false,
-                PaymentId: message is CashAgreementMessage cam5 ? cam5.PaymentId : -1,
-                RequestId: message is RentalRequestMessage brm3 ? brm3.RequestId : -1
-            );
+                isAccepted: message is RentalRequestMessage brm2 ? brm2.IsAccepted : false,
+                isAcceptedByBuyer: message is CashAgreementMessage cam3 ? cam3.IsAcceptedByBuyer : false,
+                isAcceptedBySeller: message is CashAgreementMessage cam4 ? cam4.IsAcceptedBySeller : false,
+                paymentId: message is CashAgreementMessage cam5 ? cam5.PaymentId : -1,
+                requestId: message is RentalRequestMessage brm3 ? brm3.RequestId : -1);
             return toReturn;
         }
 
         /// <summary>
-        /// Helper method to translate a Conversation object to a ConversationDTO. 
+        /// Helper method to translate a Conversation object to a ConversationDTO.
         /// Translates the list of Message objects in the conversation
         /// </summary>
         /// <param name="conversation"></param>
@@ -300,8 +288,7 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
                 convId: conversation.Id,
                 participants: conversation.ParticipantIds,
                 messages: messageDTOs,
-                lastRead: conversation.LastRead
-            );
+                lastRead: conversation.LastRead);
         }
 
         /// <summary>
@@ -312,11 +299,10 @@ namespace BookingBoardgamesILoveBan.src.Chat.Service
         public ReadReceiptDTO ReadReceiptToReadReceiptDTO(ReadReceipt readReceipt)
         {
             return new ReadReceiptDTO(
-                readReceipt.ConversationId,
-                readReceipt.ReaderId,
-                readReceipt.ReceiverId,
-                readReceipt.TimeStamp
-            );
+                readReceipt.conversationId,
+                readReceipt.readerId,
+                readReceipt.receiverId,
+                readReceipt.timeStamp);
         }
         #endregion
     }

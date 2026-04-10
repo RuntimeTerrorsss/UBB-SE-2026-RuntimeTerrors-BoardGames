@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.src.Delivery.Model.Validators
+namespace BookingBoardgamesILoveBan.Src.Delivery.Model.Validators
 {
-
     public class AddressValidator : IValidator<Dictionary<string, string>, Address>
     {
         public Dictionary<string, string> Validate(Address address)

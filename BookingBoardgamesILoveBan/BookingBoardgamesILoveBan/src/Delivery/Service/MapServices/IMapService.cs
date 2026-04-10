@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.src.Delivery.Model;
+using BookingBoardgamesILoveBan.Src.Delivery.Model;
 
-namespace BookingBoardgamesILoveBan.src.Delivery.Service.MapServices
+namespace BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices
 {
     public interface IMapService
     {

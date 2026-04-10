@@ -1,38 +1,37 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCard.Navigation;
-using BookingBoardgamesILoveBan.src.PaymentCard.View;
-using BookingBoardgamesILoveBan.src.Chat.Service;
-using BookingBoardgamesILoveBan.src.Delivery.Model.Validators;
-using BookingBoardgamesILoveBan.src.Delivery.Service.MapServices;
-using BookingBoardgamesILoveBan.src.Delivery.ViewModel;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
+﻿using System;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.Src.Delivery.Model.Validators;
+using BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices;
+using BookingBoardgamesILoveBan.Src.Delivery.ViewModel;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.PaymentCard.Navigation;
+using BookingBoardgamesILoveBan.Src.PaymentCard.View;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
-using System;
-using System.Diagnostics;
-using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.src.Interface.View
+namespace BookingBoardgamesILoveBan.Src.Delivery.View
 {
     public sealed partial class DeliveryView : Page
     {
-        private DeliveryViewModel DeliveryViewModel;
+        private DeliveryViewModel deliveryViewModel;
 
-        private double PendingLatitude;
-        private double PendingLongitude;
+        private double pendingLatitude;
+        private double pendingLongitude;
 
-        private int _currentUserId;
-        private int _requestId;
-        private int _incomingMessageId;
-        private ConversationService _conversationService;
-        private Window _currentWindow;
+        private int currentUserId;
+        private int requestId;
+        private int incomingMessageId;
+        private ConversationService conversationService;
+        private Window currentWindow;
 
         public DeliveryView()
         {
             InitializeComponent();
-
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs navigationEvent)
@@ -40,52 +39,54 @@ namespace BookingBoardgamesILoveBan.src.Interface.View
             base.OnNavigatedTo(navigationEvent);
 
             var args = ((int userId, int requestId, int messageId, ConversationService conversationService, Window window))navigationEvent.Parameter;
-            _currentUserId = args.userId;
-            _requestId = args.requestId;
-            _incomingMessageId = args.messageId;
-            _conversationService = args.conversationService;
-            _currentWindow = args.window;
+            currentUserId = args.userId;
+            requestId = args.requestId;
+            incomingMessageId = args.messageId;
+            conversationService = args.conversationService;
+            currentWindow = args.window;
 
-            DeliveryViewModel = new DeliveryViewModel(
-                _currentUserId,
+            deliveryViewModel = new DeliveryViewModel(
+                currentUserId,
                 App.MapService,
                 App.UserService,
-                new AddressValidator()
-            );
+                new AddressValidator());
 
-            DeliveryViewModel.OnNavigateToPayment = () =>
+            deliveryViewModel.OnNavigateToPayment = () =>
             {
                 var bookingArgs = new BookingNavigationArguments
                 {
-                    RequestId = _requestId,
-                    DeliveryAddress = DeliveryViewModel.CurrentAddress.ToString(),
-                    BookingMessageId = _incomingMessageId,
-                    ConversationService = _conversationService,
-                    CurrentWindow = _currentWindow
+                    RequestId = requestId,
+                    DeliveryAddress = deliveryViewModel.CurrentAddress.ToString(),
+                    BookingMessageId = incomingMessageId,
+                    ConversationService = conversationService,
+                    CurrentWindow = currentWindow
                 };
-                //Debug.WriteLine(_conversationService.UserId);
+                // Debug.WriteLine(_conversationService.UserId);
                 if (CashPaymentRadio.IsChecked == true)
+                {
                     Frame.Navigate(typeof(PaymentCash.View.CashPaymentPage), bookingArgs);
+                }
                 else
+                {
                     Frame.Navigate(typeof(CardPaymentPage), bookingArgs);
+                }
             };
 
-            DeliveryViewModel.StateChanged += RefreshUi;
-            DeliveryViewModel.Initialize(_currentUserId);
+            deliveryViewModel.StateChanged += RefreshUi;
+            deliveryViewModel.Initialize(currentUserId);
             RefreshUi();
         }
-
 
         private void RefreshUi()
         {
             // Sync all text fields from CurrentAddress (also handles map auto-fill)
-            CountryInput.Text = DeliveryViewModel.CurrentAddress.Country;
-            CityInput.Text = DeliveryViewModel.CurrentAddress.City;
-            StreetInput.Text = DeliveryViewModel.CurrentAddress.Street;
-            StreetNumberInput.Text = DeliveryViewModel.CurrentAddress.StreetNumber;
+            CountryInput.Text = deliveryViewModel.CurrentAddress.Country;
+            CityInput.Text = deliveryViewModel.CurrentAddress.City;
+            StreetInput.Text = deliveryViewModel.CurrentAddress.Street;
+            StreetNumberInput.Text = deliveryViewModel.CurrentAddress.StreetNumber;
 
             // Show/hide the map overlay
-            MapOverlay.Visibility = DeliveryViewModel.IsMapVisible
+            MapOverlay.Visibility = deliveryViewModel.IsMapVisible
                 ? Visibility.Visible
                 : Visibility.Collapsed;
 
@@ -98,7 +99,7 @@ namespace BookingBoardgamesILoveBan.src.Interface.View
 
         private void ShowFieldError(TextBox input, TextBlock errorBlock, string fieldName)
         {
-            if (DeliveryViewModel.ValidationErrors.TryGetValue(fieldName, out string? message))
+            if (deliveryViewModel.ValidationErrors.TryGetValue(fieldName, out string? message))
             {
                 errorBlock.Text = message;
                 errorBlock.Visibility = Visibility.Visible;
@@ -111,49 +112,47 @@ namespace BookingBoardgamesILoveBan.src.Interface.View
             }
         }
 
-
         private void OnFieldChanged(object sender, TextChangedEventArgs e)
         {
             if (sender is TextBox tb && tb.Tag is string fieldName)
-                DeliveryViewModel.OnFieldChange(fieldName, tb.Text);
+            {
+                deliveryViewModel.OnFieldChange(fieldName, tb.Text);
+            }
         }
 
         private void OnSaveAddressChecked(object sender, RoutedEventArgs e)
-            => DeliveryViewModel.IsSaveAddress = true;
+            => deliveryViewModel.IsSaveAddress = true;
 
         private void OnSaveAddressUnchecked(object sender, RoutedEventArgs e)
-            => DeliveryViewModel.IsSaveAddress = false;
+            => deliveryViewModel.IsSaveAddress = false;
 
         private void OnOpenMapClicked(object sender, RoutedEventArgs e)
             => _ = InitializeMapAsync();
 
         private void OnCloseMapClicked(object sender, RoutedEventArgs e)
-            => DeliveryViewModel.CloseMap();
+            => deliveryViewModel.CloseMap();
 
         private void OnSubmitClicked(object sender, RoutedEventArgs e)
-            => DeliveryViewModel.SubmitDelivery();
+            => deliveryViewModel.SubmitDelivery();
 
         private async void OnConfirmLocationClicked(object sender, RoutedEventArgs e)
-            => await DeliveryViewModel.ConfirmMapLocationAsync(PendingLatitude, PendingLongitude);
-
+            => await deliveryViewModel.ConfirmMapLocationAsync(pendingLatitude, pendingLongitude);
 
         private async Task InitializeMapAsync()
         {
-            DeliveryViewModel.OpenMap();
-
+            deliveryViewModel.OpenMap();
             await MapWebView.EnsureCoreWebView2Async();
 
-            
             MapWebView.CoreWebView2.Settings.UserAgent = "BookingBoardgamesApp/1.0 (Contact: your.email@gmail.com)";
             MapWebView.CoreWebView2.WebMessageReceived -= OnMapMessageReceived;
             MapWebView.CoreWebView2.WebMessageReceived += OnMapMessageReceived;
 
-            ///VERY
-            ///VERY
-            ///IMPORTANT
+            /// VERY
+            /// VERY
+            /// IMPORTANT
             /// GO to your device settings to Time and Language
             /// Select Region
-            /// Select region format 
+            /// Select region format
             /// Change to English US
             MapWebView.CoreWebView2.NavigateToString("""
                 <!DOCTYPE html>
@@ -193,10 +192,10 @@ namespace BookingBoardgamesILoveBan.src.Interface.View
 
                 using JsonDocument doc = JsonDocument.Parse(rawMessage);
 
-                PendingLatitude = doc.RootElement.GetProperty("lat").GetDouble();
-                PendingLongitude = doc.RootElement.GetProperty("lng").GetDouble();
+                pendingLatitude = doc.RootElement.GetProperty("lat").GetDouble();
+                pendingLongitude = doc.RootElement.GetProperty("lng").GetDouble();
 
-                Debug.WriteLine($"MAP CLICK REGISTERED -> Lat: {PendingLatitude}, Lon: {PendingLongitude}");
+                Debug.WriteLine($"MAP CLICK REGISTERED -> Lat: {pendingLatitude}, Lon: {pendingLongitude}");
             }
             catch (Exception ex)
             {

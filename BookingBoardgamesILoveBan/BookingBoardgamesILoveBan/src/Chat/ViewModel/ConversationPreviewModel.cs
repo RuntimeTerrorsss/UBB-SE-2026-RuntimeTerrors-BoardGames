@@ -1,6 +1,6 @@
-﻿namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
+﻿namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 
-using BookingBoardgamesILoveBan.src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -15,40 +15,52 @@ public class ConversationPreviewModel : INotifyPropertyChanged
     public string Initials { get; init; }
     public string AvatarUrl { get; init; }
 
-    private string _lastMessageText;
+    private string lastMessageText;
     public string LastMessageText
     {
-        get => _lastMessageText;
-        set { _lastMessageText = value; OnPropertyChanged(); }
+        get => lastMessageText;
+        set
+        {
+            lastMessageText = value;
+            OnPropertyChanged();
+        }
     }
 
-    private DateTime _timestamp;
+    private DateTime timestamp;
     public DateTime Timestamp
     {
-        get => _timestamp;
-        set { _timestamp = value; OnPropertyChanged(); OnPropertyChanged(nameof(TimestampString)); }
+        get => timestamp;
+        set
+        {
+            timestamp = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(TimestampString));
+        }
     }
 
-    private int _unreadCount;
+    private int unreadCount;
     public int UnreadCount
     {
-        get => _unreadCount;
-        set { _unreadCount = value; OnPropertyChanged(); }
+        get => unreadCount;
+        set
+        {
+            unreadCount = value;
+            OnPropertyChanged();
+        }
     }
 
-    public string TimestampString => _timestamp.ToString("HH:mm");
-
+    public string TimestampString => timestamp.ToString("HH:mm");
 
     public ConversationPreviewModel(int conversationId, string displayName, string initials,
-        string lastMessageText, DateTime timestamp, int unreadCount, string avatarUrl)
+        string lastMessageTextInput, DateTime timestampInput, int unreadCountInput, string avatarUrl)
     {
         ConversationId = conversationId;
         DisplayName = displayName;
         Initials = initials;
         AvatarUrl = avatarUrl;
-        _lastMessageText = lastMessageText;
-        _timestamp = timestamp;
-        _unreadCount = unreadCount;
+        lastMessageText = lastMessageTextInput;
+        timestamp = timestampInput;
+        unreadCount = unreadCountInput;
     }
 
     protected void OnPropertyChanged([CallerMemberName] string name = null)

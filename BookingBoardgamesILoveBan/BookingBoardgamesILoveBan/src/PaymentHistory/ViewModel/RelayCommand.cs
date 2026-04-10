@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 {
     public class RelayCommand<T> : ICommand
     {
-        private readonly Action<T> _execute;
-        private readonly Predicate<T> _canExecute;
+        private readonly Action<T> executeAction;
+        private readonly Predicate<T> canExecutePredicate;
 
         public RelayCommand(Action<T> execute, Predicate<T> canExecute = null)
         {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
+            executeAction = execute ?? throw new ArgumentNullException(nameof(execute));
+            canExecutePredicate = canExecute;
         }
 
-        public bool CanExecute(object parameter) => _canExecute == null || _canExecute((T)parameter);
+        public bool CanExecute(object parameter) => canExecutePredicate == null || canExecutePredicate((T)parameter);
 
-        public void Execute(object parameter) => _execute((T)parameter);
+        public void Execute(object parameter) => executeAction((T)parameter);
 
         public event EventHandler CanExecuteChanged;
         public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
@@ -24,18 +24,18 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel
 
     public class RelayCommandNoParam : ICommand
     {
-        private readonly Action _execute;
-        private readonly Func<bool> _canExecute;
+        private readonly Action executeAct;
+        private readonly Func<bool> canExecuteFunc;
 
         public RelayCommandNoParam(Action execute, Func<bool> canExecute = null)
         {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
+            executeAct = execute ?? throw new ArgumentNullException(nameof(execute));
+            canExecuteFunc = canExecute;
         }
 
-        public bool CanExecute(object parameter) => _canExecute == null || _canExecute();
+        public bool CanExecute(object parameter) => canExecuteFunc == null || canExecuteFunc();
 
-        public void Execute(object parameter) => _execute();
+        public void Execute(object parameter) => executeAct();
 
         public event EventHandler CanExecuteChanged;
         public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);

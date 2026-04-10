@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using Microsoft.Data.SqlClient;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
+namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
 {
 	public class PaymentRepository : IPaymentRepository
 	{
-		
-        private static string _connectionString = DatabaseBootstrap.GetAppConnection();
+        private static string connectionString = DatabaseBootstrap.GetAppConnection();
 
         public IReadOnlyList<Model.Payment> GetAll()
         {
             var transactions = new List<Model.Payment>();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var cmd = new SqlCommand("SELECT * FROM [Payment]", connection);
@@ -24,7 +23,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
                 {
                     transactions.Add(new Payment
                     {
-                        tid = (int)reader["tid"],
+                        Tid = (int)reader["tid"],
                         RequestId = (int)reader["RequestId"],
                         ClientId = (int)reader["ClientId"],
                         OwnerId = (int)reader["OwnerId"],
@@ -39,17 +38,20 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
 
         public Model.Payment GetById(int tid)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var getCommand = connection.CreateCommand();
                 getCommand.CommandText = "SELECT * FROM [Payment] WHERE tid = @Tid";
                 getCommand.Parameters.AddWithValue("@Tid", tid);
                 using var reader = getCommand.ExecuteReader();
-                if (!reader.Read()) return null;
+                if (!reader.Read())
+                {
+                    return null;
+                }
                 return new Model.Payment
                 {
-                    tid = (int)reader["tid"],
+                    Tid = (int)reader["tid"],
                     RequestId = (int)reader["RequestId"],
                     ClientId = (int)reader["ClientId"],
                     OwnerId = (int)reader["OwnerId"],
@@ -68,7 +70,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
 
         public int AddPayment(Model.Payment transaction)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var createCommand = connection.CreateCommand();
@@ -87,31 +89,30 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
                 createCommand.Parameters.AddWithValue("@State", transaction.State);
                 createCommand.Parameters.AddWithValue("@DateOfTransaction",
                     (object?)transaction.DateOfTransaction ?? DateTime.Now);
-				createCommand.Parameters.AddWithValue("@DateConfirmedBuyer", 
+				createCommand.Parameters.AddWithValue("@DateConfirmedBuyer",
                     (object?)transaction.DateConfirmedBuyer ?? DBNull.Value);
-				createCommand.Parameters.AddWithValue("@DateConfirmedSeller", 
+				createCommand.Parameters.AddWithValue("@DateConfirmedSeller",
                     (object?)transaction.DateConfirmedSeller ?? DBNull.Value);
 				createCommand.Parameters.AddWithValue("@FilePath",
-                    (object?)transaction.FilePath ?? "");
+                    (object?)transaction.FilePath ?? string.Empty);
                 var result = createCommand.ExecuteScalar();
                 return (int)result;
             }
         }
         public bool DeletePayment(Model.Payment transaction)
         {
-
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var cmd = new SqlCommand("DELETE FROM [Payment] WHERE tid = @Tid", connection);
-                cmd.Parameters.AddWithValue("@Tid", transaction.tid);
+                cmd.Parameters.AddWithValue("@Tid", transaction.Tid);
                 int rowsAffected = cmd.ExecuteNonQuery();
                 return rowsAffected > 0;
             }
         }
         public Model.Payment UpdatePayment(Model.Payment transaction)
         {
-            Model.Payment oldTransaction = GetById(transaction.tid);
+            Model.Payment oldTransaction = GetById(transaction.Tid);
 
             using (var connection = new SqlConnection(DatabaseBootstrap.GetAppConnection()))
             {
@@ -122,20 +123,18 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
                         WHERE tid = @Tid", connection);
 
                 cmd.Parameters.AddWithValue("@FilePath",
-                    (object?)transaction.FilePath ?? "");
+                    (object?)transaction.FilePath ?? string.Empty);
                 cmd.Parameters.AddWithValue("@DateOfTransaction",
                     (object?)transaction.DateOfTransaction ?? DateTime.Now);
                 cmd.Parameters.AddWithValue("@DateConfirmedBuyer",
                     (object?)transaction.DateConfirmedBuyer ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@DateConfirmedSeller",
                     (object?)transaction.DateConfirmedSeller ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Tid", transaction.tid);
+                cmd.Parameters.AddWithValue("@Tid", transaction.Tid);
                 cmd.ExecuteNonQuery();
             }
 
             return oldTransaction;
         }
     }
-
-    
 }

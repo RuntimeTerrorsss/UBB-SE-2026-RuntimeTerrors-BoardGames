@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCard.Converters
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.Converters
 {
     /// <summary>
-    /// Converter from bool to visibility 
+    /// Converter from bool to visibility
     /// If a certain property is false, then an UI object won't be shown on screen
     /// </summary>
     public class BoolToVisibilityConverter : IValueConverter
@@ -20,5 +20,4 @@ namespace BookingBoardgamesILoveBan.src.PaymentCard.Converters
         public object ConvertBack(object value, Type targetType, object parameter, string language)
             => value is Visibility v && v == Visibility.Visible;
     }
-    
 }

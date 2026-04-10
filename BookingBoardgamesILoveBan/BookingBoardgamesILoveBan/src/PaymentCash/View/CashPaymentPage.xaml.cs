@@ -1,16 +1,16 @@
-using BookingBoardgamesILoveBan.src.PaymentCard.Navigation;
-using BookingBoardgamesILoveBan.src.Chat.View;
-using BookingBoardgamesILoveBan.src.PaymentCash.ViewModel;
+using BookingBoardgamesILoveBan.Src.PaymentCard.Navigation;
+using BookingBoardgamesILoveBan.Src.Chat.View;
+using BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCash.View
+namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
 {
     public sealed partial class CashPaymentPage : Page
     {
         public CashPaymentViewModel ViewModel { get; set; }
-        private Window _currentWindow;
+        private Window currentWindow;
 
         public CashPaymentPage()
         {
@@ -31,16 +31,15 @@ namespace BookingBoardgamesILoveBan.src.PaymentCash.View
                     booking.RequestId,
                     booking.DeliveryAddress,
                     booking.BookingMessageId,
-                    booking.ConversationService
-                );
+                    booking.ConversationService);
 
                 DataContext = ViewModel;
-                _currentWindow = booking.CurrentWindow;
+                currentWindow = booking.CurrentWindow;
             }
         }
         private void NavigateToChatButton_Click(object sender, RoutedEventArgs e)
         {
-            _currentWindow.Close();
+            currentWindow.Close();
             /*
             if (Frame.CanGoBack)
             {

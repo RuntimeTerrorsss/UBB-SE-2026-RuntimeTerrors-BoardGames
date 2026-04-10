@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
-using BookingBoardgamesILoveBan.src.PaymentHistory.ViewModel;
-using BookingBoardgamesILoveBan.src.PaymentHistory.DTO;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.View
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.View
 {
     public sealed partial class PaymentHistoryView : Page
     {
@@ -49,7 +49,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.View
             }
             if (parent is Frame frame)
             {
-                frame.Navigate(typeof(BookingBoardgamesILoveBan.src.View.DashboardView));
+                frame.Navigate(typeof(BookingBoardgamesILoveBan.Src.View.DashboardView));
             }
         }
     }

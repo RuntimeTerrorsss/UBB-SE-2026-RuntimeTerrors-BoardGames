@@ -1,13 +1,13 @@
-﻿using BookingBoardgamesILoveBan.src.Delivery.Model;
-using BookingBoardgamesILoveBan.src.Delivery.Model.Validators;
-using BookingBoardgamesILoveBan.src.Delivery.Service.MapServices;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.Delivery.Model;
+using BookingBoardgamesILoveBan.Src.Delivery.Model.Validators;
+using BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 
-namespace BookingBoardgamesILoveBan.src.Delivery.ViewModel
+namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
 {
     public class DeliveryViewModel
     {
@@ -20,7 +20,7 @@ namespace BookingBoardgamesILoveBan.src.Delivery.ViewModel
         public bool IsSaveAddress { get; set; } = false;
         public Dictionary<string, string> ValidationErrors { get; set; } = new Dictionary<string, string>();
         public User? CurrentUser { get; set; }
-        public int CurrentId { get; set; } = 1; 
+        public int CurrentId { get; set; } = 1;
         public Action? OnNavigateToPayment { get; set; }
 
         public event Action? StateChanged;
@@ -36,7 +36,6 @@ namespace BookingBoardgamesILoveBan.src.Delivery.ViewModel
             Validator = validator;
             CurrentId = currentUserId;
             CurrentUser = UserService.GetById(currentUserId);
-           
             CurrentAddress = CurrentUser != null ? new Address(CurrentUser.Country, CurrentUser.City, CurrentUser.Street, CurrentUser.StreetNumber) : new Address();
         }
         public void Initialize(int userId)
@@ -51,8 +50,7 @@ namespace BookingBoardgamesILoveBan.src.Delivery.ViewModel
                     CurrentUser.Country,
                     CurrentUser.City,
                     CurrentUser.Street,
-                    CurrentUser.StreetNumber
-                );
+                    CurrentUser.StreetNumber);
             }
         }
 
@@ -60,7 +58,9 @@ namespace BookingBoardgamesILoveBan.src.Delivery.ViewModel
         {
             typeof(Address).GetProperty(fieldName)?.SetValue(CurrentAddress, newValue);
             if (ValidationErrors.Remove(fieldName))
+            {
                 StateChanged?.Invoke();
+            }
         }
 
         /// <summary>Show the map overlay.</summary>
@@ -103,7 +103,9 @@ namespace BookingBoardgamesILoveBan.src.Delivery.ViewModel
             if (ValidationErrors.Count == 0)
             {
                 if (IsSaveAddress && CurrentUser is not null)
+                {
                     UserService.SaveAddress(CurrentUser.Id, CurrentAddress);
+                }
 
                 OnNavigateToPayment?.Invoke();
             }

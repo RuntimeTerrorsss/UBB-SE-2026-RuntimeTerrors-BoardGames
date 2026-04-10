@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -13,15 +13,16 @@
     <Nullable>enable</Nullable>
 	 <AppxPackage>false</AppxPackage>
 	 <WindowsPackageType>None</WindowsPackageType>
-  
+    <CodeAnalysisRuleSet>SE.ruleset</CodeAnalysisRuleSet>
 </PropertyGroup>
+			   
   <ItemGroup>
     <None Remove="Images\hamster.jpg" />
-    <None Remove="src\Chat\View\ChatPageView.xaml" />
-    <None Remove="src\Chat\View\ConversationItemView.xaml" />
-    <None Remove="src\Chat\View\LeftPanelView.xaml" />
-    <None Remove="src\Chat\View\MessageItemView.xaml" />
-    <None Remove="src\Chat\View\RightPanelView.xaml" />
+    <None Remove="Src\Chat\View\ChatPageView.xaml" />
+    <None Remove="Src\Chat\View\ConversationItemView.xaml" />
+    <None Remove="Src\Chat\View\LeftPanelView.xaml" />
+    <None Remove="Src\Chat\View\MessageItemView.xaml" />
+    <None Remove="Src\Chat\View\RightPanelView.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,6 +55,10 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260317003" />
     <PackageReference Include="PdfSharpCore" Version="1.3.67" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Page Update="src\PaymentCard\View\DashboardPage.xaml">
@@ -61,32 +66,32 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="src\Chat\View\MessageItemView.xaml">
+    <Page Update="Src\Chat\View\MessageItemView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="src\Chat\View\ChatView.xaml">
+    <Page Update="Src\Chat\View\ChatView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="src\Chat\View\RightPanelView.xaml">
+    <Page Update="Src\Chat\View\RightPanelView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="src\Chat\View\ConversationItemView.xaml">
+    <Page Update="Src\Chat\View\ConversationItemView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="src\Chat\View\LeftPanelView.xaml">
+    <Page Update="Src\Chat\View\LeftPanelView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="src\Chat\View\ChatPageView.xaml">
+    <Page Update="Src\Chat\View\ChatPageView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -115,16 +120,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="src\Chat\Interface\**" />
-    <EmbeddedResource Remove="src\Chat\Interface\**" />
-    <None Remove="src\Chat\Interface\**" />
-    <Page Remove="src\Chat\Interface\**" />
+    <Compile Remove="Src\Chat\Interface\**" />
+    <EmbeddedResource Remove="Src\Chat\Interface\**" />
+    <None Remove="Src\Chat\Interface\**" />
+    <Page Remove="Src\Chat\Interface\**" />
   </ItemGroup>
 
-  <ItemGroup><Page Update="src\View\DashboardView.xaml"><Generator>MSBuild:Compile</Generator></Page></ItemGroup>
+  <ItemGroup><Page Update="Src\View\DashboardView.xaml"><Generator>MSBuild:Compile</Generator></Page></ItemGroup>
 
   <ItemGroup>
-    <PRIResource Remove="src\Chat\Interface\**" />
+    <PRIResource Remove="Src\Chat\Interface\**" />
   </ItemGroup>
 </Project>
 

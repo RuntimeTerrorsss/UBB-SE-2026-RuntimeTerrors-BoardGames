@@ -1,7 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 
-namespace BookingBoardgamesILoveBan.src.Interface.View
+namespace BookingBoardgamesILoveBan.Src.Interface.View
 {
     // partial is required — WinUI 3 mandates it for any class implementing a WinRT interface
     public sealed partial class BoolToVisibilityConverter : IValueConverter

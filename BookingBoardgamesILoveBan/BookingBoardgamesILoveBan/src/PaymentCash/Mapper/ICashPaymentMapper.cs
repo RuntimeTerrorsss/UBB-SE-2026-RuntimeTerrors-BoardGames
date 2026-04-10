@@ -1,12 +1,11 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
-using BookingBoardgamesILoveBan.src.PaymentCash.Model;
+﻿using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
 
-
-namespace BookingBoardgamesILoveBan.src.PaymentCash.Mapper
+namespace BookingBoardgamesILoveBan.Src.PaymentCash.Mapper
 {
 	public interface ICashPaymentMapper
 	{
-		public PaymentCommon.Model.Payment toEntity(CashPaymentDto paymentDto);
-		public CashPaymentDto toDto(PaymentCommon.Model.Payment payment);
+		public PaymentCommon.Model.Payment ToEntity(CashPaymentDto paymentDto);
+		public CashPaymentDto ToDto(PaymentCommon.Model.Payment payment);
 	}
 }

@@ -11,16 +11,15 @@ using Windows.Media.Streaming.Adaptive;
 
 public static class DatabaseBootstrap
 {
+    private static string masterConnection;
+    private static string appConnection;
+    private static string databaseName;
 
-    private static string _masterConnection;
-    private static string _appConnection;
-    private static string _databaseName;
-
-    public static string GetAppConnection() => _appConnection;
+    public static string GetAppConnection() => appConnection;
 
     public static string GetProjectRoot()
     {
-        //FIXME - REGEX-like implementation that is slightly nicer but still iffy
+        // FIXME - REGEX-like implementation that is slightly nicer but still iffy
         string currentPath = AppContext.BaseDirectory;
         int binIndex = currentPath.IndexOf("\\bin\\", StringComparison.OrdinalIgnoreCase);
         if (binIndex != -1)
@@ -42,9 +41,9 @@ public static class DatabaseBootstrap
         using var document = JsonDocument.Parse(jsonContent);
         var rootElement = document.RootElement;
 
-        _masterConnection = rootElement.GetProperty("MasterConnection").GetString();
-        _appConnection = rootElement.GetProperty("AppConnection").GetString();
-        _databaseName = rootElement.GetProperty("DatabaseName").GetString();
+        masterConnection = rootElement.GetProperty("MasterConnection").GetString();
+        appConnection = rootElement.GetProperty("AppConnection").GetString();
+        databaseName = rootElement.GetProperty("DatabaseName").GetString();
     }
     public static string GetSchemaSql()
     {
@@ -71,21 +70,21 @@ public static class DatabaseBootstrap
         try
         {
             // Create Rental App Database if it does not exist
-            using (var connection = new SqlConnection(_masterConnection)) 
+            using (var connection = new SqlConnection(masterConnection))
             {
                 connection.Open();
                 var command = new SqlCommand($@"
-                    IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{_databaseName}')
-                    CREATE DATABASE [{_databaseName}];
+                    IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{databaseName}')
+                    CREATE DATABASE [{databaseName}];
                 ", connection);
                 command.ExecuteNonQuery();
                 connection.Close();
             }
 
             // Load database tables from SQL script (schema only)
-            // and Add System as User 0 
+            // and Add System as User 0
             string schemaSql = GetSchemaSql();
-            using (var connection = new SqlConnection(_appConnection))
+            using (var connection = new SqlConnection(appConnection))
             {
                 connection.Open();
                 var schemaCommand = new SqlCommand(schemaSql, connection);
@@ -94,9 +93,9 @@ public static class DatabaseBootstrap
                 System.Diagnostics.Debug.WriteLine("Database Schema applied successfully.");
             }
 
-            // add mock data 
+            // add mock data
             string mockData = GetMockData();
-            using (var connection = new SqlConnection(_appConnection))
+            using (var connection = new SqlConnection(appConnection))
             {
                 connection.Open();
                 var mockDataCommand = new SqlCommand(mockData, connection);

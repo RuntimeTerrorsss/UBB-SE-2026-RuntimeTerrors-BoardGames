@@ -1,22 +1,20 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCard.Service;
-using BookingBoardgamesILoveBan.src.Chat.Repository;
-using BookingBoardgamesILoveBan.src.Chat.Service;
-using BookingBoardgamesILoveBan.src.Delivery.Service.MapServices;
-using BookingBoardgamesILoveBan.src.Mocks.GameMock;
-using BookingBoardgamesILoveBan.src.Mocks.RequestMock;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
-using BookingBoardgamesILoveBan.src.PaymentCommon.Repository;
-using BookingBoardgamesILoveBan.src.PaymentCash.Mapper;
-using BookingBoardgamesILoveBan.src.PaymentCash.Service;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Repository;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Service;
-using BookingBoardgamesILoveBan.src.Receipt.Service;
+﻿using BookingBoardgamesILoveBan.Src.PaymentCard.Service;
+using BookingBoardgamesILoveBan.Src.Chat.Repository;
+using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices;
+using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
+using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Mapper;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Service;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
+using BookingBoardgamesILoveBan.Src.Receipt.Service;
 using Microsoft.UI.Xaml;
-
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace BookingBoardgamesILoveBan
 {
     /// <summary>
@@ -24,14 +22,14 @@ namespace BookingBoardgamesILoveBan
     /// </summary>
     public partial class App : Application
     {
-        private Window? _window;
+        private Window? window;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
-        /// 
-        public static src.Mocks.UserMock.UserService UserService { get; private set; } = new UserService();
+        ///
+        public static Src.Mocks.UserMock.UserService UserService { get; private set; } = new UserService();
 
         public static GameService GameService { get; private set; } = new GameService();
         public static RequestService RequestService { get; private set; } = new RequestService(App.GameService);
@@ -47,7 +45,7 @@ namespace BookingBoardgamesILoveBan
 
         public static ServicePayment ServicePayment { get; private set; } = new ServicePayment(App.HistoryRepository,
             App.ReceiptService);
-         
+
         public static CashPaymentService CashPaymentService { get; private set; } = new CashPaymentService(App.PaymentRepository,
             new CashPaymentMapper(), App.ReceiptService);
 
@@ -70,8 +68,8 @@ namespace BookingBoardgamesILoveBan
             // Make sure database is properly set up
             DatabaseBootstrap.Initialize();
 
-            _window = new MainWindow();
-            _window.Activate();
+            window = new MainWindow();
+            window.Activate();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.DTO
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.DTO
 {
     public class PaymentDto
     {

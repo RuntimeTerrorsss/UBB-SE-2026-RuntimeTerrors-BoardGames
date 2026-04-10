@@ -1,21 +1,20 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.Service;
-using BookingBoardgamesILoveBan.src.Mocks.GameMock;
-using BookingBoardgamesILoveBan.src.Mocks.RequestMock;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
-using BookingBoardgamesILoveBan.src.PaymentCash.Model;
-using BookingBoardgamesILoveBan.src.PaymentCash.Service;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
+using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Service;
 
-
-namespace BookingBoardgamesILoveBan.src.PaymentCash.ViewModel
+namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 {
 	public class CashPaymentViewModel
 	{
-		private ICashPaymentService _service;
-		private readonly UserService _userService;
-		private readonly RequestService _requestService;
-		private readonly GameService _gameService;
-		private readonly ConversationService _conversationService;
+		private ICashPaymentService service;
+		private readonly UserService userService;
+		private readonly RequestService requestService;
+		private readonly GameService gameService;
+		private readonly ConversationService conversationService;
 
 		public string OwnerName { get; set; }
 		public string GameName { get; set; }
@@ -23,40 +22,40 @@ namespace BookingBoardgamesILoveBan.src.PaymentCash.ViewModel
 		public string RequestDates { get; set; }
 		public string Amount { get; set; }
 
-		private int _rentalRequestMessageId;
+		private int rentalRequestMessageId;
 
 		public CashPaymentViewModel(
-			ICashPaymentService service, 
-			UserService userService, 
-			RequestService requestService, 
-			GameService gameService, 
+			ICashPaymentService service,
+			UserService userService,
+			RequestService requestService,
+			GameService gameService,
 			int requestId,
 			string deliveryAddress,
 			int messageId,
-			ConversationService conversationService
-		) {
-			this._service = service;
-			this._userService = userService;
-			this._requestService = requestService;
-			this._gameService = gameService;
-			this._conversationService = conversationService;
-			this._rentalRequestMessageId = messageId;
+			ConversationService conversationService)
+		{
+			this.service = service;
+			this.userService = userService;
+			this.requestService = requestService;
+			this.gameService = gameService;
+			this.conversationService = conversationService;
+			this.rentalRequestMessageId = messageId;
 
-			Request request = this._requestService.GetById(requestId);
-			Game game = this._gameService.GetById(request.GameId);
-			User client = this._userService.GetById(request.ClientId);
-			User owner = this._userService.GetById(request.OwnerId);
+			Request request = this.requestService.GetById(requestId);
+			Game game = this.gameService.GetById(request.GameId);
+			User client = this.userService.GetById(request.ClientId);
+			User owner = this.userService.GetById(request.OwnerId);
 
 			this.OwnerName = owner.Username;
 			this.GameName = game.Name;
 			this.DeliveryAddress = deliveryAddress;
 			this.RequestDates = request.StartDate.ToShortDateString() + " to " + request.EndDate.ToShortDateString();
 
-			decimal amount = this._requestService.GetRequestPrice(requestId);
+			decimal amount = this.requestService.GetRequestPrice(requestId);
 			this.Amount = amount.ToString();
 
-			int paymentId = this._service.AddCashPayment(new CashPaymentDto(-1, requestId, client.Id, owner.Id, amount));
-			this._conversationService.OnCashPaymentSelected(_rentalRequestMessageId, paymentId);
+			int paymentId = this.service.AddCashPayment(new CashPaymentDto(-1, requestId, client.Id, owner.Id, amount));
+			this.conversationService.OnCashPaymentSelected(rentalRequestMessageId, paymentId);
 		}
 	}
 }

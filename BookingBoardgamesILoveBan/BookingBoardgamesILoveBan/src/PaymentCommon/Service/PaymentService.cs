@@ -1,31 +1,32 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
-using BookingBoardgamesILoveBan.src.PaymentCommon.Repository;
-using BookingBoardgamesILoveBan.src.PaymentCash.Model;
-using BookingBoardgamesILoveBan.src.Receipt.Service;
+﻿using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
+using BookingBoardgamesILoveBan.Src.Receipt.Service;
 
-
-namespace BookingBoardgamesILoveBan.src.PaymentCommon.Service
+namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Service
 {
 	public abstract class PaymentService : IPaymentService
 	{
-		protected IPaymentRepository _paymentRepository;
-		protected IReceiptService _receiptService;
+		protected IPaymentRepository paymentRepository;
+		protected IReceiptService receiptService;
 
-		protected PaymentService(IPaymentRepository repository, IReceiptService receiptService) {
-			this._receiptService = receiptService;
-			this._paymentRepository = repository;
+		protected PaymentService(IPaymentRepository repository, IReceiptService receiptService)
+		{
+			this.receiptService = receiptService;
+			this.paymentRepository = repository;
 		}
 
 		/// <summary>
 		/// Set the receipt file path of a payment (when everything is confirmed).
 		/// </summary>
 		/// <param name="paymentId">of payment to set file path to</param>
-		public void GenerateReceipt(int paymentId) {
-            Model.Payment payment = this._paymentRepository.GetById(paymentId);
+		public void GenerateReceipt(int paymentId)
+		{
+            Model.Payment payment = this.paymentRepository.GetById(paymentId);
 
-			payment.FilePath = this._receiptService.GenerateReceiptRelativePath(payment.RequestId);
+			payment.FilePath = this.receiptService.GenerateReceiptRelativePath(payment.RequestId);
 
-			this._paymentRepository.UpdatePayment(payment);
+			this.paymentRepository.UpdatePayment(payment);
 		}
 
 		/// <summary>
@@ -33,16 +34,17 @@ namespace BookingBoardgamesILoveBan.src.PaymentCommon.Service
 		/// </summary>
 		/// <param name="paymentId">of payment to get pdf path</param>
 		/// <returns>full path to pdf</returns>
-		public string GetReceipt(int paymentId) {
-            Model.Payment payment = this._paymentRepository.GetById(paymentId);
+		public string GetReceipt(int paymentId)
+		{
+            Model.Payment payment = this.paymentRepository.GetById(paymentId);
 
-			if (payment.FilePath == null || payment.FilePath == "") {
+			if (payment.FilePath == null || payment.FilePath == string.Empty)
+			{
 				this.GenerateReceipt(paymentId);
-                payment = this._paymentRepository.GetById(paymentId);
+                payment = this.paymentRepository.GetById(paymentId);
             }
 
-
-			return this._receiptService.GetReceiptDocument(payment);
+			return this.receiptService.GetReceiptDocument(payment);
 		}
 	}
 }

@@ -1,6 +1,6 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCash.Model;
+﻿using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCash.Service
+namespace BookingBoardgamesILoveBan.Src.PaymentCash.Service
 {
 	public interface ICashPaymentService
 	{

@@ -1,4 +1,4 @@
-﻿namespace BookingBoardgamesILoveBan.src.PaymentHistory.Enums
+﻿namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Enums
 {
     public enum FilterType
     {

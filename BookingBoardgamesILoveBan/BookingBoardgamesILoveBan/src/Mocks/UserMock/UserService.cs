@@ -1,28 +1,30 @@
-﻿using BookingBoardgamesILoveBan.src.Delivery.Model;
+﻿using System;
+using BookingBoardgamesILoveBan.Src.Delivery.Model;
 using Microsoft.Data.SqlClient;
 using Microsoft.UI.Xaml;
-using System;
-
-
-namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
+namespace BookingBoardgamesILoveBan.Src.Mocks.UserMock
 {
 	public class UserService
 	{
-		private readonly string _connectionString = DatabaseBootstrap.GetAppConnection();
+		private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
 
-		public User GetById(int id) {
+		public User GetById(int id)
+		{
 			const string query = @"SELECT uid, UserName, Country, City, Street, StreetNumber, DisplayName, AvatarUrl, Balance FROM [User] WHERE uid = @id";
 			User foundUser = null;
 
-			using (var connection = new SqlConnection(this._connectionString)) {
-				using (var command = new SqlCommand(query, connection)) {
+			using (var connection = new SqlConnection(this.connectionString))
+			{
+				using (var command = new SqlCommand(query, connection))
+				{
 					command.Parameters.AddWithValue("@id", id);
 
 					connection.Open();
 
-					using (var reader = command.ExecuteReader()) {
-						while (reader.Read()) {
-
+					using (var reader = command.ExecuteReader())
+					{
+						while (reader.Read())
+						{
 							foundUser = new User(reader.GetInt32(
 								reader.GetOrdinal("uid")),
 								reader.GetString(reader.GetOrdinal("UserName")),
@@ -32,8 +34,7 @@ namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
 								reader.GetString(reader.GetOrdinal("Street")),
 								reader.GetString(reader.GetOrdinal("StreetNumber")),
 								reader.GetString(reader.GetOrdinal("AvatarUrl")),
-								reader.GetDecimal(reader.GetOrdinal("Balance"))
-							);
+								reader.GetDecimal(reader.GetOrdinal("Balance")));
 						}
 					}
 
@@ -52,7 +53,7 @@ namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
 			string streetNumber = address.StreetNumber;
 			const string query = @"update [User] set Country = @country, City = @city, Street = @street, StreetNumber = @streetNumber  where uid = @id";
 
-			using (var newConnection = new SqlConnection(this._connectionString))
+			using (var newConnection = new SqlConnection(this.connectionString))
 			{
 				using (var command = new SqlCommand(query, newConnection))
 				{
@@ -71,7 +72,6 @@ namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
                 }
 			}
         }
-    
 
         public decimal GetUserBalance(int userId)
         {
@@ -81,7 +81,7 @@ namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
 
         public void UpdateBalance(int userId, decimal newBalance)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var cmd = new SqlCommand(
@@ -91,7 +91,5 @@ namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
                 cmd.ExecuteNonQuery();
             }
         }
-
-
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 
-
-namespace BookingBoardgamesILoveBan.src.Mocks.RequestMock
+namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
 {
 	public class Request
 	{
@@ -12,7 +11,8 @@ namespace BookingBoardgamesILoveBan.src.Mocks.RequestMock
 		public DateTime StartDate { get; set; }
 		public DateTime EndDate { get; set; }
 
-		public Request(int id, int gameId, int clientId, int ownerId, DateTime startDate, DateTime endDate) {
+		public Request(int id, int gameId, int clientId, int ownerId, DateTime startDate, DateTime endDate)
+		{
 			this.Id = id;
 			this.GameId = gameId;
 			this.ClientId = clientId;

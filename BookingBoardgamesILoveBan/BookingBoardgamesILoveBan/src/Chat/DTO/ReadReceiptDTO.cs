@@ -1,16 +1,15 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Chat.Model;
 
-namespace BookingBoardgamesILoveBan.src.Chat.DTO
+namespace BookingBoardgamesILoveBan.Src.Chat.DTO
 {
     public record ReadReceiptDTO(
-        int ConversationId,
-        int ReaderId,
-        int ReceiverId,
-        DateTime TimeStamp
-    );
+        int conversationId,
+        int readerId,
+        int receiverId,
+        DateTime timeStamp);
 }

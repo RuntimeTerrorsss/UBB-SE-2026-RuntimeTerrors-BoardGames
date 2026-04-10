@@ -1,8 +1,7 @@
-﻿using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 
-
-namespace BookingBoardgamesILoveBan.src.PaymentCommon.Repository
+namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
 {
 	public interface IPaymentRepository
 	{

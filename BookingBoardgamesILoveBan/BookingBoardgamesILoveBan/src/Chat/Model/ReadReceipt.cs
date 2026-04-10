@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.src.Chat.Model
+namespace BookingBoardgamesILoveBan.Src.Chat.Model
 {
     public record ReadReceipt(
-        int ConversationId,
-        int ReaderId,
-        int ReceiverId,
-        DateTime TimeStamp
-    );
+        int conversationId,
+        int readerId,
+        int receiverId,
+        DateTime timeStamp);
 }

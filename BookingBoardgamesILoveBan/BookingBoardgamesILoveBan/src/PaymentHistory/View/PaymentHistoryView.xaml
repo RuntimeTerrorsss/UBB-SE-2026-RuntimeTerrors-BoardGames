@@ -1,9 +1,9 @@
 <Page
-    x:Class="BookingBoardgamesILoveBan.src.PaymentHistory.View.PaymentHistoryView"
+    x:Class="BookingBoardgamesILoveBan.Src.PaymentHistory.View.PaymentHistoryView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:BookingBoardgamesILoveBan.src.PaymentHistory.View"
-    xmlns:dto="using:BookingBoardgamesILoveBan.src.PaymentHistory.DTO"
+    xmlns:local="using:BookingBoardgamesILoveBan.Src.PaymentHistory.View"
+    xmlns:dto="using:BookingBoardgamesILoveBan.Src.PaymentHistory.DTO"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"

@@ -1,26 +1,26 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.DTO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using Microsoft.UI.Xaml;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using Microsoft.UI.Xaml;
 
-namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
+namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
 {
     public class LeftPanelViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        
-        public bool IsEmptyStateVisible => _allConversations.Count == 0;
-        public bool IsNoMatchesVisible => _allConversations.Count > 0 && Conversations.Count == 0;
+
+        public bool IsEmptyStateVisible => allConversations.Count == 0;
+        public bool IsNoMatchesVisible => allConversations.Count > 0 && Conversations.Count == 0;
         public bool IsListVisible => Conversations.Count > 0;
 
         private void RefreshUIStates()
@@ -30,48 +30,48 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
             OnPropertyChanged(nameof(IsListVisible));
         }
 
-        private List<ConversationPreviewModel> _allConversations = new();
+        private List<ConversationPreviewModel> allConversations = new ();
 
-        private ObservableCollection<ConversationPreviewModel> _conversations;
+        private ObservableCollection<ConversationPreviewModel> conversations;
         // this one below is what is sent to left panel and is updated according to the search string
         public ObservableCollection<ConversationPreviewModel> Conversations
         {
-            get => _conversations;
+            get => conversations;
             set
             {
-                _conversations = value;
+                conversations = value;
                 OnPropertyChanged();
             }
         }
 
-        private string _searchText = string.Empty;
+        private string searchText = string.Empty;
         public string SearchText
         {
-            get => _searchText;
+            get => searchText;
             set
             {
-                if (_searchText != value)
+                if (searchText != value)
                 {
-                    _searchText = value;
+                    searchText = value;
                     OnPropertyChanged();
                     ApplyFilter(); // whenever filter is changed, search is triggered
                 }
             }
         }
 
-        private int? _selectedConversationId;
+        private int? selectedConversationId;
         public ConversationPreviewModel SelectedConversation
         {
-            get => Conversations.FirstOrDefault(c => c.ConversationId == _selectedConversationId);
+            get => Conversations.FirstOrDefault(c => c.ConversationId == selectedConversationId);
             set
             {
-                if (_selectedConversationId != value?.ConversationId)
+                if (selectedConversationId != value?.ConversationId)
                 {
-                    _selectedConversationId = value?.ConversationId;
+                    selectedConversationId = value?.ConversationId;
 
-                    if (_selectedConversationId.HasValue)
+                    if (selectedConversationId.HasValue)
                     {
-                        MarkAsRead(_selectedConversationId.Value);
+                        MarkAsRead(selectedConversationId.Value);
                     }
 
                     OnPropertyChanged();
@@ -85,11 +85,11 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
         }
 
         /// <summary>
-        /// This method applies the search filter to the conversations list. 
+        /// This method applies the search filter to the conversations list.
         /// </summary>
         private void ApplyFilter()
         {
-            var filtered = _allConversations
+            var filtered = allConversations
                 .Where(c => string.IsNullOrEmpty(SearchText) ||
                             c.DisplayName.Contains(SearchText, StringComparison.Ordinal))
                 .ToList();
@@ -98,7 +98,9 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
             for (int i = Conversations.Count - 1; i >= 0; i--)
             {
                 if (!filtered.Contains(Conversations[i]))
+                {
                     Conversations.RemoveAt(i);
+                }
             }
 
             // Add missing items and fix ordering
@@ -108,9 +110,13 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
                 int currentIndex = Conversations.IndexOf(item);
 
                 if (currentIndex == -1)
+                {
                     Conversations.Insert(i, item);       // not present, insert at correct position
+                }
                 else if (currentIndex != i)
+                {
                     Conversations.Move(currentIndex, i); // present but wrong position, move it
+                }
                                                          // else: already in the right place, do nothing
             }
             OnPropertyChanged(nameof(SelectedConversation));
@@ -118,13 +124,16 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
         }
 
         /// <summary>
-        /// Marks a conversation as read by setting its UnreadCount to 0. 
+        /// Marks a conversation as read by setting its UnreadCount to 0.
         /// </summary>
         /// <param name="conversationId"></param>
         private void MarkAsRead(int conversationId)
         {
-            var existing = _allConversations.FirstOrDefault(c => c.ConversationId == conversationId);
-            if (existing == null || existing.UnreadCount == 0) return;
+            var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversationId);
+            if (existing == null || existing.UnreadCount == 0)
+            {
+                return;
+            }
             existing.UnreadCount = 0;
         }
 
@@ -135,37 +144,36 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
         /// <param name="senderName"></param>
         public void HandleIncomingMessage(MessageDTO message, string senderName)
         {
-            var existing = _allConversations.FirstOrDefault(c => c.ConversationId == message.ConversationId);
+            var existing = allConversations.FirstOrDefault(c => c.ConversationId == message.conversationId);
 
             if (existing != null)
             {
-                existing.LastMessageText = message.Content;
+                existing.LastMessageText = message.content;
                 existing.Timestamp = DateTime.Now;
-                existing.UnreadCount = (message.ConversationId == _selectedConversationId) ? 0 : existing.UnreadCount + 1;
+                existing.UnreadCount = (message.conversationId == selectedConversationId) ? 0 : existing.UnreadCount + 1;
 
                 // move to top in both collections
-                _allConversations.Remove(existing);
-                _allConversations.Insert(0, existing);
+                allConversations.Remove(existing);
+                allConversations.Insert(0, existing);
             }
             else
             {
                 var newConvo = new ConversationPreviewModel(
-                    message.ConversationId,
+                    message.conversationId,
                     senderName,
                     senderName.Substring(0, 1).ToUpper(),
-                    message.Content,
+                    message.content,
                     DateTime.Now,
-                    unreadCount: (message.ConversationId == _selectedConversationId) ? 0 : 1,
-                    App.UserService.GetById(message.ReceiverId).AvatarUrl //TODO - CHANGE
-                );
-                _allConversations.Insert(0, newConvo);
+                    unreadCountInput: (message.conversationId == selectedConversationId) ? 0 : 1,
+                    App.UserService.GetById(message.receiverId).AvatarUrl);
+                allConversations.Insert(0, newConvo);
             }
 
             ApplyFilter();
         }
 
         /// <summary>
-        /// Handles an incoming conversation by creating a new conversation preview and adding it to the list. 
+        /// Handles an incoming conversation by creating a new conversation preview and adding it to the list.
         /// This is typically called when a new conversation is initiated, either by the user or by someone else.
         /// </summary>
         /// <param name="conversation"></param>
@@ -173,8 +181,11 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
         /// <param name="userId"></param>
         public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId)
         {
-            var existing = _allConversations.FirstOrDefault(c => c.ConversationId == conversation.Id);
-            if (existing != null) return; // should not happen but just in case
+            var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversation.Id);
+            if (existing != null)
+            {
+                return;
+            }// should not happen but just in case
 
             var otherUser = conversation.Participants[0] == userId ? conversation.Participants[1] : conversation.Participants[0];
 
@@ -182,13 +193,12 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
                 conversation.Id,
                 displayName,
                 displayName.Substring(0, 1).ToUpper(),
-                conversation.MessageList.LastOrDefault()?.GetPreview() ?? "",
-                conversation.MessageList.LastOrDefault()?.SentAt ?? DateTime.MinValue,
-                unreadCount: conversation.UnreadCount[userId],
-                App.UserService.GetById(otherUser).AvatarUrl 
-            );
-            _allConversations.Insert(0, newConvo);
-            sortConversationsByTimestamp();
+                conversation.MessageList.LastOrDefault()?.GetPreview() ?? string.Empty,
+                conversation.MessageList.LastOrDefault()?.sentAt ?? DateTime.MinValue,
+                unreadCountInput: conversation.UnreadCount[userId],
+                App.UserService.GetById(otherUser).AvatarUrl);
+            allConversations.Insert(0, newConvo);
+            SortConversationsByTimestamp();
             ApplyFilter();
         }
 
@@ -201,9 +211,9 @@ namespace BookingBoardgamesILoveBan.src.Chat.ViewModel
         /// <summary>
         /// Sorts the conversations by their timestamp in descending order (most recent first).
         /// </summary>
-        public void sortConversationsByTimestamp()
+        public void SortConversationsByTimestamp()
         {
-            _allConversations = _allConversations.OrderByDescending(c => c.Timestamp).ToList();
+            allConversations = allConversations.OrderByDescending(c => c.Timestamp).ToList();
             Debug.WriteLine("sorted conversations:");
             ApplyFilter();
         }

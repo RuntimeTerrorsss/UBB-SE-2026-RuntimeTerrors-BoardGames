@@ -1,27 +1,26 @@
-﻿using BookingBoardgamesILoveBan.src.Mocks.GameMock;
-using BookingBoardgamesILoveBan.src.Mocks.RequestMock;
-using BookingBoardgamesILoveBan.src.Mocks.UserMock;
-using BookingBoardgamesILoveBan.src.PaymentCommon.Model;
+﻿using System;
+using System.IO;
+using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
+using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
-using System;
-using System.IO;
 
-
-namespace BookingBoardgamesILoveBan.src.Receipt.Service
+namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 {
 	public class ReceiptService : IReceiptService
 	{
-		private static string s_baseFolderPath = Path.Combine(
-			Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
-			"BookingBoardgames"
-			);
+		private static string baseFolderPath = Path.Combine(
+			Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+			"BookingBoardgames");
 
 		private readonly UserService userService;
 		private readonly RequestService requestService;
 		private readonly GameService gameService;
 
-		public ReceiptService(UserService userService, RequestService requestService, GameService gameService) {
+		public ReceiptService(UserService userService, RequestService requestService, GameService gameService)
+		{
 			this.userService = userService;
 			this.requestService = requestService;
 			this.gameService = gameService;
@@ -34,7 +33,8 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 		/// </summary>
 		/// <param name="requestId">id of request for generating a unique file name</param>
 		/// <returns>unique relative path allocated for the receipt</returns>
-		public string GenerateReceiptRelativePath(int requestId) {
+		public string GenerateReceiptRelativePath(int requestId)
+		{
 			string fileName = $"receipt_{requestId}_{DateTime.Now:yyMMdd_HHmmss}.pdf";
 
 			return $"receipts\\{fileName}";
@@ -43,21 +43,24 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 		/// <summary>
 		/// Get the full path to the receipt pdf.
 		/// Source: D:\Downloads\BookingBoardgames\receipts
-		/// 
+		///
 		/// If pdf for receipt does not exist at source, it is created and full path to it returned.
 		/// Otherwise, full path to existing pdf is returned.
 		/// </summary>
 		/// <param name="payment">transaction for getting relative path to receipt</param>
 		/// <returns>full path to existing or newly created pdf</returns>
 		/// <exception cref="InvalidOperationException">receipt path of transaction is missing</exception>
-		public string GetReceiptDocument(PaymentCommon.Model.Payment payment) {		
-			if (payment.FilePath == null || payment.FilePath == "") {
+		public string GetReceiptDocument(PaymentCommon.Model.Payment payment)
+		{
+			if (payment.FilePath == null || payment.FilePath == string.Empty)
+			{
 				throw new InvalidOperationException("Receipt path is missing.");
 			}
 
 			string fullReceiptPath = this.GetFullPath(payment.FilePath);
 
-			if (!File.Exists(fullReceiptPath)) {
+			if (!File.Exists(fullReceiptPath))
+			{
 				return this.CreateReceipt(payment);
 			}
 
@@ -71,8 +74,10 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 		/// <param name="payment">transaction for generating the content of pdf</param>
 		/// <returns>full path to created pdf</returns>
 		/// <exception cref="InvalidOperationException">receipt path of transaction is missing</exception>
-		private string CreateReceipt(PaymentCommon.Model.Payment payment) {
-			if (payment.FilePath == null || payment.FilePath == "") {
+		private string CreateReceipt(PaymentCommon.Model.Payment payment)
+		{
+			if (payment.FilePath == null || payment.FilePath == string.Empty)
+			{
 				throw new InvalidOperationException("Receipt path is missing.");
 			}
 
@@ -91,8 +96,10 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 			double positionY = 40;
 			int sectionSpacing = 10;
 
-			foreach (string section in this.GetReceiptContent(payment)) {
-				foreach (string line in section.Split("\n")) {
+			foreach (string section in this.GetReceiptContent(payment))
+			{
+				foreach (string line in section.Split("\n"))
+				{
 					gfx.DrawString(line, font, XBrushes.Black,
 						new XRect(positionX, positionY, page.Width - 80, page.Height), XStringFormats.TopLeft);
 
@@ -114,8 +121,9 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 		/// </summary>
 		/// <param name="relativePath">string</param>
 		/// <returns>full path</returns>
-		private string GetFullPath(string relativePath) {
-			return Path.Combine(s_baseFolderPath, relativePath.TrimStart('\\', '/'));
+		private string GetFullPath(string relativePath)
+		{
+			return Path.Combine(baseFolderPath, relativePath.TrimStart('\\', '/'));
 		}
 
 		/// <summary>
@@ -123,7 +131,8 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 		/// </summary>
 		/// <param name="payment">transaction with relevant transaction data</param>
 		/// <returns>pdf content text</returns>
-		private string[] GetReceiptContent(PaymentCommon.Model.Payment payment) {
+		private string[] GetReceiptContent(PaymentCommon.Model.Payment payment)
+		{
 			string header = $"Receipt - Boardgame Rental\n" +
 				$"Rental ID: {payment.RequestId}\n" +
 				$"Date Issued: {this.GetIssuedDateFromFilename(payment.FilePath.Split("\\")[1])}";
@@ -143,10 +152,13 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 
 			string confirmation = "Confirmation\n";
 
-			if (payment.PaymentMethod.ToLower() == "cash") {
+			if (payment.PaymentMethod.ToLower() == "cash")
+			{
 				confirmation += $"- Owner Confirmed Payment Received: {payment.DateConfirmedSeller}\n" +
 					$"- Client Confirmed Game Received: {payment.DateConfirmedBuyer}";
-			} else {
+			}
+			else
+			{
 				confirmation += $"- Payment Confirmed On: {payment.DateOfTransaction}";
 			}
 
@@ -154,8 +166,8 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 				"- the client has paid for the boardgame and the owner has acknowleded the transaction\n" +
 				"- the owner has delivered the boardgame and the client has acknowledged the delivery";
 
-			return [header, requestInfo, paymentDetails, confirmation, summary];
-		}
+            return new[] { header, requestInfo, paymentDetails, confirmation, summary };
+        }
 
 		/// <summary>
 		/// Get formated date for "Date Issued" field in pdf content from the receipt file name.
@@ -163,11 +175,15 @@ namespace BookingBoardgamesILoveBan.src.Receipt.Service
 		/// </summary>
 		/// <param name="fileName">from where to extract the date</param>
 		/// <returns>reformated date (dd/MM/yyyy)</returns>
-		private string GetIssuedDateFromFilename(string fileName) {
-			try {
+		private string GetIssuedDateFromFilename(string fileName)
+		{
+			try
+			{
 				DateTime exactDate = DateTime.ParseExact(fileName.Split("_")[2], "yyMMdd", null);
 				return exactDate.ToString("dd/MM/yyyy");
-			} catch (Exception) {
+			}
+			catch (Exception)
+			{
 				return DateTime.Now.ToString("dd/MM/yyyy");
 			}
 		}

@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCard.Commands
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.Commands
 {
     /// <summary>
-    /// RelayCommand is aICommand implementation that can expose a method or delegate to the view. 
+    /// RelayCommand is aICommand implementation that can expose a method or delegate to the view.
     /// These types act as a way to bind commands between the viewmodel and UI elements.
     /// It exists in winUi packages, but for some reason, I could not get a hold of those, so I had to improvise
     /// </summary>

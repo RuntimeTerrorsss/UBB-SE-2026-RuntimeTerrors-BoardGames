@@ -1,14 +1,14 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.Model;
-using BookingBoardgamesILoveBan.src.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Chat.Model;
+using BookingBoardgamesILoveBan.Src.Model;
 
-namespace BookingBoardgamesILoveBan.src.Chat.Service
+namespace BookingBoardgamesILoveBan.Src.Chat.Service
 {
-    public interface MessageObserver
+    public interface IMessageObserver
     {
         public void OnMessageReceived(Message message);
         public void OnMessageUpdateReceived(Message message);

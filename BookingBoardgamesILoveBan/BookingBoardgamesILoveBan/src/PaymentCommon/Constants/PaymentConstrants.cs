@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCommon.Constants
+namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Constants
 {
 	public class PaymentConstrants
 	{

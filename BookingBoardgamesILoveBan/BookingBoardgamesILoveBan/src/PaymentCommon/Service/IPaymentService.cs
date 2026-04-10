@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.src.PaymentCommon.Service
+namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Service
 {
 	public interface IPaymentService
 	{

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Model;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Model;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.Repository
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
 {
     public interface IRepositoryPayment
     {

@@ -1,4 +1,4 @@
-﻿namespace BookingBoardgamesILoveBan.src.Mocks.UserMock
+﻿namespace BookingBoardgamesILoveBan.Src.Mocks.UserMock
 {
 	public class User
 	{
@@ -20,18 +20,17 @@
 
         public decimal Balance { get; set; } = 0;
 
-        public User(int Id, string Name, string country, string city, string street, string streetNumber)
+        public User(int id, string name, string country, string city, string street, string streetNumber)
         {
-            this.Id = Id;
-            this.Username = Name;
+            this.Id = id;
+            this.Username = name;
             this.Country = country;
             this.Street = street;
             this.StreetNumber = streetNumber;
             this.City = city;
-
         }
-        
-        public User(int id, string username, string displayName, string country, string city, string street, string streetNumber, string avatarUrl, decimal balance) {
+        public User(int id, string username, string displayName, string country, string city, string street, string streetNumber, string avatarUrl, decimal balance)
+        {
             this.Id = id;
             this.Username = username;
             this.DisplayName = displayName;
@@ -42,6 +41,5 @@
             this.AvatarUrl = avatarUrl;
             this.Balance = balance;
         }
-
 	}
 }

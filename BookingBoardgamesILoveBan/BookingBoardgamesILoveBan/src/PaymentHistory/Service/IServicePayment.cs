@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using BookingBoardgamesILoveBan.src.PaymentHistory.DTO;
-using BookingBoardgamesILoveBan.src.PaymentHistory.Enums;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
 
-namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
+namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
 {
     public interface IServicePayment
     {
@@ -13,7 +13,7 @@ namespace BookingBoardgamesILoveBan.src.PaymentHistory.Service
         List<PaymentDto> GetAllPaymentsForUI();
 
         /// <summary>
-        /// Retrieves transactions mapped to DTOs, filtered or sorted by the given criteria and payment method, 
+        /// Retrieves transactions mapped to DTOs, filtered or sorted by the given criteria and payment method,
         /// supporting pagination.
         /// </summary>
         /// <param name="filter">The chosen filter or sort type.</param>
