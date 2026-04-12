@@ -17,7 +17,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly CardPaymentService cardPaymentService;
-        private readonly UserService userService;
+        private readonly IUserService userService;
         private readonly System.Timers.Timer inactivityTimer;
         private readonly System.Timers.Timer balanceRefreshTimer;
         private readonly SynchronizationContext syncContext;
@@ -126,7 +126,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
 
         public CardPaymentViewModel(
             CardPaymentService cardPaymentService,
-            UserService userService,
+            IUserService userService,
             int requestId,
             string deliveryAddress,
             int bookingMessageId,

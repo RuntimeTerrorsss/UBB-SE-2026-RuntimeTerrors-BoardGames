@@ -16,14 +16,14 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 {
     public class CardPaymentService : PaymentService
     {
-        private readonly UserService userService;
-        private readonly RequestService requestService;
+        private readonly IUserService userService;
+        private readonly IRequestService requestService;
 
         public CardPaymentService(
             PaymentRepository repo,
-            UserService userService,
+            IUserService userService,
             ReceiptService receiptService,
-            RequestService requestService) : base(repo, receiptService)
+            IRequestService requestService) : base(repo, receiptService)
         {
             this.userService = userService;
             this.requestService = requestService;

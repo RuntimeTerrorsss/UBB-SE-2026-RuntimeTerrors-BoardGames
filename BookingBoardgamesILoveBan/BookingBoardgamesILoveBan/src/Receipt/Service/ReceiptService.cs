@@ -15,11 +15,11 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 			Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
 			"BookingBoardgames");
 
-		private readonly UserService userService;
-		private readonly RequestService requestService;
-		private readonly GameService gameService;
+		private readonly IUserService userService;
+		private readonly IRequestService requestService;
+		private readonly IGameService gameService;
 
-		public ReceiptService(UserService userService, RequestService requestService, GameService gameService)
+		public ReceiptService(IUserService userService, IRequestService requestService, IGameService gameService)
 		{
 			this.userService = userService;
 			this.requestService = requestService;

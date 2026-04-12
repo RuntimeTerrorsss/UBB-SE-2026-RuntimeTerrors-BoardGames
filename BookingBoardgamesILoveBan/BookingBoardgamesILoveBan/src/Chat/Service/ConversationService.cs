@@ -16,7 +16,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
     public class ConversationService : IMessageObserver
     {
         private ConversationRepository ConversationRepository { get; set; }
-        private UserService userService = App.UserService;
+        private IUserService userService = App.UserService;
         private int UserId { get; set; }
 
         public event Action<MessageDTO, string> MessageProcessed;

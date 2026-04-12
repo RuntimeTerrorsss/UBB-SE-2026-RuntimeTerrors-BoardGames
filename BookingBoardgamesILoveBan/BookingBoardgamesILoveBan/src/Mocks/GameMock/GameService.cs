@@ -2,7 +2,7 @@
 
 namespace BookingBoardgamesILoveBan.Src.Mocks.GameMock
 {
-	public class GameService
+	public class GameService : IGameService
 	{
 		private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
 
