@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.37111.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookingBoardgamesILoveBan", "BookingBoardgamesILoveBan\BookingBoardgamesILoveBan.csproj", "{E0C754E5-587A-4566-BBA9-6EF7B20095A8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookingBoardgamesLoveBan.Tests", "BookingBoardgamesLoveBan.Tests\BookingBoardgamesLoveBan.Tests.csproj", "{01342C83-D777-F30F-1A6C-F73D6482888C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -20,6 +22,7 @@ Global
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|ARM64.Deploy.0 = Debug|ARM64
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|x64.ActiveCfg = Debug|x64
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|x64.Build.0 = Debug|x64
+		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|x64.Deploy.0 = Debug|x64
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|x86.ActiveCfg = Debug|x86
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|x86.Build.0 = Debug|x86
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Debug|x86.Deploy.0 = Debug|x86
@@ -32,6 +35,18 @@ Global
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Release|x86.ActiveCfg = Release|x86
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Release|x86.Build.0 = Release|x86
 		{E0C754E5-587A-4566-BBA9-6EF7B20095A8}.Release|x86.Deploy.0 = Release|x86
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Debug|x64.Build.0 = Debug|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Debug|x86.Build.0 = Debug|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Release|ARM64.Build.0 = Release|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Release|x64.ActiveCfg = Release|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Release|x64.Build.0 = Release|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Release|x86.ActiveCfg = Release|Any CPU
+		{01342C83-D777-F30F-1A6C-F73D6482888C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
