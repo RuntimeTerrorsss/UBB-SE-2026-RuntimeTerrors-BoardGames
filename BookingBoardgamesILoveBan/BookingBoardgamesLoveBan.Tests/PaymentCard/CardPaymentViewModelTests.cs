@@ -26,7 +26,7 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.ViewModel
             return new CardPaymentViewModel(
                 mockCardPaymentService.Object,
                 mockUserService.Object,
-                requestIdentifier: 1,
+                requestId: 1,
                 deliveryAddress: "123 Main St",
                 bookingMessageIdentifier: 10,
                 conversationService: null);

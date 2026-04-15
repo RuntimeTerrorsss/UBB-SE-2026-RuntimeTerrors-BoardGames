@@ -211,10 +211,10 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
             this.cardPaymentService = cardPaymentService;
             this.userService = userService;
 
-            RequestIdentifier = requestIdentifier;
+            RequestIdentifier = requestId;
             DeliveryAddress = deliveryAddress;
             BookingMessageIdentifier = bookingMessageIdentifier;
-            RequestDto requestDataTransferObject = this.cardPaymentService.GetRequestDataTransferObject(requestIdentifier);
+            RequestDto requestDataTransferObject = this.cardPaymentService.GetRequestDataTransferObject(requestId);
             ConversationService = conversationService;
 
             ClientIdentifier = requestDataTransferObject.ClientId;

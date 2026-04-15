@@ -19,7 +19,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
             PaymentRepository paymentRepository,
             UserService userService,
             ReceiptService receiptService,
-            IRequestService requestService) : base(repo, receiptService)
+            IRequestService requestService) : base(paymentRepository, receiptService)
         {
             this.userService = userService;
             this.requestService = requestService;
