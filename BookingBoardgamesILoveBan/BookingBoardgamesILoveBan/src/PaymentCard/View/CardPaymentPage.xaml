@@ -7,126 +7,160 @@
     xmlns:converters="using:BookingBoardgamesILoveBan.Src.PaymentCard.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-	<Grid Padding="40">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" />
-			<!--  Title  -->
-			<RowDefinition Height="Auto" />
-			<!--  Order info  -->
-			<RowDefinition Height="*" />
-			<!--  Spacer  -->
-			<RowDefinition Height="Auto" />
-			<!--  Bottom actions  -->
-		</Grid.RowDefinitions>
+    <Grid Padding="40" MaxWidth="1000" HorizontalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-		<!--  Title  -->
-		<TextBlock
-			Grid.Row="0"
-			Margin="0,0,0,24"
-			FontSize="28"
-			FontWeight="Bold"
-			Text="Card Payment" />
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,0,32"
+            FontSize="32"
+            FontWeight="SemiBold"
+            Text="Secure Checkout" />
 
-        <!-- Order info panel -->
-        <StackPanel Grid.Row="1" Spacing="12">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Client:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.ClientName, Mode=OneTime}"/>
+        <Grid Grid.Row="1" ColumnSpacing="40">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="6*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{ThemeResource LayerFillColorDefaultBrush}" 
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" 
+                    CornerRadius="8" Padding="24" VerticalAlignment="Top">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Order Summary" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                    <Grid RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Game:" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,16,0"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind PaymentViewModel.GameName, Mode=OneTime}" FontWeight="Medium" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Owner:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind PaymentViewModel.OwnerName, Mode=OneTime}" FontWeight="Medium"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Dates:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind PaymentViewModel.RequestDates, Mode=OneTime}" FontWeight="Medium" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Address:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind PaymentViewModel.DeliveryAddress, Mode=OneTime}" FontWeight="Medium" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Your Balance:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{x:Bind PaymentViewModel.BalanceAmount, Mode=OneWay}" FontWeight="Medium"/>
+                    </Grid>
+
+                    <MenuFlyoutSeparator Margin="0,8"/>
+
+                    <Grid Margin="0,8,0,0">
+                        <TextBlock Text="Total" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                        <TextBlock Text="{x:Bind PaymentViewModel.Price, Mode=OneTime}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="1" Spacing="24">
+
+                <StackPanel x:Name="PaymentPanel" Spacing="20"
+                            Visibility="{x:Bind PaymentViewModel.IsPaymentSuccessful, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
+
+                    <TextBlock Text="Payment Details" FontSize="20" FontWeight="SemiBold"/>
+
+                    <StackPanel Spacing="16">
+                        <TextBox Header="Cardholder Name" 
+                                 PlaceholderText="John Doe" 
+                                 Text="{x:Bind PaymentViewModel.CardholderName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBox Header="Card Number" 
+                                 PlaceholderText="0000 0000 0000 0000" 
+                                 MaxLength="19"
+                                 Text="{x:Bind PaymentViewModel.CardNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" Header="Expiration Date" 
+                                     PlaceholderText="MM/YY" MaxLength="5"
+                                     Text="{x:Bind PaymentViewModel.ExpiryDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <PasswordBox Grid.Column="1" Header="CVV" 
+                                         PlaceholderText="123" MaxLength="4"
+                                         Password="{x:Bind PaymentViewModel.Cvv, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <TextBlock Foreground="#E81123" 
+                               Text="Insufficient account balance. Please top up your wallet."
+                               Visibility="{x:Bind PaymentViewModel.IsWarningMessageVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+
+                    <StackPanel Spacing="16" Margin="0,16,0,0">
+                        <CheckBox IsChecked="{x:Bind PaymentViewModel.AreTermsAccepted, Mode=TwoWay}">
+                            <TextBlock>
+                                <Run Text="I agree to the " />
+                                <Hyperlink Click="OnTermsLinkClick">Terms of Service</Hyperlink>
+                            </TextBlock>
+                        </CheckBox>
+
+                        <Grid>
+                            <Button HorizontalAlignment="Left" 
+                                    Command="{x:Bind PaymentViewModel.ExitCommand}" 
+                                    Content="Cancel" 
+                                    Style="{ThemeResource DefaultButtonStyle}"/>
+
+                            <Button HorizontalAlignment="Right" 
+                                    Command="{x:Bind PaymentViewModel.FinishPaymentCommand}" 
+                                    IsEnabled="{x:Bind PaymentViewModel.IsPaymentButtonEnabled, Mode=OneWay}"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Width="150" Height="40">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <ProgressRing Width="16" Height="16" Foreground="White"
+                                                  IsActive="{x:Bind PaymentViewModel.IsCurrentlyLoading, Mode=OneWay}"
+                                                  Visibility="{x:Bind PaymentViewModel.IsCurrentlyLoading, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
+                                    <TextBlock Text="Pay Now" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel x:Name="SuccessPanel" Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,40,0,0"
+                            Visibility="{x:Bind PaymentViewModel.IsPaymentSuccessful, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+
+                    <FontIcon Glyph="&#xE10B;" FontSize="64" Foreground="Green" Margin="0,0,0,16"/>
+                    <TextBlock FontSize="24" FontWeight="Bold" Text="Payment Successful!" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Your transaction has been securely processed." Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,16">
+                        <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                            <TextBlock Text="Remaining Balance:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Bind PaymentViewModel.BalanceAmount, Mode=OneWay}" FontSize="20" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button HorizontalAlignment="Center" 
+                            Command="{x:Bind PaymentViewModel.ExitCommand}" 
+                            Content="Return to Chat" 
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Width="200" Height="40"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Game:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.GameName, Mode=OneTime}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Rental Dates:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.RequestDates, Mode=OneTime}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Owner:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.OwnerName, Mode=OneTime}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Delivery Address:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.DeliveryAddress, Mode=OneTime}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Delivery Date:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.DeliveryDate, Mode=OneTime}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Price:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.Price, Mode=OneTime}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Your Balance:" FontWeight="Bold" Width="140"/>
-                <TextBlock Text="{x:Bind ViewModel.Balance, Mode=OneWay}"/>
-            </StackPanel>
-        </StackPanel>
-
-		<!--  Payment panel — shown before payment  -->
-		<StackPanel
-			x:Name="PaymentPanel"
-			Grid.Row="3"
-			Spacing="16"
-			Visibility="{x:Bind ViewModel.IsSuccess, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
-
-			<!--  Insufficient balance warning  -->
-			<TextBlock
-				Foreground="Red"
-				Text="Insufficient balance. Please add funds to continue."
-				Visibility="{x:Bind ViewModel.IsWarningVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-
-			<!--  Terms and conditions  -->
-			<StackPanel Orientation="Horizontal" Spacing="8">
-				<CheckBox IsChecked="{x:Bind ViewModel.TermsAccepted, Mode=TwoWay}" />
-				<TextBlock VerticalAlignment="Center">
-					<Run Text="I agree to the " />
-					<Hyperlink Click="OnTermsLinkClick">Terms of Service</Hyperlink>
-				</TextBlock>
-			</StackPanel>
-
-			<!--  Loading indicator  -->
-			<ProgressRing
-				Width="32"
-				Height="32"
-				HorizontalAlignment="Center"
-				IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
-
-			<!--  Action buttons  -->
-			<Grid>
-				<Button
-					HorizontalAlignment="Left"
-					Command="{x:Bind ViewModel.ExitCommand}"
-					Content="Exit Payment" />
-				<Button
-					HorizontalAlignment="Right"
-					Command="{x:Bind ViewModel.FinishPaymentCommand}"
-					Content="Finish Payment"
-					IsEnabled="{x:Bind ViewModel.IsPayButtonEnabled, Mode=OneWay}" />
-			</Grid>
-		</StackPanel>
-
-		<!--  Success panel — shown after payment  -->
-		<StackPanel
-			x:Name="SuccessPanel"
-			Grid.Row="3"
-			Spacing="16"
-			Visibility="{x:Bind ViewModel.IsSuccess, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-			<TextBlock
-				FontSize="20"
-				FontWeight="Bold"
-				Text="Payment successful!" />
-			<StackPanel Orientation="Horizontal" Spacing="8">
-				<TextBlock FontWeight="Bold" Text="New balance:" />
-				<TextBlock Text="{x:Bind ViewModel.Balance, Mode=OneWay}" />
-			</StackPanel>
-			<Button
-				HorizontalAlignment="Left"
-				Command="{x:Bind ViewModel.ExitCommand}"
-				Content="Back to Chat" />
-		</StackPanel>
-
-	</Grid>
+        </Grid>
+    </Grid>
 </Page>

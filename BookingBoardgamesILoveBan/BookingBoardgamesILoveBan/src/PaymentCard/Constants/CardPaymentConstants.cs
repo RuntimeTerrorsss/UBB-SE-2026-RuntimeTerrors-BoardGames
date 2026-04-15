@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentCard.Constants
@@ -14,5 +10,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Constants
         public const double TimerBeforeClosingPayment = 30_000;
         public const double TimerForRefreshingBalance = 4000;
         public const int LoadingTime = 50;
+        public const int SuccessfulPaymentState = 1;
+        public const string CardPaymentMethodName = "CARD";
     }
 }

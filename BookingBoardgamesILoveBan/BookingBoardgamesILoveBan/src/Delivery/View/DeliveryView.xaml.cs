@@ -55,9 +55,9 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
             {
                 var bookingArgs = new BookingNavigationArguments
                 {
-                    RequestId = requestId,
+                    RequestIdentifier = requestId,
                     DeliveryAddress = deliveryViewModel.CurrentAddress.ToString(),
-                    BookingMessageId = incomingMessageId,
+                    BookingMessageIdentifier = incomingMessageId,
                     ConversationService = conversationService,
                     CurrentWindow = currentWindow
                 };

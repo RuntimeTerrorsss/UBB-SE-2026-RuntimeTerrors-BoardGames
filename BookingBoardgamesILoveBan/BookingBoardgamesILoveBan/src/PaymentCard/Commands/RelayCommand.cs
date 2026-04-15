@@ -1,32 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentCard.Commands
 {
-    /// <summary>
-    /// RelayCommand is aICommand implementation that can expose a method or delegate to the view.
-    /// These types act as a way to bind commands between the viewmodel and UI elements.
-    /// It exists in winUi packages, but for some reason, I could not get a hold of those, so I had to improvise
-    /// </summary>
     public class RelayCommand : ICommand
     {
-        private readonly Action execute;
-        private readonly Func<bool> canExecute;
+        private readonly Action executeAction;
+        private readonly Func<bool> canExecuteFunction;
 
-        public RelayCommand(Action execute, Func<bool> canExecute = null)
+        public RelayCommand(Action executeAction, Func<bool> canExecuteFunction = null)
         {
-            this.execute = execute;
-            this.canExecute = canExecute;
+            this.executeAction = executeAction;
+            this.canExecuteFunction = canExecuteFunction;
         }
 
         public event EventHandler CanExecuteChanged;
 
-        public bool CanExecute(object parameter) => canExecute?.Invoke() ?? true;
-        public void Execute(object parameter) => execute();
+        public bool CanExecute(object parameter) => canExecuteFunction?.Invoke() ?? true;
+        public void Execute(object parameter) => executeAction();
 
         public void NotifyCanExecuteChanged() =>
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);

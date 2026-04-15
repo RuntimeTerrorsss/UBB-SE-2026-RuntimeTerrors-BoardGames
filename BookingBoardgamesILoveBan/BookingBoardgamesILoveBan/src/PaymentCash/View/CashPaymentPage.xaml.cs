@@ -21,16 +21,16 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
         {
             base.OnNavigatedTo(e);
 
-			if (e.Parameter is BookingNavigationArguments booking)
+            if (e.Parameter is BookingNavigationArguments booking)
             {
                 ViewModel = new CashPaymentViewModel(
                     App.CashPaymentService,
                     App.UserService,
                     App.RequestService,
                     App.GameService,
-                    booking.RequestId,
+                    booking.RequestIdentifier,
                     booking.DeliveryAddress,
-                    booking.BookingMessageId,
+                    booking.BookingMessageIdentifier,
                     booking.ConversationService);
 
                 DataContext = ViewModel;
