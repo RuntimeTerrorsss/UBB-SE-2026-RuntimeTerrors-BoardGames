@@ -12,7 +12,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
     public class DeliveryViewModel
     {
         private IMapService MapService { get; set; }
-        private UserService UserService { get; set; }
+        private IUserService UserService { get; set; }
         private IValidator<Dictionary<string, string>, Address> Validator { get; set; }
 
         public Address CurrentAddress { get; set; }
@@ -28,7 +28,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
         public DeliveryViewModel(
             int currentUserId,
             IMapService mapService,
-            UserService userService,
+            IUserService userService,
             IValidator<Dictionary<string, string>, Address> validator)
         {
             MapService = mapService;

@@ -10,7 +10,7 @@ IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Game')
 CREATE TABLE Game(
 	gid INTEGER PRIMARY KEY IDENTITY(1,1),
 	Name VARCHAR(50) NOT NULL,
-	PricePerDay DECIMAL NOT NULL
+	PricePerDay DECIMAL(18, 2) NOT NULL
 )
 
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'User')
@@ -19,7 +19,7 @@ CREATE TABLE [User] (
 	AvatarUrl VARCHAR(512) DEFAULT NULL,
 	DisplayName VARCHAR(50),
 	UserName VARCHAR(50),
-	Balance DECIMAL DEFAULT 0,
+	Balance DECIMAL(18,2) DEFAULT 0,
 	Country NVARCHAR(50),
 	City NVARCHAR(50),
 	Street NVARCHAR(50),
@@ -111,3 +111,4 @@ INSERT INTO [User] (AvatarUrl, DisplayName, UserName, Balance, Country, City, St
 ('https://i.pravatar.cc/150?u=alice', 'Alice',   'alice99',  150.00, 'Romania', 'Cluj', 'Aleea Godeanu', '23-25')
 
 INSERT INTO _Migrations (Name) VALUES ('InitialSchema')
+

@@ -31,8 +31,8 @@ namespace BookingBoardgamesILoveBan
         ///
         public static Src.Mocks.UserMock.UserService UserService { get; private set; } = new UserService();
 
-        public static GameService GameService { get; private set; } = new GameService();
-        public static RequestService RequestService { get; private set; } = new RequestService(App.GameService);
+        public static IGameService GameService { get; private set; } = new GameService();
+        public static IRequestService RequestService { get; private set; } = new RequestService(App.GameService);
 
         public static PaymentRepository PaymentRepository { get; private set; } = new PaymentRepository();
         public static ReceiptService ReceiptService { get; private set; } = new ReceiptService(App.UserService, App.RequestService, App.GameService);

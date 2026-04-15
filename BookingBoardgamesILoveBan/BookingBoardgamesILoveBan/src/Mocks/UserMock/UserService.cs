@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.UI.Xaml;
 namespace BookingBoardgamesILoveBan.Src.Mocks.UserMock
 {
-	public class UserService
+	public class UserService : IUserService
 	{
 		private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
 

@@ -4,12 +4,12 @@ using Microsoft.Data.SqlClient;
 
 namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
 {
-	public class RequestService
+	public class RequestService : IRequestService
 	{
 		private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
-		private readonly GameService gameService;
+		private readonly IGameService gameService;
 
-        public RequestService(GameService gameservice)
+        public RequestService(IGameService gameservice)
         {
 			gameService = gameservice;
         }

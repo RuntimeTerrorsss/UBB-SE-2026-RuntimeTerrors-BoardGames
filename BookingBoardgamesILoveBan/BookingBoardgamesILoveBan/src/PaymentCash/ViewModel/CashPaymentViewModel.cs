@@ -11,9 +11,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 	public class CashPaymentViewModel
 	{
 		private ICashPaymentService service;
-		private readonly UserService userService;
-		private readonly RequestService requestService;
-		private readonly GameService gameService;
+		private readonly IUserService userService;
+		private readonly IRequestService requestService;
+		private readonly IGameService gameService;
 		private readonly ConversationService conversationService;
 
 		public string OwnerName { get; set; }
@@ -26,9 +26,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 
 		public CashPaymentViewModel(
 			ICashPaymentService service,
-			UserService userService,
-			RequestService requestService,
-			GameService gameService,
+			IUserService userService,
+			IRequestService requestService,
+			IGameService gameService,
 			int requestId,
 			string deliveryAddress,
 			int messageId,
