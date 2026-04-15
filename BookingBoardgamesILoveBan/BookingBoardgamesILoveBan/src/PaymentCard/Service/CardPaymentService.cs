@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BookingBoardgamesILoveBan.Src.PaymentCard.Constants;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
@@ -10,7 +6,7 @@ using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
-using BookingBoardgamesILoveBan.Src.PaymentCard.DTO;
+using BookingBoardgamesILoveBan.Src.PaymentCard.DataTransferObjects;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 {
@@ -20,95 +16,98 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
         private readonly RequestService requestService;
 
         public CardPaymentService(
-            PaymentRepository repo,
+            PaymentRepository paymentRepository,
             UserService userService,
             ReceiptService receiptService,
-            RequestService requestService) : base(repo, receiptService)
+            RequestService requestService) : base(paymentRepository, receiptService)
         {
             this.userService = userService;
             this.requestService = requestService;
         }
 
-        public CardPaymentDTO AddCardPayment(int requestId, int clientId, int ownerId, decimal amount)
+        public CardPaymentDataTransferObject AddCardPayment(int requestIdentifier, int clientIdentifier, int ownerIdentifier, decimal amount)
         {
-            if (!CheckBalanceSufficiency(requestId, clientId))
+            if (!CheckBalanceSufficiency(requestIdentifier, clientIdentifier))
             {
                 throw new Exception("Insufficient Funds");
             }
 
-            ProcessPayment(requestId, clientId, ownerId);
+            ProcessPayment(requestIdentifier, clientIdentifier, ownerIdentifier);
 
             PaymentCommon.Model.Payment payment = new PaymentCommon.Model.Payment
             {
-                RequestId = requestId,
-                ClientId = clientId,
-                OwnerId = ownerId,
+                RequestId = requestIdentifier,
+                ClientId = clientIdentifier,
+                OwnerId = ownerIdentifier,
                 Amount = amount,
-                PaymentMethod = "CARD",
+                PaymentMethod = CardPaymentConstants.CardPaymentMethodName,
                 DateOfTransaction = DateTime.Now,
                 DateConfirmedBuyer = DateTime.Now,
                 DateConfirmedSeller = null,
-                State = 1,
+                State = CardPaymentConstants.SuccessfulPaymentState,
                 FilePath = null
             };
 
             payment.Tid = this.paymentRepository.AddPayment(payment);
-            string filePath = receiptService.GenerateReceiptRelativePath(payment.RequestId);
-            payment.FilePath = filePath;
+            string receiptFilePath = receiptService.GenerateReceiptRelativePath(payment.RequestId);
+            payment.FilePath = receiptFilePath;
             paymentRepository.UpdatePayment(payment);
 
-            return this.ToDto(payment);
+            return this.ConvertToDataTransferObject(payment);
         }
 
-        public bool CheckBalanceSufficiency(int requestID, int clientId)
+        public bool CheckBalanceSufficiency(int requestIdentifier, int clientIdentifier)
         {
-            return requestService.GetRequestPrice(requestID) <= userService.GetUserBalance(clientId);
+            return requestService.GetRequestPrice(requestIdentifier) <= userService.GetUserBalance(clientIdentifier);
         }
 
-        public CardPaymentDTO GetCardPayment(int paymentID)
+        public CardPaymentDataTransferObject GetCardPayment(int paymentIdentifier)
         {
-            return this.ToDto(paymentRepository.GetById(paymentID));
+            return this.ConvertToDataTransferObject(paymentRepository.GetById(paymentIdentifier));
         }
 
-        public decimal GetCurrentBalance(int clientID)
+        public decimal GetCurrentBalance(int clientIdentifier)
         {
-            return userService.GetUserBalance(clientID);
+            return userService.GetUserBalance(clientIdentifier);
         }
 
-        public void ProcessPayment(int requestID, int clientId, int ownerId)
+        public void ProcessPayment(int requestIdentifier, int clientIdentifier, int ownerIdentifier)
         {
-            decimal priceRequest = requestService.GetRequestPrice(requestID);
-            decimal clientBalance = userService.GetUserBalance(clientId);
-            decimal ownerBalance = userService.GetUserBalance(ownerId);
-            decimal newClientBalance = clientBalance - priceRequest;
+            decimal requestPrice = requestService.GetRequestPrice(requestIdentifier);
+            decimal clientBalance = userService.GetUserBalance(clientIdentifier);
+            decimal ownerBalance = userService.GetUserBalance(ownerIdentifier);
+            decimal newClientBalance = clientBalance - requestPrice;
+
             if (newClientBalance < 0)
             {
                 throw new Exception("Insufficient Funds");
             }
-            userService.UpdateBalance(clientId, newClientBalance);
-            userService.UpdateBalance(ownerId, ownerBalance + priceRequest);
+
+            userService.UpdateBalance(clientIdentifier, newClientBalance);
+            userService.UpdateBalance(ownerIdentifier, ownerBalance + requestPrice);
         }
 
-        public CardPaymentDTO ToDto(PaymentCommon.Model.Payment cardPayment)
+        public CardPaymentDataTransferObject ConvertToDataTransferObject(PaymentCommon.Model.Payment cardPayment)
         {
-            return new CardPaymentDTO(
-                    tid: cardPayment.Tid,
-                    requestId: cardPayment.RequestId,
-                    clientId: cardPayment.ClientId,
-                    ownerId: cardPayment.OwnerId,
+            return new CardPaymentDataTransferObject(
+                    transactionIdentifier: cardPayment.Tid,
+                    requestIdentifier: cardPayment.RequestId,
+                    clientIdentifier: cardPayment.ClientId,
+                    ownerIdentifier: cardPayment.OwnerId,
                     amount: cardPayment.Amount,
                     dateOfTransaction: cardPayment.DateOfTransaction ?? DateTime.Now,
                     paymentMethod: cardPayment.PaymentMethod);
         }
 
-        public RequestDto GetRequestDto(int requestId)
+        public virtual RequestDto GetRequestDataTransferObject(int requestIdentifier)
         {
-            Request request = this.requestService.GetById(requestId);
+            Request request = this.requestService.GetById(requestIdentifier);
             string gameName = this.requestService.GetGameName(request.Id);
             string ownerName = this.userService.GetById(request.OwnerId).Username;
             string clientName = this.userService.GetById(request.ClientId).Username;
             decimal gamePrice = this.requestService.GetRequestPrice(request.Id);
-            return new RequestDto(request.Id, gameName, request.ClientId, request.OwnerId, ownerName, clientName,  request.StartDate, request.EndDate, gamePrice);
+
+            return new RequestDto(request.Id, gameName, request.ClientId, request.OwnerId, ownerName, clientName, request.StartDate, request.EndDate, gamePrice);
         }
     }
 }

@@ -73,13 +73,13 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.UserMock
 			}
         }
 
-        public decimal GetUserBalance(int userId)
+        public virtual decimal GetUserBalance(int userId)
         {
             User user = this.GetById(userId);
             return user.Balance;
         }
 
-        public void UpdateBalance(int userId, decimal newBalance)
+        public virtual void UpdateBalance(int userId, decimal newBalance)
         {
             using (var connection = new SqlConnection(connectionString))
             {

@@ -1,27 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BookingBoardgamesILoveBan.Src.PaymentCard.DTO
+namespace BookingBoardgamesILoveBan.Src.PaymentCard.DataTransferObjects
 {
-    public class CardPaymentDTO
+    public class CardPaymentDataTransferObject
     {
-        public int Tid { get; set; }
-        public int RequestId { get; set; }
-        public int ClientId { get; set; }
-        public int OwnerId { get; set; }
+        public int TransactionIdentifier { get; set; }
+        public int RequestIdentifier { get; set; }
+        public int ClientIdentifier { get; set; }
+        public int OwnerIdentifier { get; set; }
         public decimal Amount { get; set; }
         public DateTime DateOfTransaction { get; set; }
         public string PaymentMethod { get; set; }
 
-        public CardPaymentDTO(int tid, int requestId, int clientId, int ownerId, decimal amount, DateTime dateOfTransaction, string paymentMethod)
+        public CardPaymentDataTransferObject(
+            int transactionIdentifier,
+            int requestIdentifier,
+            int clientIdentifier,
+            int ownerIdentifier,
+            decimal amount,
+            DateTime dateOfTransaction,
+            string paymentMethod)
         {
-            Tid = tid;
-            RequestId = requestId;
-            ClientId = clientId;
-            OwnerId = ownerId;
+            TransactionIdentifier = transactionIdentifier;
+            RequestIdentifier = requestIdentifier;
+            ClientIdentifier = clientIdentifier;
+            OwnerIdentifier = ownerIdentifier;
             Amount = amount;
             DateOfTransaction = dateOfTransaction;
             PaymentMethod = paymentMethod;

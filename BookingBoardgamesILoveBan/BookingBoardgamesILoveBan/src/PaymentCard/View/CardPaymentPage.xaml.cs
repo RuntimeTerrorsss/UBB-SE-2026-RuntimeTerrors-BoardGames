@@ -1,92 +1,76 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using BookingBoardgamesILoveBan.Src.PaymentCard.Navigation;
 using BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel;
-using BookingBoardgamesILoveBan.Src.PaymentCard.View;
+using BookingBoardgamesILoveBan.Src.View;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using BookingBoardgamesILoveBan.Src.View;
-
-// To learn more about WinUI, the WinUI project structure,
-/// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace BookingBoardgamesILoveBan.Src.PaymentCard.View
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class CardPaymentPage : Page
     {
-        public CardPaymentViewModel ViewModel { get; set; }
-        private Window currentWindow;
+        public CardPaymentViewModel PaymentViewModel { get; set; }
+        private Window activeCurrentWindow;
 
         public CardPaymentPage()
         {
             InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs navigationEvent)
+        protected override void OnNavigatedTo(NavigationEventArgs navigationEventArguments)
         {
-            base.OnNavigatedTo(navigationEvent);
-            var booking = (BookingNavigationArguments)navigationEvent.Parameter;
+            base.OnNavigatedTo(navigationEventArguments);
+            var bookingArguments = (BookingNavigationArguments)navigationEventArguments.Parameter;
 
-            ViewModel = new CardPaymentViewModel(
+            PaymentViewModel = new CardPaymentViewModel(
                 App.CardPaymentService,
                 App.UserService,
-                booking.RequestId,
-                booking.DeliveryAddress,
-                booking.BookingMessageId,
-                booking.ConversationService);
+                bookingArguments.RequestIdentifier,
+                bookingArguments.DeliveryAddress,
+                bookingArguments.BookingMessageIdentifier,
+                bookingArguments.ConversationService);
 
-            DataContext = ViewModel;
-            currentWindow = booking.CurrentWindow;
+            DataContext = PaymentViewModel;
+            activeCurrentWindow = bookingArguments.CurrentWindow;
 
             Bindings.Update();
 
-            ViewModel.NavigateBack = () =>
+            PaymentViewModel.NavigateBackwardsAction = () =>
             {
-                currentWindow.Close();
+                activeCurrentWindow.Close();
             };
-            ViewModel.NavigateToExit = () =>
+            PaymentViewModel.NavigateToExitAction = () =>
             {
-                currentWindow.Close();
+                activeCurrentWindow.Close();
             };
 
-            ViewModel.OnActivated();
+            PaymentViewModel.OnPageActivated();
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs onNavigatedFormEvent)
+        protected override void OnNavigatedFrom(NavigationEventArgs onNavigatedFromEventArguments)
         {
-            base.OnNavigatedFrom(onNavigatedFormEvent);
-            ViewModel.OnDeactivated();
+            base.OnNavigatedFrom(onNavigatedFromEventArguments);
+            PaymentViewModel.OnPageDeactivated();
         }
 
-        protected override void OnPointerMoved(PointerRoutedEventArgs onPointerMovedEvent)
+        protected override void OnPointerMoved(PointerRoutedEventArgs onPointerMovedEventArguments)
         {
-            base.OnPointerMoved(onPointerMovedEvent);
-            ViewModel.ResetInactivityCommand.Execute(null);
+            base.OnPointerMoved(onPointerMovedEventArguments);
+            PaymentViewModel.ResetInactivityCommand.Execute(null);
         }
 
-        protected override void OnKeyDown(KeyRoutedEventArgs onKeyDownEvent)
+        protected override void OnKeyDown(KeyRoutedEventArgs onKeyDownEventArguments)
         {
-            base.OnKeyDown(onKeyDownEvent);
-            ViewModel.ResetInactivityCommand.Execute(null);
+            base.OnKeyDown(onKeyDownEventArguments);
+            PaymentViewModel.ResetInactivityCommand.Execute(null);
         }
 
-        private async void OnTermsLinkClick(Hyperlink sender, HyperlinkClickEventArgs onTermsClickedEvent)
+        private async void OnTermsLinkClick(Hyperlink hyperlinkSender, HyperlinkClickEventArgs onTermsClickedEventArguments)
         {
-            var dialog = new ContentDialog
+            var termsDialog = new ContentDialog
             {
                 Title = "Terms of Service",
                 Content = "By completing this payment you agree to our refund policy. " +
@@ -94,7 +78,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.View
                 CloseButtonText = "Close",
                 XamlRoot = this.XamlRoot
             };
-            await dialog.ShowAsync();
+            await termsDialog.ShowAsync();
         }
     }
 }

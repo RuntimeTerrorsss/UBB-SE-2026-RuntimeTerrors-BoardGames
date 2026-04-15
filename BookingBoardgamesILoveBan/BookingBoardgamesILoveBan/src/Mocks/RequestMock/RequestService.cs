@@ -47,7 +47,7 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
 			return foundRequest;
 		}
 
-        public decimal GetRequestPrice(int requestId)
+        public virtual decimal GetRequestPrice(int requestId)
         {
             Request request = this.GetById(requestId);
             int daysOfBooking = (request.EndDate - request.StartDate).Days;
