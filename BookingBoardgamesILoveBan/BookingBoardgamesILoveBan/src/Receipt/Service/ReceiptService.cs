@@ -33,7 +33,7 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 		/// </summary>
 		/// <param name="requestId">id of request for generating a unique file name</param>
 		/// <returns>unique relative path allocated for the receipt</returns>
-		public string GenerateReceiptRelativePath(int requestId)
+		public virtual string GenerateReceiptRelativePath(int requestId)
 		{
 			string fileName = $"receipt_{requestId}_{DateTime.Now:yyMMdd_HHmmss}.pdf";
 

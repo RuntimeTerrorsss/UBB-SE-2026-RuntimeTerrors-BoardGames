@@ -68,7 +68,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
             }
         }
 
-        public int AddPayment(Model.Payment transaction)
+        public virtual int AddPayment(Model.Payment transaction)
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -110,7 +110,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
                 return rowsAffected > 0;
             }
         }
-        public Model.Payment UpdatePayment(Model.Payment transaction)
+        public virtual Model.Payment UpdatePayment(Model.Payment transaction)
         {
             Model.Payment oldTransaction = GetById(transaction.Tid);
 

@@ -99,7 +99,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
                     paymentMethod: cardPayment.PaymentMethod);
         }
 
-        public RequestDto GetRequestDataTransferObject(int requestIdentifier)
+        public virtual RequestDto GetRequestDataTransferObject(int requestIdentifier)
         {
             Request request = this.requestService.GetById(requestIdentifier);
             string gameName = this.requestService.GetGameName(request.Id);
