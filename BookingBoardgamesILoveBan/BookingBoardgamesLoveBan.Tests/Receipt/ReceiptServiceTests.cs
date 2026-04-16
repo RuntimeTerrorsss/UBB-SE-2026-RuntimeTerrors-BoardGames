@@ -24,6 +24,8 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
                 );
         }
 
+        // ================================ GenerateReceiptRelativePath ======================================
+
         [Fact]
         public void GenerateReceiptRelativePath_ReturnsPathFolder()
         {
@@ -54,6 +56,8 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
 
             Assert.NotEqual(result1, result2);
         }
+
+        // ================================ GetReceiptDocument ======================================
 
         [Fact]
         public void GetReceiptDocument_NullFilePath()

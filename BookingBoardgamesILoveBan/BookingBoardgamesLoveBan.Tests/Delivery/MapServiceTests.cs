@@ -12,6 +12,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
     {
         private readonly MapService service = new MapService();
 
+
+        // ================================ GetAddressFromMapAsync ======================================
+
         [Fact]
         public async Task GetAddressFromMapAsync_ZeroCoordinates_ReturnsNull()
         {
