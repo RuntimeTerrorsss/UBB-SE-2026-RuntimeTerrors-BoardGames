@@ -16,14 +16,14 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
     public class ServicePayment : IServicePayment
     {
         private readonly IRepositoryPayment repository;
-        private readonly ReceiptService receiptservice;
+        private readonly IReceiptService receiptservice; // changed to interface
 
         /// <summary>
         /// Initializes a new instance of the ServiceTransactions class.
         /// </summary>
         /// <param name="repository">The transactions repository providing data access.</param>
         /// <param name="receiptService">Service to handle generating and opening receipts.</param>
-        public ServicePayment(IRepositoryPayment paymentRepository, ReceiptService receiptService)
+        public ServicePayment(IRepositoryPayment paymentRepository, IReceiptService receiptService)
         {
             repository = paymentRepository;
             receiptservice = receiptService;
