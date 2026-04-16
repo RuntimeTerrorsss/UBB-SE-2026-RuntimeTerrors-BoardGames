@@ -20,7 +20,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
 
         public CardPaymentServiceTests()
         {
-            DatabaseBootstrap.Initialize();
             mockPaymentRepository = new Mock<PaymentRepository>();
             mockUserService = new Mock<UserService>();
 
@@ -108,6 +107,84 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             mockUserService.Verify(us => us.UpdateBalance(clientId, 50.0m), Times.Once);
             mockUserService.Verify(us => us.UpdateBalance(ownerId, 600.0m), Times.Once);
             mockPaymentRepository.Verify(repo => repo.UpdatePayment(It.IsAny<Payment>()), Times.Once);
+        }
+        [Fact]
+        public void GetRequestDataTransferObject_FetchesAndReturnsDto()
+        {
+            int requestId = 1;
+
+            var result = cardPaymentService.GetRequestDataTransferObject(requestId);
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public void GetCardPayment_FetchesAndReturnsPayment()
+        {
+            int expectedTransactionId = 999;
+
+            var fakePayment = new Payment
+            {
+                Tid = expectedTransactionId,
+                Amount = 50.0m,
+                PaymentMethod = "CARD",
+                RequestId = 1,
+                ClientId = 2,
+                OwnerId = 3
+            };
+
+            mockPaymentRepository.Setup(repo => repo.GetById(expectedTransactionId)).Returns(fakePayment);
+
+            var fetchedPayment = cardPaymentService.GetCardPayment(expectedTransactionId);
+
+            Assert.NotNull(fetchedPayment);
+            Assert.Equal(expectedTransactionId, fetchedPayment.TransactionIdentifier);
+        }
+        [Fact]
+        public void GetCurrentBalance_FetchesAndReturnsBalance()
+        {
+            int clientId = 2;
+            decimal expectedBalance = 250.0m;
+            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(expectedBalance);
+
+            var result = cardPaymentService.GetCurrentBalance(clientId);
+
+            Assert.Equal(expectedBalance, result);
+        }
+
+        [Fact]
+        public void ProcessPayment_InsufficientFunds_ThrowsException()
+        {
+            int requestId = 1;
+            int clientId = 2;
+            int ownerId = 3;
+
+            mockRequestService.Setup(rs => rs.GetRequestPrice(requestId)).Returns(100.0m);
+            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(50.0m);
+            mockUserService.Setup(us => us.GetUserBalance(ownerId)).Returns(500.0m);
+
+            var exception = Assert.Throws<Exception>(() =>
+                cardPaymentService.ProcessPayment(requestId, clientId, ownerId));
+
+            Assert.Equal("Insufficient Funds", exception.Message);
+        }
+
+        [Fact]
+        public void ConvertToDataTransferObject_NullTransactionDate_UsesCurrentDate()
+        {
+            var fakePayment = new Payment
+            {
+                Tid = 1,
+                RequestId = 1,
+                ClientId = 1,
+                OwnerId = 1,
+                Amount = 10m,
+                PaymentMethod = "CARD",
+                DateOfTransaction = null
+            };
+
+            var result = cardPaymentService.ConvertToDataTransferObject(fakePayment);
+            Assert.NotNull(result);
+            Assert.Equal(DateTime.Now.Date, result.DateOfTransaction.Date);
         }
     }
 }

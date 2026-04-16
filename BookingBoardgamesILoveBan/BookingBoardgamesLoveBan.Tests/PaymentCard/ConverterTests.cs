@@ -38,5 +38,41 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.Converters
             var result = converter.Convert(false, typeof(Visibility), null, null);
             Assert.Equal(Visibility.Visible, result);
         }
+        [Fact]
+        public void BoolToVisibility_ConvertBack_Visible_ReturnsTrue()
+        {
+            var converter = new BoolToVisibilityConverter();
+
+            var result = converter.ConvertBack(Visibility.Visible, typeof(bool), null, null);
+
+            Assert.True((bool)result);
+        }
+
+        [Fact]
+        public void BoolToVisibility_ConvertBack_Collapsed_ReturnsFalse()
+        {
+            var converter = new BoolToVisibilityConverter();
+            var result = converter.ConvertBack(Visibility.Collapsed, typeof(bool), null, null);
+
+            Assert.False((bool)result);
+        }
+
+        [Fact]
+        public void BoolToVisibility_ConvertBack_Null_ReturnsFalse()
+        {
+            var converter = new BoolToVisibilityConverter();
+
+            var result = converter.ConvertBack(null, typeof(bool), null, null);
+            Assert.False((bool)result);
+        }
+
+        [Fact]
+        public void InverseBoolToVisibility_ConvertBack_ThrowsNotImplementedException()
+        {
+            var converter = new InverseBoolToVisibilityConverter();
+
+            Assert.Throws<NotImplementedException>(() =>
+                converter.ConvertBack(null, typeof(bool), null, null));
+        }
     }
 }

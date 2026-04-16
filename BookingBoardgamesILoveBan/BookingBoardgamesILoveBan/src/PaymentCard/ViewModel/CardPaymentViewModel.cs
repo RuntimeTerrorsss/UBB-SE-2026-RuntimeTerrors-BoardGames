@@ -292,7 +292,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
                 await Task.Run(() =>
                     cardPaymentService.AddCardPayment(RequestIdentifier, ClientIdentifier, OwnerIdentifier, Price));
 
-                this.ConversationService.OnCardPaymentSelected(this.BookingMessageIdentifier);
+                this.ConversationService?.OnCardPaymentSelected(this.BookingMessageIdentifier);
                 RefreshBalance();
                 IsPaymentSuccessful = true;
                 CurrentStatusMessage = "Payment successful!";
