@@ -21,7 +21,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
 
         void CreateCashAgreementMessage(int messageIdOfParentRentalRequestMessage, int paymentId);
 
-        void Subscribe(int userId, IMessageObserver observer);
+        void Subscribe(int userId, IConversationService observer);
         void Unsubscribe(int userId);
         void NotifySubscribersAboutMessage(Message message);
         void NotifySubscribersAboutMessageUpdate(Message message);

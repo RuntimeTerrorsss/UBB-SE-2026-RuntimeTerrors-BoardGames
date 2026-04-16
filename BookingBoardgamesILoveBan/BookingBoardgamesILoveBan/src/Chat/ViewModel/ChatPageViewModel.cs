@@ -4,11 +4,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
-using BookingBoardgamesILoveBan.Src.Chat.Repository;
 using BookingBoardgamesILoveBan.Src.Chat.Service;
-using BookingBoardgamesILoveBan.Src.Enum;
-using BookingBoardgamesILoveBan.Src.Model;
-namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+
+namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
 
 public class ChatPageViewModel
 {
@@ -23,7 +23,7 @@ public class ChatPageViewModel
     }
     private List<ConversationDTO> conversations = new ();
 
-    public ChatPageViewModel(int currentUser)
+    /*public ChatPageViewModel(int currentUser)
     {
         LeftPanel = new LeftPanelViewModel();
         Chat = new ChatViewModel(currentUser);
@@ -47,6 +47,45 @@ public class ChatPageViewModel
         conversationService.ConversationProcessed += OnConversationReceived;
         conversationService.ReadReceiptProcessed += OnReadReceiptReceived;
         conversationService.MessageUpdateProcessed += OnMessageUpdateReceived;
+    }*/
+
+    public ChatPageViewModel(int currentUser)
+    : this(currentUser, new ConversationService(App.ConversationRepository, currentUser))
+    {
+    }
+
+    public ChatPageViewModel(int currentUser, ConversationService service) : this(currentUser, service, App.UserService)
+    {
+    }
+
+    public ChatPageViewModel(int currentUser, ConversationService service, IUserService uService)
+    {
+        LeftPanel = new LeftPanelViewModel();
+        Chat = new ChatViewModel(currentUser);
+        currentUserId = currentUser;
+
+        LeftPanel.PropertyChanged += OnLeftPanelPropertyChanged;
+        Chat.MessageSent += OnMessageSent;
+        Chat.BookingRequestUpdate += UpdateBookingRequest;
+        Chat.CashAgreementAccept += UpdateCashAgreement;
+
+        conversationService = service;
+
+        conversations = conversationService.FetchConversations();
+
+        foreach (var convo in conversations)
+        {
+            LeftPanel.HandleIncomingConversation(
+                convo,
+                conversationService.GetOtherUserNameByConversationDTO(convo),
+                currentUserId,
+                uService);
+        }
+
+        conversationService.MessageProcessed += OnMessageReceived;
+        conversationService.ConversationProcessed += OnConversationReceived;
+        conversationService.ReadReceiptProcessed += OnReadReceiptReceived;
+        conversationService.MessageUpdateProcessed += OnMessageUpdateReceived;
     }
 
     /// <summary>
@@ -62,7 +101,6 @@ public class ChatPageViewModel
         {
             return;
         }
-
         if (LeftPanel.SelectedConversation == null)
         {
             return;
@@ -73,7 +111,6 @@ public class ChatPageViewModel
         {
             return;
         }
-
         int selectedConversationOtherUserUnreadCount = convo.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
         Chat.LoadConversation(LeftPanel.SelectedConversation, convo.MessageList, selectedConversationOtherUserUnreadCount);
 
@@ -215,7 +252,6 @@ public class ChatPageViewModel
         {
             return;
         }
-
         for (int i = 0; i < convo.MessageList.Count; i++)
         {
             if (convo.MessageList[i].id == updatedMessage.id)

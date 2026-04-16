@@ -13,7 +13,7 @@ using BookingBoardgamesILoveBan.Src.Model;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.Service
 {
-    public class ConversationService : IMessageObserver
+    public class ConversationService : IConversationService
     {
         private IConversationRepository ConversationRepository { get; set; }
         private IUserService userService;
@@ -24,11 +24,15 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         public event Action<ReadReceiptDTO> ReadReceiptProcessed;
         public event Action<MessageDTO, string> MessageUpdateProcessed;
 
-        public ConversationService(IConversationRepository conversationRepo, int userIdInput)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput) : this(conversationRepo, userIdInput, App.UserService)
+        {
+        }
+
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserService uService)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;
-            userService = App.UserService;
+            userService = uService;
 
             ConversationRepository.Subscribe(UserId, this);
         }

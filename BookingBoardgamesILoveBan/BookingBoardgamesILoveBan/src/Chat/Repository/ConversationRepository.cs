@@ -15,11 +15,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
 {
     public class ConversationRepository : IConversationRepository
     {
-        private Dictionary<int, IMessageObserver> Subscribers { get; set; }
+        private Dictionary<int, IConversationService> Subscribers { get; set; }
 
         public ConversationRepository()
         {
-            Subscribers = new Dictionary<int, IMessageObserver>();
+            Subscribers = new Dictionary<int, IConversationService>();
         }
 
         #region Public Methods
@@ -691,7 +691,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="observer"></param>
-        public void Subscribe(int userId, IMessageObserver observer)
+        public void Subscribe(int userId, IConversationService observer)
         {
             if (!Subscribers.ContainsKey(userId))
             {
