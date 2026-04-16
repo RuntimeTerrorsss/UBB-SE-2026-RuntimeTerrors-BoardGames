@@ -111,3 +111,9 @@ INSERT INTO [User] (AvatarUrl, DisplayName, UserName, Balance, Country, City, St
 ('https://i.pravatar.cc/150?u=alice', 'Alice',   'alice99',  150.00, 'Romania', 'Cluj', 'Aleea Godeanu', '23-25')
 
 INSERT INTO _Migrations (Name) VALUES ('InitialSchema')
+
+ALTER TABLE Game
+ALTER COLUMN PricePerDay DECIMAL(18, 2);
+
+ALTER TABLE [User]
+ALTER COLUMN Balance DECIMAL(18, 2);
