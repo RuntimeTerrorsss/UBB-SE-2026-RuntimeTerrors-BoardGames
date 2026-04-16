@@ -136,5 +136,29 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
             Assert.Equal(all[0].OwnerName, result.OwnerName);
         }
+
+        [Fact]
+        public void GetPaymentById_ExistingId_WithDateConfirmedSeller()
+        {
+            var all = repositoryPayment.GetAllPayments();
+            var withSeller = all.FirstOrDefault(p => p.DateConfirmedSeller != null);
+            if (withSeller == null) 
+                return;
+
+            var result = repositoryPayment.GetPaymentById(withSeller.Tid);
+            Assert.NotNull(result.DateConfirmedSeller);
+        }
+
+        [Fact]
+        public void GetPaymentById_ExistingId_WithFilePath()
+        {
+            var all = repositoryPayment.GetAllPayments();
+            var withFile = all.FirstOrDefault(p => p.FilePath != null);
+            if (withFile == null) 
+                return;
+
+            var result = repositoryPayment.GetPaymentById(withFile.Tid);
+            Assert.NotNull(result.FilePath);
+        }
     }
 }

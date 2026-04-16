@@ -44,6 +44,8 @@ BEGIN
 	(6, 6, 3,  4.80, '2026-03-18 16:00:00', NULL,                  NULL, 'CASH', 0, NULL)   -- tid 6
 
 	UPDATE [Payment] SET DateConfirmedSeller = '2026-03-12 11:00:00' WHERE RequestId = 5
+	INSERT INTO [Payment] (RequestId, ClientId, OwnerId, Amount, PaymentMethod, State, DateOfTransaction, DateConfirmedBuyer, DateConfirmedSeller, FilePath)
+VALUES (1, 1, 2, 50.00, 'Cash', 1, '2024-01-15', '2024-01-16', '2024-01-17', 'receipts\receipt_1_240115.pdf')
 
 	-- CONVERSATIONS
 	-- cid 1: Alice  <-> Bob
