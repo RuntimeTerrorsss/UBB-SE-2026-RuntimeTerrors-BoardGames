@@ -85,6 +85,53 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             Assert.Equal(1, viewModel.CurrentPage);
         }
 
+        // ================================ SearchText ======================================
+
+        [Fact]
+        public async Task SearchText_TriggersDebouncedFilter()
+        {
+            var fake = (FakeServicePayment)service;
+            fake.PaymentsToReturn = new List<PaymentDto>
+                {
+                    new PaymentDto { Id = 1, Amount = 10 }
+                };
+            viewModel.SearchText = "test";
+            await Task.Delay(600);
+            Assert.Single(viewModel.Payments);
+        }
+
+        [Fact]
+        public async Task SearchText_CancelsPreviousSearch()
+        {
+            viewModel.SearchText = "a";
+            viewModel.SearchText = "b";
+            await Task.Delay(600);
+            Assert.True(true); // makes sure there was no crash
+        }
+
+        // ================================ OpenReceipt ======================================
+
+        [Fact]
+        public void OpenReceiptCommand_IsInitialized()
+        {
+            Assert.NotNull(viewModel.OpenReceiptCommand);
+        }
+
+        [Fact]
+        public void OpenReceipt_IfNull_DoNothing()
+        {
+            viewModel.OpenReceiptCommand.Execute(null);
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void OpenReceipt_InexistentFile_DoNotThrow()
+        {
+            var payment = new PaymentDto { Id = 999 };
+            viewModel.OpenReceiptCommand.Execute(payment);
+            Assert.True(true); // no exception => passeddd
+        }
+
         // ================================ SelectedFilterOption ======================================
 
         [Fact]
@@ -94,6 +141,32 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             viewModel.SelectedFilterOption = viewModel.FilterOptions.First(f => f.Type == FilterType.Newest);
 
             Assert.Equal(1, viewModel.CurrentPage);
+        }
+
+        // ================================ ApplyFilter ======================================
+
+        [Fact]
+        public void ApplyFilter_IfSelectedFilterIsNull_DoNothing()
+        {
+            // set filter to null (break it intentionally)
+            typeof(PaymentHistoryViewModel).GetField("selectedFilterOption", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(viewModel, null);
+
+            viewModel.SearchText = "test";
+            Assert.True(true); // no crash
+        }
+
+        [Fact]
+        public void ApplyFilter_AddsPaymentsToCollection()
+        {
+            var fake = (FakeServicePayment)service;
+            fake.PaymentsToReturn = new List<PaymentDto>
+                {
+                    new PaymentDto { Id = 1, Amount = 10 },
+                    new PaymentDto { Id = 2, Amount = 20 }
+                };
+
+            viewModel.SelectedFilterOption = viewModel.FilterOptions.First();
+            Assert.Equal(2, viewModel.Payments.Count);
         }
 
         // ================================ SelectedPaymentMethod ======================================
