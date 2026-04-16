@@ -138,5 +138,44 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             Assert.True(vm.IsRead);
         }
+
+        [Fact]
+        public void IsAccepted_Should_Be_Set_From_DTO_And_Updatable()
+        {
+            var msg = CreateMessage() with { isAccepted = true };
+
+            var vm = new MessageViewModel(msg, 1);
+
+            Assert.True(vm.IsAccepted);
+
+            vm.IsAccepted = false;
+
+            Assert.False(vm.IsAccepted);
+        }
+
+        [Fact]
+        public void Constructor_Should_Set_AcceptedBy_When_BuyerAccepted()
+        {
+            var msg = CreateMessage() with
+            {
+                isAcceptedByBuyer = true,
+                receiverId = 99
+            };
+
+            var vm = new MessageViewModel(msg, 1);
+
+            Assert.Equal(2, vm.AcceptedBy.Length);
+            Assert.All(vm.AcceptedBy, id => Assert.Equal(99, id));
+        }
+
+        [Fact]
+        public void BothAccepted_Should_Be_False_When_Not_Two()
+        {
+            var vm = new MessageViewModel(CreateMessage(), 1);
+
+            vm.AcceptedBy = new[] { 1 };
+
+            Assert.False(vm.BothAccepted);
+        }
     }
 }

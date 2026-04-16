@@ -383,5 +383,105 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             Assert.Equal("system", dto.content);
         }
 
+        [Fact]
+        public void GetOtherUserNameByMessageDTO_ReturnsCorrectUser()
+        {
+            var dto = new MessageDTO(
+                1, 1, 1, 2, DateTime.Now, "hi",
+                MessageType.Text, "", false, false, false, false, -1, -1
+            );
+
+            var result = _service.GetOtherUserNameByMessageDTO(dto);
+
+            Assert.Equal("user2", result);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_Image_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.Image, imageUrl = "img.png" };
+
+            var msg = _service.MessageDTOToMessage(dto);
+
+            Assert.IsType<ImageMessage>(msg);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_Rental_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.RentalRequest };
+
+            var msg = _service.MessageDTOToMessage(dto);
+
+            Assert.IsType<RentalRequestMessage>(msg);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_Cash_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.CashAgreement };
+
+            var msg = _service.MessageDTOToMessage(dto);
+
+            Assert.IsType<CashAgreementMessage>(msg);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_System_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.System};
+
+            var msg = _service.MessageDTOToMessage(dto);
+
+            Assert.IsType<SystemMessage>(msg);
+        }
+
+        [Fact]
+        public void ConversationToConversationDTO_MapsCorrectly()
+        {
+            var conv = new Conversation(
+                1,
+                new[] { 1, 2 },
+                new List<Message> { new TextMessage(1, 1, 1, 2, DateTime.Now, "hi") },
+                new Dictionary<int, DateTime>
+                {
+                    { 1, DateTime.Now },
+                    { 2, DateTime.Now }
+                }
+            );
+
+            var dto = _service.ConversationToConversationDTO(conv);
+
+            Assert.Equal(1, dto.Id);
+            Assert.Single(dto.MessageList);
+        }
+
+        [Fact]
+        public void ReadReceiptToReadReceiptDTO_MapsCorrectly()
+        {
+            var rr = new ReadReceipt(1, 1, 2, DateTime.Now);
+
+            var dto = _service.ReadReceiptToReadReceiptDTO(rr);
+
+            Assert.Equal(1, dto.conversationId);
+            Assert.Equal(1, dto.readerId);
+            Assert.Equal(2, dto.receiverId);
+        }
+
+        [Fact]
+        public void FetchConversations_MultipleConversations()
+        {
+            var convs = new List<Conversation>
+            {
+                new Conversation(1, new[] {1,2}, new List<Message>(), new()),
+                new Conversation(2, new[] {1,3}, new List<Message>(), new())
+            };
+
+            _repoMock.Setup(r => r.GetConversationsForUser(1)).Returns(convs);
+
+            var result = _service.FetchConversations();
+
+            Assert.Equal(2, result.Count);
+        }
     }
 }

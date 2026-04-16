@@ -16,10 +16,18 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
     public class ConversationRepository : IConversationRepository
     {
         private Dictionary<int, IConversationService> Subscribers { get; set; }
-
-        public ConversationRepository()
+        private static string appConnectionString;
+        public ConversationRepository(bool isTest = false)
         {
             Subscribers = new Dictionary<int, IConversationService>();
+            if (isTest)
+            {
+                appConnectionString = "Server=localhost\\MSSQLSERVER02;Database=ChatTestDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+            }
+            else
+            {
+                appConnectionString = DatabaseBootstrap.GetAppConnection();
+            }
         }
 
         #region Public Methods
@@ -100,8 +108,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="senderId"></param>
         /// <param name="receiverId"></param>
         /// <returns></returns>
-        public int CreateConversation(int senderId, int receiverId)
+        public int CreateConversation(int senderId, int receiverId, bool isTest = false)
         {
+            if (isTest)
+            {
+                appConnectionString = "Server=localhost\\MSSQLSERVER02;Database=ChatTestDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+            }
+
             Conversation newConversation = CreateConversationInDB(senderId, receiverId);
             if (newConversation.MessageList.Count == 0)
             {
@@ -136,7 +149,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         #endregion
 
         #region Database Communication
-        private static string appConnectionString = DatabaseBootstrap.GetAppConnection();
 
         // GETTERS
 

@@ -22,39 +22,8 @@ public class ChatPageViewModel
         get => conversationService;
     }
     private List<ConversationDTO> conversations = new ();
-
-    /*public ChatPageViewModel(int currentUser)
-    {
-        LeftPanel = new LeftPanelViewModel();
-        Chat = new ChatViewModel(currentUser);
-        currentUserId = currentUser;
-
-        LeftPanel.PropertyChanged += OnLeftPanelPropertyChanged;
-        Chat.MessageSent += OnMessageSent;
-        Chat.BookingRequestUpdate += UpdateBookingRequest;
-        Chat.CashAgreementAccept += UpdateCashAgreement;
-
-        conversationService = new ConversationService(App.ConversationRepository, currentUser);
-
-        conversations = conversationService.FetchConversations();
-
-        foreach (var convo in conversations)
-        {
-            LeftPanel.HandleIncomingConversation(convo, conversationService.GetOtherUserNameByConversationDTO(convo), currentUserId);
-        }
-
-        conversationService.MessageProcessed += OnMessageReceived;
-        conversationService.ConversationProcessed += OnConversationReceived;
-        conversationService.ReadReceiptProcessed += OnReadReceiptReceived;
-        conversationService.MessageUpdateProcessed += OnMessageUpdateReceived;
-    }*/
-
     public ChatPageViewModel(int currentUser)
-    : this(currentUser, new ConversationService(App.ConversationRepository, currentUser))
-    {
-    }
-
-    public ChatPageViewModel(int currentUser, ConversationService service) : this(currentUser, service, App.UserService)
+    : this(currentUser, new ConversationService(App.ConversationRepository, currentUser), App.UserService)
     {
     }
 

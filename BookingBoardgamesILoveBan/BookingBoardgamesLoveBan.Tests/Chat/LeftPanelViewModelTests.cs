@@ -200,5 +200,116 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             Assert.False(vm.IsEmptyStateVisible);
         }
+
+        [Fact]
+        public void ApplyFilter_Should_Reorder_Correctly()
+        {
+            var vm = CreateVM();
+
+            vm.HandleIncomingMessage(CreateMessage(1), "B", userService.Object);
+            vm.HandleIncomingMessage(CreateMessage(2), "A", userService.Object);
+
+            vm.SearchText = "";
+
+            Assert.Equal("A", vm.Conversations[0].DisplayName);
+        }
+
+        [Fact]
+        public void ApplyFilter_Should_Move_Items_When_Order_Changes()
+        {
+            var vm = CreateVM();
+
+            vm.HandleIncomingMessage(CreateMessage(1), "John", userService.Object);
+            vm.HandleIncomingMessage(CreateMessage(2), "Mike", userService.Object);
+
+            vm.Conversations[0].Timestamp = DateTime.MinValue;
+            vm.Conversations[1].Timestamp = DateTime.Now;
+
+            vm.SortConversationsByTimestamp();
+
+            Assert.Equal("John", vm.Conversations.First().DisplayName);
+        }
+
+        [Fact]
+        public void HandleIncomingMessage_WhenSelected_Should_NotIncreaseUnread()
+        {
+            var vm = CreateVM();
+
+            var msg = CreateMessage();
+
+            vm.HandleIncomingMessage(msg, "John", userService.Object);
+
+            var convo = vm.Conversations.First();
+
+            vm.SelectedConversation = convo;
+
+            vm.HandleIncomingMessage(msg with { content = "new" }, "John", userService.Object);
+
+            Assert.Equal(0, convo.UnreadCount);
+        }
+
+        [Fact]
+        public void HandleIncomingConversation_WithMessages_Should_SetPreviewAndTimestamp()
+        {
+            var vm = CreateVM();
+            var service = CreateUserService();
+
+            var message = CreateMessage();
+
+            var convo = new ConversationDTO(
+                convId: 1,
+                participants: new[] { 1, 2 },
+                messages: new List<MessageDTO> { message },
+                lastRead: new Dictionary<int, DateTime>
+                {
+            { 1, DateTime.MinValue },
+            { 2, DateTime.MinValue }
+                }
+            );
+
+            vm.HandleIncomingConversation(convo, "John", 1, service);
+
+            var result = vm.Conversations.First();
+
+            Assert.Equal("hello", result.LastMessageText);
+            Assert.Equal(message.sentAt, result.Timestamp);
+        }
+
+        [Fact]
+        public void SortConversationsByTimestamp_Should_OrderDescending()
+        {
+            var vm = CreateVM();
+            var service = CreateUserService();
+
+            var msg1 = CreateMessage();
+            var msg2 = CreateMessage(2) with { sentAt = DateTime.Now.AddMinutes(1) };
+
+            vm.HandleIncomingMessage(msg1, "A", userService.Object);
+            vm.HandleIncomingMessage(msg2, "B", userService.Object);
+
+            vm.SortConversationsByTimestamp();
+
+            var list = vm.Conversations.ToList();
+
+            Assert.True(list[0].Timestamp >= list[1].Timestamp);
+        }
+
+        [Fact]
+        public void RaisePropertyChanged_Should_InvokeEvent()
+        {
+            var vm = CreateVM();
+
+            bool triggered = false;
+
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == "TestProp")
+                    triggered = true;
+            };
+
+            vm.RaisePropertyChanged("TestProp");
+
+            Assert.True(triggered);
+        }
     }
 }

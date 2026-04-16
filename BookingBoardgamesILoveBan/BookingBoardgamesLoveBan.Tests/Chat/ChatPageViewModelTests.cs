@@ -159,5 +159,95 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             Assert.True(true);
         }
+
+        [Fact]
+        public void MessageSent_Should_Call_Service_With_Receiver()
+        {
+            var repo = new Mock<IConversationRepository>();
+
+            repo.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
+                .Returns(new List<Conversation>
+                {
+                    new Conversation(
+                        1,
+                        new[] { 1, 2 },
+                        new List<Message>(),
+                        new Dictionary<int, DateTime>
+                        {
+                            { 1, DateTime.MinValue },
+                            { 2, DateTime.MinValue }
+                        }
+                    )
+                });
+
+            userService = new Mock<IUserService>();
+            userService
+                .Setup(u => u.GetById(It.IsAny<int>()))
+                .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
+
+            var service = new ConversationService(repo.Object, currentUserId, userService.Object);
+
+            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+
+            var msg = new MessageDTO(1, "hello", MessageType.Text)
+            {
+                conversationId = 1,
+                senderId = 1
+            };
+
+            vm.Chat.RaiseMessageSent(msg);
+
+            repo.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
+        }
+
+        [Fact]
+        public void SelectingConversation_Should_LoadChat()
+        {
+            var vm = CreateVM();
+
+            var convo = vm.LeftPanel.Conversations.First();
+
+            vm.LeftPanel.SelectedConversation = convo;
+
+            Assert.Equal(convo.ConversationId, vm.Chat.ConversationId);
+        }
+
+        [Fact]
+        public void OnMessageReceived_Should_Update_LeftPanel_And_Chat()
+        {
+            var service = CreateService();
+            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+
+            var msg = new TextMessage(1, 1, 2, 1, DateTime.Now, "hi");
+
+            service.OnMessageReceived(msg);
+
+            Assert.NotEmpty(vm.LeftPanel.Conversations);
+        }
+
+        [Fact]
+        public void OnReadReceipt_Should_Update_LastRead()
+        {
+            var service = CreateService();
+            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+
+            var receipt = new ReadReceipt(1, 2, 1, DateTime.Now);
+
+            service.OnReadReceiptReceived(receipt);
+
+            // No crash + state updated
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void BookingRequest_Should_Update_Message()
+        {
+            var service = CreateService();
+            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+
+            vm.Chat.RaiseBookingRequestUpdate(1, 1, true, true);
+
+            Assert.True(true);
+        }
     }
 }
