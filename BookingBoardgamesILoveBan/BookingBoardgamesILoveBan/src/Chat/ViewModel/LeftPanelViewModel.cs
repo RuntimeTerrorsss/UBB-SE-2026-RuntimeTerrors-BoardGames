@@ -145,6 +145,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="senderName"></param>
         public void HandleIncomingMessage(MessageDTO message, string senderName)
         {
+            HandleIncomingMessage(message, senderName, App.UserService);
+        }
+
+        public void HandleIncomingMessage(MessageDTO message, string senderName, IUserService userService)
+        {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == message.conversationId);
 
             if (existing != null)
@@ -166,7 +171,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
                     message.content,
                     DateTime.Now,
                     unreadCountInput: (message.conversationId == selectedConversationId) ? 0 : 1,
-                    App.UserService.GetById(message.receiverId).AvatarUrl);
+                    userService.GetById(message.receiverId).AvatarUrl);
                 allConversations.Insert(0, newConvo);
             }
 
