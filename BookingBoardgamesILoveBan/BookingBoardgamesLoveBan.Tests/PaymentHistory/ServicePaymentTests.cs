@@ -312,5 +312,72 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             Assert.Equal(2, result.PageNumber);
         }
 
+        [Fact]
+        public void GetFilteredPayments_Last6Months_ExcludesOlderPayments()
+        {
+            var payments = new List<HistoryPayment>
+                {
+                    MakePayment(1, "Chess", "Alice", "Card", 10, DateTime.Now.AddMonths(-2)),
+                    MakePayment(2, "Risk", "Bob", "Card", 20, DateTime.Now.AddMonths(-7))
+                };
+            InitializeService(payments);
+
+            var result = servicePayment.GetFilteredPayments(FilterType.Last6Months);
+
+            Assert.Single(result.Items);
+            Assert.Equal("Chess", result.Items.ElementAt(0).ProductName);
+        }
+
+        [Fact]
+        public void GetFilteredPayments_Last9Months_ExcludesOlderPayments()
+        {
+            var payments = new List<HistoryPayment>
+                {
+                    MakePayment(1, "Chess", "Alice", "Card", 10, DateTime.Now.AddMonths(-2)),
+                    MakePayment(2, "Risk", "Bob", "Card", 20, DateTime.Now.AddMonths(-10))
+                };
+            InitializeService(payments);
+
+            var result = servicePayment.GetFilteredPayments(FilterType.Last9Months);
+
+            Assert.Single(result.Items);
+            Assert.Equal("Chess", result.Items.ElementAt(0).ProductName);
+        }
+
+        // ================================ GetReceiptDocumentPath ======================================
+
+        [Fact]
+        public void GetReceiptDocumentPath_NullFilePath_GeneratesNewPath()
+        {
+            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = null };
+            var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
+            var fakeReceipt = new FakeReceiptService();
+            var service = new ServicePayment(fakeRepo, fakeReceipt);
+            var result = service.GetReceiptDocumentPath(1);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+        }
+
+        [Fact]
+        public void GetReceiptDocumentPath_FilePathWithoutBackslashes()
+        {
+            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipt_1_test.pdf" };
+            var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
+            var fakeReceipt = new FakeReceiptService();
+            var service = new ServicePayment(fakeRepo, fakeReceipt);
+            var result = service.GetReceiptDocumentPath(1);
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public void GetReceiptDocumentPath_FilePathWithBackslashes()
+        {
+            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipts\\receipt_1_test.pdf" };
+            var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
+            var fakeReceipt = new FakeReceiptService();
+            var service = new ServicePayment(fakeRepo, fakeReceipt);
+            var result = service.GetReceiptDocumentPath(1);
+            Assert.NotNull(result);
+        }
     }
 }
