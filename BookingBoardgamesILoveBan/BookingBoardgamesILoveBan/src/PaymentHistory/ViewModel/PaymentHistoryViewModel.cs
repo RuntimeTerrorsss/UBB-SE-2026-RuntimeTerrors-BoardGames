@@ -183,6 +183,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
                     // windows storage file reference to launch safely
                     var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(fileInfo.FullName);
                     await Windows.System.Launcher.LaunchFileAsync(file);
+                    // idk how to test these :/
                 }
             }
             catch (System.Exception)
