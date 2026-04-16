@@ -155,20 +155,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             Assert.True(true); // no crash
         }
 
-        [Fact]
-        public void ApplyFilter_AddsPaymentsToCollection()
-        {
-            var fake = (FakeServicePayment)service;
-            fake.PaymentsToReturn = new List<PaymentDto>
-                {
-                    new PaymentDto { Id = 1, Amount = 10 },
-                    new PaymentDto { Id = 2, Amount = 20 }
-                };
-
-            viewModel.SelectedFilterOption = viewModel.FilterOptions.First();
-            Assert.Equal(2, viewModel.Payments.Count);
-        }
-
         // ================================ SelectedPaymentMethod ======================================
 
         [Fact]

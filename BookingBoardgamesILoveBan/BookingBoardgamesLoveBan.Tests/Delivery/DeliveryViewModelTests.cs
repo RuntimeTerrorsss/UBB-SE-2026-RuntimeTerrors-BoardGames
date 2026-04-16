@@ -18,17 +18,25 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             public Address AddressToReturn { get; set; } = null;
 
-            public Task<Address> GetAddressFromMapAsync(double latitude, double longitude) =>
-                Task.FromResult(AddressToReturn);
+            public Task<Address> GetAddressFromMapAsync(double latitude, double longitude)
+            {
+                return Task.FromResult(AddressToReturn);
+            }
         }
 
         private class FakeUserService : IUserService
         {
             public User UserToReturn { get; set; } = null;
 
-            public User GetById(int id) => UserToReturn;
+            public User GetById(int id)
+            {
+                return UserToReturn;
+            }
             public void SaveAddress(int id, Address address) { }
-            public decimal GetUserBalance(int userId) => 0;
+            public decimal GetUserBalance(int userId)
+            {
+                return 0;
+            }
             public void UpdateBalance(int userId, decimal newBalance) { }
         }
 
@@ -36,7 +44,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             public Dictionary<string, string> ErrorsToReturn { get; set; } = new();
 
-            public Dictionary<string, string> Validate(Address address) => ErrorsToReturn;
+            public Dictionary<string, string> Validate(Address address)
+            {
+                return ErrorsToReturn;
+            }
         }
 
         // ================================ setup ======================================
@@ -66,7 +77,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         public void OpenMap_SetsIsMapVisibleTrue()
         {
             viewModel.OpenMap();
-
             Assert.True(viewModel.IsMapVisible);
         }
 
@@ -75,9 +85,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             bool fired = false;
             viewModel.StateChanged += () => fired = true;
-
             viewModel.OpenMap();
-
             Assert.True(fired);
         }
 
@@ -98,9 +106,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             bool fired = false;
             viewModel.StateChanged += () => fired = true;
-
             viewModel.CloseMap();
-
             Assert.True(fired);
         }
 

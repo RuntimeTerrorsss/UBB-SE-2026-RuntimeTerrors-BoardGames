@@ -72,5 +72,26 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             var payment = new Payment { FilePath = string.Empty };
             Assert.Throws<InvalidOperationException>(() => receiptService.GetReceiptDocument(payment));
         }
+
+        [Fact]
+        public void GetReceiptDocument_ValidFilename_ParsesDate()
+        {
+            var payment = new Payment
+            {
+                RequestId = 1,
+                ClientId = 1,
+                OwnerId = 2,
+                Amount = 100,
+                PaymentMethod = "card",
+                DateOfTransaction = DateTime.Now,
+                FilePath = "receipts\\receipt_1_240101_123000.pdf"
+            };
+
+            var path = receiptService.GetReceiptDocument(payment);
+
+            Assert.True(File.Exists(path));
+
+            File.Delete(path);
+        }
     }
 }
