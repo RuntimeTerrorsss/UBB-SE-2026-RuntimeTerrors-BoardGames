@@ -26,6 +26,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public async Task GetAddressFromMapAsync_ValidCoordinates_ReturnsNonNull()
         {
+            await Task.Delay(1500);
             var result = await service.GetAddressFromMapAsync(46.77, 23.59);
 
             Assert.NotNull(result);
@@ -34,6 +35,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public async Task GetAddressFromMapAsync_ValidCoordinates_ReturnsCorrectCountry()
         {
+            await Task.Delay(1500);
             var result = await service.GetAddressFromMapAsync(46.77, 23.59);
 
             Assert.Equal("România", result.Country);
@@ -53,6 +55,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public async Task GetAddressFromMapAsync_Town_FillsCityField()
         {
+            await Task.Delay(1500);
             var result = await service.GetAddressFromMapAsync(46.80, 23.70);
             Assert.NotNull(result);
             Assert.NotEmpty(result.City);

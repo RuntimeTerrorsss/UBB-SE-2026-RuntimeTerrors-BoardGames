@@ -28,7 +28,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices
 
             try
             {
-                string url = $"https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json";
+                string url = System.FormattableString.Invariant($"https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json");
 
                 HttpResponseMessage response = await httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
