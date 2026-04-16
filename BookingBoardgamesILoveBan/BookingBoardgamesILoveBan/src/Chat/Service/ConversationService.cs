@@ -13,10 +13,10 @@ using BookingBoardgamesILoveBan.Src.Model;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.Service
 {
-    public class ConversationService : IMessageObserver
+    public class ConversationService : IConversationService
     {
-        private ConversationRepository ConversationRepository { get; set; }
-        private IUserService userService = App.UserService;
+        private IConversationRepository ConversationRepository { get; set; }
+        private IUserService userService;
         private int UserId { get; set; }
 
         public event Action<MessageDTO, string> MessageProcessed;
@@ -24,10 +24,24 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         public event Action<ReadReceiptDTO> ReadReceiptProcessed;
         public event Action<MessageDTO, string> MessageUpdateProcessed;
 
-        public ConversationService(ConversationRepository conversationRepo, int userIdInput)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput) : this(conversationRepo, userIdInput, App.UserService)
+        {
+        }
+
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserService uService)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;
+            userService = uService;
+
+            ConversationRepository.Subscribe(UserId, this);
+        }
+        public ConversationService(IConversationRepository conversationRepo, IUserService userService, int userIdInput)
+        {
+            UserId = userIdInput;
+            ConversationRepository = conversationRepo;
+            this.userService = userService;
+
             ConversationRepository.Subscribe(UserId, this);
         }
 
@@ -55,7 +69,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public string GetOtherUserNameByConversationDTO(ConversationDTO conversation)
         {
-            return userService.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]).Username ?? "Unknown User";
+            var user = userService.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]);
+            return user?.Username ?? "Unknown User";
         }
 
         /// <summary>

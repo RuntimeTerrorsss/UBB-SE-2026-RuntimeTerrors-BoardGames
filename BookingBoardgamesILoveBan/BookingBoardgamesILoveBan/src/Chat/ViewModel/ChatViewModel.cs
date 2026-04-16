@@ -231,4 +231,16 @@ public class ChatViewModel : INotifyPropertyChanged
         InputText = string.Empty;
         MessageSent.Invoke(dto);
     }
+    public void RaiseBookingRequestUpdate(int messageId, int conversationId, bool accepted, bool resolved)
+    {
+        BookingRequestUpdate?.Invoke(messageId, conversationId, accepted, resolved);
+    }
+    public void RaiseCashAgreementAccept(int messageId, int conversationId)
+    {
+        CashAgreementAccept?.Invoke(messageId, conversationId);
+    }
+    public void RaiseMessageSent(MessageDTO message)
+    {
+        MessageSent?.Invoke(message);
+    }
 }

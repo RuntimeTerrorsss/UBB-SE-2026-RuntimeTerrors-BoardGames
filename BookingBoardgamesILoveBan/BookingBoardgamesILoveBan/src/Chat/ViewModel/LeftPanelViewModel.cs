@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using Microsoft.UI.Xaml;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
@@ -144,6 +145,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="senderName"></param>
         public void HandleIncomingMessage(MessageDTO message, string senderName)
         {
+            HandleIncomingMessage(message, senderName, App.UserService);
+        }
+
+        public void HandleIncomingMessage(MessageDTO message, string senderName, IUserService userService)
+        {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == message.conversationId);
 
             if (existing != null)
@@ -165,7 +171,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
                     message.content,
                     DateTime.Now,
                     unreadCountInput: (message.conversationId == selectedConversationId) ? 0 : 1,
-                    App.UserService.GetById(message.receiverId).AvatarUrl);
+                    userService.GetById(message.receiverId).AvatarUrl);
                 allConversations.Insert(0, newConvo);
             }
 
@@ -180,6 +186,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="displayName"></param>
         /// <param name="userId"></param>
         public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId)
+        {
+            HandleIncomingConversation(conversation, displayName, userId, App.UserService);
+        }
+
+        public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserService service)
         {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversation.Id);
             if (existing != null)
@@ -196,7 +207,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
                 conversation.MessageList.LastOrDefault()?.GetPreview() ?? string.Empty,
                 conversation.MessageList.LastOrDefault()?.sentAt ?? DateTime.MinValue,
                 unreadCountInput: conversation.UnreadCount[userId],
-                App.UserService.GetById(otherUser).AvatarUrl);
+                service.GetById(otherUser).AvatarUrl);
             allConversations.Insert(0, newConvo);
             SortConversationsByTimestamp();
             ApplyFilter();
@@ -216,6 +227,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
             allConversations = allConversations.OrderByDescending(c => c.Timestamp).ToList();
             Debug.WriteLine("sorted conversations:");
             ApplyFilter();
+        }
+        public void RaisePropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
