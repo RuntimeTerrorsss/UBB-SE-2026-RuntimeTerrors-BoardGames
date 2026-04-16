@@ -27,10 +27,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
 
             var paymentService = new CardPaymentService(repository, userService, receiptService, requestService);
 
-            int clientId = 1;
+            int clientId = 5;
             int ownerId = 2;
-            int requestId = 1;
-            decimal price = 100m;
+            int requestId = 5;
+            decimal price = 15m;
 
             var result = paymentService.AddCardPayment(requestId, clientId, ownerId, price);
             var retrievedPayment = paymentService.GetCardPayment(result.TransactionIdentifier);
@@ -41,6 +41,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             Assert.NotNull(retrievedPayment);
             Assert.Equal(price, retrievedPayment.Amount);
             Assert.Equal(clientId, retrievedPayment.ClientIdentifier);
+            decimal currentClientBalance = userService.GetUserBalance(clientId);
+            decimal currentOwnerBalance = userService.GetUserBalance(ownerId);
+
+            userService.UpdateBalance(clientId, currentClientBalance + price);
+            userService.UpdateBalance(ownerId, currentOwnerBalance - price);
 
         }
     }

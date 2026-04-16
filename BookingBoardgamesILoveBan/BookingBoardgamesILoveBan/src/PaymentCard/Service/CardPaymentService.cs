@@ -25,7 +25,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
             this.requestService = requestService;
         }
 
-        public CardPaymentDataTransferObject AddCardPayment(int requestIdentifier, int clientIdentifier, int ownerIdentifier, decimal amount)
+        public virtual CardPaymentDataTransferObject AddCardPayment(int requestIdentifier, int clientIdentifier, int ownerIdentifier, decimal amount)
         {
             if (!CheckBalanceSufficiency(requestIdentifier, clientIdentifier))
             {

@@ -36,7 +36,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
             return transactions;
         }
 
-        public Model.Payment GetById(int tid)
+        public virtual Model.Payment GetById(int tid)
         {
             using (var connection = new SqlConnection(connectionString))
             {
