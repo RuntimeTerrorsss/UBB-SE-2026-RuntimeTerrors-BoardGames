@@ -37,6 +37,8 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var result = await service.GetAddressFromMapAsync(46.77, 23.59);
 
             Assert.Equal("România", result.Country);
+            Assert.NotEmpty(result.City);
+            Assert.NotEmpty(result.Street);
         }
 
         [Fact]
@@ -46,6 +48,14 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var result = await service.GetAddressFromMapAsync(0.1, 0.1);
 
             Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetAddressFromMapAsync_Town_FillsCityField()
+        {
+            var result = await service.GetAddressFromMapAsync(46.80, 23.70);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result.City);
         }
     }
 }
