@@ -43,6 +43,8 @@ BEGIN
 	(5, 5, 2,  1.50, '2026-03-12 11:00:00', '2026-03-12 11:00:00', NULL, 'CARD', 1, NULL),  -- tid 5
 	(6, 6, 3,  4.80, '2026-03-18 16:00:00', NULL,                  NULL, 'CASH', 0, NULL)   -- tid 6
 
+	UPDATE [Payment] SET DateConfirmedSeller = '2026-03-12 11:00:00' WHERE RequestId = 5
+
 	-- CONVERSATIONS
 	-- cid 1: Alice  <-> Bob
 	-- cid 2: Bob    <-> Carol

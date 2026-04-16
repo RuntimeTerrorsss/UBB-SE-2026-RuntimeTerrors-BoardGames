@@ -72,6 +72,16 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             }
         }
 
+        [Fact]
+        public void GetAllPayments_SomePayments_HaveNonNullFields()
+        {
+            var result = repositoryPayment.GetAllPayments();
+            Assert.Contains(result, p => p.DateOfTransaction != null);
+            Assert.Contains(result, p => p.DateConfirmedBuyer != null);
+            Assert.Contains(result, p => p.DateConfirmedSeller != null);
+            Assert.Contains(result, p => p.FilePath != null);
+        }
+
         // ================================ GetPaymentById ======================================
 
         [Fact]
