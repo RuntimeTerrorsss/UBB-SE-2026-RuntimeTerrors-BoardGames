@@ -13,7 +13,7 @@ using Microsoft.Data.SqlClient;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.Repository
 {
-    public class ConversationRepository
+    public class ConversationRepository : IConversationRepository
     {
         private Dictionary<int, IMessageObserver> Subscribers { get; set; }
 

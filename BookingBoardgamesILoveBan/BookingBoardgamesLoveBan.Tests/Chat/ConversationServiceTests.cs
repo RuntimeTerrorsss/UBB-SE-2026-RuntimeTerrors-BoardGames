@@ -15,21 +15,35 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ConversationServiceTests
     {
-        private readonly Mock<ConversationRepository> _repoMock;
+        private readonly Mock<IConversationRepository> _repoMock;
         private readonly Mock<IUserService> _userServiceMock;
         private readonly ConversationService _service;
 
         public ConversationServiceTests()
         {
-            _repoMock = new Mock<ConversationRepository>();
+            _repoMock = new Mock<IConversationRepository>();
             _userServiceMock = new Mock<IUserService>();
 
-            _service = new ConversationService(_repoMock.Object, 1);
-        }
+            _userServiceMock
+                .Setup(u => u.GetById(It.IsAny<int>()))
+                .Returns((int id) => new User(
+                    id,
+                    "user" + id,
+                    "display",
+                    "RO",
+                    "Sibiu",
+                    "street",
+                    "1",
+                    "",
+                    0
+                ));
 
-        // ----------------------------
-        // FetchConversations
-        // ----------------------------
+            _service = new ConversationService(
+                _repoMock.Object,
+                _userServiceMock.Object,
+                1
+            );
+        }
 
         [Fact]
         public void FetchConversations_ReturnsEmptyList_WhenRepoEmpty()
@@ -65,10 +79,6 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             Assert.Equal(1, result.First().Id);
         }
 
-        // ----------------------------
-        // SendMessage
-        // ----------------------------
-
         [Fact]
         public void SendMessage_CallsRepository()
         {
@@ -96,10 +106,6 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             _repoMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
         }
 
-        // ----------------------------
-        // UpdateMessage
-        // ----------------------------
-
         [Fact]
         public void UpdateMessage_CallsRepository()
         {
@@ -111,10 +117,6 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             _repoMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
         }
-
-        // ----------------------------
-        // ReadReceipt
-        // ----------------------------
 
         [Fact]
         public void SendReadReceipt_CallsRepository()
@@ -137,10 +139,6 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             _repoMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
         }
 
-        // ----------------------------
-        // Conversion tests
-        // ----------------------------
-
         [Fact]
         public void MessageToDTO_TextMessage_Works()
         {
@@ -162,10 +160,6 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             Assert.IsType<TextMessage>(msg);
         }
 
-        // ----------------------------
-        // Helpers
-        // ----------------------------
-
         private MessageDTO CreateTextDTO()
         {
             return new MessageDTO(
@@ -184,6 +178,67 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 paymentId: -1,
                 requestId: -1
             );
+        }
+
+        [Fact]
+        public void OnMessageReceived_TriggersEvent()
+        {
+            var msg = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
+
+            bool called = false;
+
+            _service.MessageProcessed += (dto, name) => called = true;
+
+            _service.OnMessageReceived(msg);
+
+            Assert.True(called);
+        }
+
+        [Fact]
+        public void OnConversationReceived_TriggersEvent()
+        {
+            var conv = new Conversation(
+                1,
+                new int[] { 1, 2 },
+                new List<Message>(),
+                new Dictionary<int, DateTime> { { 1, DateTime.Now }, { 2, DateTime.Now } }
+            );
+
+            bool called = false;
+
+            _service.ConversationProcessed += (dto, name) => called = true;
+
+            _service.OnConversationReceived(conv);
+
+            Assert.True(called);
+        }
+
+        [Fact]
+        public void OnReadReceiptReceived_TriggersEvent()
+        {
+            var rr = new ReadReceipt(1, 1, 2, DateTime.Now);
+
+            bool called = false;
+
+            _service.ReadReceiptProcessed += dto => called = true;
+
+            _service.OnReadReceiptReceived(rr);
+
+            Assert.True(called);
+        }
+
+        [Fact]
+        public void OnMessageUpdateReceived_TriggersEvent()
+        {
+            var msg = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
+
+            bool called = false;
+
+            _service.MessageUpdateProcessed += (dto, name) => called = true;
+
+            _service.OnMessageUpdateReceived(msg);
+
+            Assert.True(called);
         }
     }
 }

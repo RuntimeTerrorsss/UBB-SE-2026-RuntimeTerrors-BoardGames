@@ -15,8 +15,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
 {
     public class ConversationService : IMessageObserver
     {
-        private ConversationRepository ConversationRepository { get; set; }
-        private IUserService userService = App.UserService;
+        private IConversationRepository ConversationRepository { get; set; }
+        private IUserService userService;
         private int UserId { get; set; }
 
         public event Action<MessageDTO, string> MessageProcessed;
@@ -24,10 +24,20 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         public event Action<ReadReceiptDTO> ReadReceiptProcessed;
         public event Action<MessageDTO, string> MessageUpdateProcessed;
 
-        public ConversationService(ConversationRepository conversationRepo, int userIdInput)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;
+            userService = App.UserService;
+
+            ConversationRepository.Subscribe(UserId, this);
+        }
+        public ConversationService(IConversationRepository conversationRepo, IUserService userService, int userIdInput)
+        {
+            UserId = userIdInput;
+            ConversationRepository = conversationRepo;
+            this.userService = userService;
+
             ConversationRepository.Subscribe(UserId, this);
         }
 
