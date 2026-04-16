@@ -210,9 +210,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                     MakePayment(1, "Chess", "Alice", "Card", 10)
                 };
             InitializeService(payments);
-
             var result = servicePayment.GetFilteredPayments(FilterType.AllTime, searchQuery: "monopoly");
-
             Assert.Empty(result.Items);
         }
 
@@ -299,20 +297,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void GetFilteredPayments_Pagination_ReturnsCorrectPage()
-        {
-            var payments = Enumerable.Range(1, 20)
-                .Select(i => MakePayment(i, $"Game{i}", "Alice", "Card", i * 10))
-                .ToList();
-            InitializeService(payments);
-
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 2, pageSize: 10);
-
-            Assert.Equal(20, result.TotalCount);
-            Assert.Equal(2, result.PageNumber);
-        }
-
-        [Fact]
         public void GetFilteredPayments_Last6Months_ExcludesOlderPayments()
         {
             var payments = new List<HistoryPayment>
@@ -344,6 +328,20 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             Assert.Equal("Chess", result.Items.ElementAt(0).ProductName);
         }
 
+        [Fact]
+        public void GetFilteredPayments_Pagination_ReturnsCorrectPage()
+        {
+            var payments = Enumerable.Range(1, 20)
+                .Select(i => MakePayment(i, $"Game{i}", "Alice", "Card", i * 10))
+                .ToList();
+            InitializeService(payments);
+
+            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 2, pageSize: 10);
+
+            Assert.Equal(20, result.TotalCount);
+            Assert.Equal(2, result.PageNumber);
+        }
+
         // ================================ GetReceiptDocumentPath ======================================
 
         [Fact]
@@ -359,7 +357,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void GetReceiptDocumentPath_FilePathWithoutBackslashes()
+        public void GetReceiptDocumentPath_FilePathWithoutBackslashes_AddsBackslashes()
         {
             var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipt_1_test.pdf" };
             var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
@@ -370,7 +368,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void GetReceiptDocumentPath_FilePathWithBackslashes()
+        public void GetReceiptDocumentPath_FilePathWithBackslashes_ReturnsDocument()
         {
             var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipts\\receipt_1_test.pdf" };
             var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });

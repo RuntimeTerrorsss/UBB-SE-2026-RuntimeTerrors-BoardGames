@@ -138,6 +138,18 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
+        public void GetPaymentById_ExistingId_WithDateOfTransactionr()
+        {
+            var all = repositoryPayment.GetAllPayments();
+            var withTransaction = all.FirstOrDefault(p => p.DateOfTransaction != null);
+            if (withTransaction == null)
+                return;
+
+            var result = repositoryPayment.GetPaymentById(withTransaction.Tid);
+            Assert.NotNull(result.DateOfTransaction);
+        }
+
+        [Fact]
         public void GetPaymentById_ExistingId_WithDateConfirmedSeller()
         {
             var all = repositoryPayment.GetAllPayments();
@@ -147,6 +159,18 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
             var result = repositoryPayment.GetPaymentById(withSeller.Tid);
             Assert.NotNull(result.DateConfirmedSeller);
+        }
+
+        [Fact]
+        public void GetPaymentById_ExistingId_WithDateConfirmedBuyer()
+        {
+            var all = repositoryPayment.GetAllPayments();
+            var withBuyer = all.FirstOrDefault(p => p.DateConfirmedBuyer != null);
+            if (withBuyer == null)
+                return;
+
+            var result = repositoryPayment.GetPaymentById(withBuyer.Tid);
+            Assert.NotNull(result.DateConfirmedBuyer);
         }
 
         [Fact]
