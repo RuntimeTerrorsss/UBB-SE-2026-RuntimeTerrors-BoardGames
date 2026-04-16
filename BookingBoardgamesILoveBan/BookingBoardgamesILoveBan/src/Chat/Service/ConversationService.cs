@@ -65,7 +65,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public string GetOtherUserNameByConversationDTO(ConversationDTO conversation)
         {
-            return userService.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]).Username ?? "Unknown User";
+            var user = userService.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]);
+            return user?.Username ?? "Unknown User";
         }
 
         /// <summary>

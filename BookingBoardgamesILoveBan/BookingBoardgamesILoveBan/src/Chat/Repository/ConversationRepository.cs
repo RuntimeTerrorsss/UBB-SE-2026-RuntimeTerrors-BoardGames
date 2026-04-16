@@ -62,7 +62,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 message.Id = AddMessageToDB(message);
                 NotifySubscribersAboutMessage(message);
             }
-            else // THIS SHOULD NEVER HAPPEN
+            else
             {
                 throw new InvalidOperationException("Conversation not found.");
             }
