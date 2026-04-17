@@ -39,8 +39,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             }
 
-            public decimal CalculateTotalAmount(IEnumerable<PaymentDto> payments) =>
-                payments?.Sum(p => p.Amount) ?? 0;
+            public decimal CalculateTotalAmount(IEnumerable<PaymentDto> payments)
+            {
+                return payments?.Sum(p => p.Amount) ?? 0;
+            }
 
             public string GetReceiptDocumentPath(int paymentId)
             {
@@ -103,10 +105,16 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public async Task SearchText_CancelsPreviousSearch()
         {
-            viewModel.SearchText = "a";
-            viewModel.SearchText = "b";
-            await Task.Delay(600);
-            Assert.True(true); // makes sure there was no crash
+            try
+            {
+                viewModel.SearchText = "a";
+                viewModel.SearchText = "b";
+                await Task.Delay(600);
+            }
+            catch (Exception ex)
+            {
+                Assert.True(false); // must not run
+            }
         }
 
         // ================================ OpenReceipt ======================================
@@ -120,19 +128,25 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void OpenReceipt_IfNull_DoNothing()
         {
-            viewModel.OpenReceiptCommand.Execute(null);
-            Assert.True(true);
+            try
+            {
+                viewModel.OpenReceiptCommand.Execute(null);
+            }
+            catch (Exception ex) { Assert.True(false); }
         }
 
         [Fact]
         public void OpenReceipt_InexistentFile_DoNotThrow()
         {
-            var payment = new PaymentDto { Id = 999 };
-            viewModel.OpenReceiptCommand.Execute(payment);
-            Assert.True(true); // no exception => passeddd
+            try
+            {
+                var payment = new PaymentDto { Id = 999 };
+                viewModel.OpenReceiptCommand.Execute(payment);
+            }
+            catch { Assert.True(false); }
         }
 
-        // TODO for existent !!!!!!!!!!!!!!!!!!
+        // todo for existent
 
         // ================================ SelectedFilterOption ======================================
 
@@ -150,11 +164,14 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void ApplyFilter_IfSelectedFilterIsNull_DoNothing()
         {
-            // set filter to null (break it intentionally)
-            typeof(PaymentHistoryViewModel).GetField("selectedFilterOption", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(viewModel, null);
+            try
+            {
+                // set filter to null (break it intentionally)
+                typeof(PaymentHistoryViewModel).GetField("selectedFilterOption", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(viewModel, null);
 
-            viewModel.SearchText = "test";
-            Assert.True(true); // no crash
+                viewModel.SearchText = "test";
+            }
+            catch { Assert.True(false); }
         }
 
         [Fact]

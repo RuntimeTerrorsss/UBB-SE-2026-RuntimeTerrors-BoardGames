@@ -46,11 +46,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
         private class FakeReceiptService : IReceiptService
         {
-            public string GenerateReceiptRelativePath(int requestId) =>
-                $"receipts\\receipt_{requestId}_test.pdf";
+            public string GenerateReceiptRelativePath(int requestId)
+            {
+                return $"receipts\\receipt_{requestId}_test.pdf";
+            }
 
-            public string GetReceiptDocument(Payment payment) =>
-                $"C:\\Documents\\BookingBoardgames\\receipts\\receipt_{payment.RequestId}_test.pdf";
+            public string GetReceiptDocument(Payment payment)
+            {
+                return $"C:\\Documents\\BookingBoardgames\\receipts\\receipt_{payment.RequestId}_test.pdf";
+            }
         }
 
         // ================================ setup ======================================

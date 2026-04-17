@@ -17,16 +17,23 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         // ================================ fakes ======================================
         private class FakeUserService : IUserService
         {
-            public User GetById(int id) => new User(id, $"user_{id}", "country", "city", "str", "number");
+            public User GetById(int id)
+            { return new User(id, $"user_{id}", "country", "city", "str", "number"); }
             public void SaveAddress(int id, Address address) { }
-            public decimal GetUserBalance(int userId) => 0;
+            public decimal GetUserBalance(int userId)
+            {
+                return 0;
+            }
             public void UpdateBalance(int userId, decimal newBalance) { }
         }
 
         private class FakeGameService : IGameService
         {
-            public Game GetById(int id) => new Game(id, $"game_{id}", 100m );
-            public decimal GetPriceGameById(int gameId) => 0;
+            public Game GetById(int id) { return new Game(id, $"game_{id}", 100m); }
+            public decimal GetPriceGameById(int gameId)
+            {
+                return 0;
+            }
         }
 
         private class FakeRequestService : IRequestService
@@ -38,8 +45,9 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
                 DateTime.Now,
                 DateTime.Now.AddDays(3)
             );
-            public decimal GetRequestPrice(int requestId) => 0;
-            public string GetGameName(int requestId) => "game_1";
+            public decimal GetRequestPrice(int requestId)
+            { return 0; }
+            public string GetGameName(int requestId) { return "game_1"; }
         }
 
         // ================================ setup ======================================

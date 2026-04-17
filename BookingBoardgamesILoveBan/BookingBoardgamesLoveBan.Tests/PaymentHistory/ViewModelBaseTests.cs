@@ -27,11 +27,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 set => SetProperty(ref _count, value);
             }
 
-            public void TriggerOnPropertyChanged(string propertyName) =>
+            public void TriggerOnPropertyChanged(string propertyName)
+            {
                 OnPropertyChanged(propertyName);
+            }
 
-            public bool CallSetProperty<T>(ref T storage, T value, string propertyName = null) =>
-                SetProperty(ref storage, value, propertyName);
+            public bool CallSetProperty<T>(ref T storage, T value, string propertyName = null)
+            {
+                return SetProperty(ref storage, value, propertyName);
+            }
         }
 
         // ================================ OnPropertyChanged ======================================

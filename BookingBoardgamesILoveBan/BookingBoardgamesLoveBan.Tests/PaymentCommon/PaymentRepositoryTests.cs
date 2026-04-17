@@ -137,7 +137,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var oldPayment = paymentRepository.UpdatePayment(updatedPayment);
             System.Diagnostics.Debug.WriteLine(oldPayment);
             Assert.NotNull(oldPayment);
-            Assert.Equal("", oldPayment.FilePath); // FIX has to be null
+            Assert.Equal("", oldPayment.FilePath); // not null because of AddPayment function
 
             // clean
             paymentRepository.DeletePayment(payment);
