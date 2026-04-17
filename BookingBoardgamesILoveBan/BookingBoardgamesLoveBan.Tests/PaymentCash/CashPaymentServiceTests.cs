@@ -2,6 +2,7 @@ using BookingBoardgamesILoveBan.Src.PaymentCash.Mapper;
 using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
 using BookingBoardgamesILoveBan.Src.PaymentCash.Service;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
 
@@ -33,7 +34,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(10, 11, 12, 13, 14m, "CASH");
+            var payment = new Payment(10, 11, 12, 13, 14m, "CASH");
             repository.ById[10] = payment;
             var mappedDto = new CashPaymentDto(20, 21, 22, 23, 24m);
             mapper.ToDtoResult = mappedDto;
@@ -52,7 +53,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(1, 5, 2, 3, 10m, "CASH");
+            var payment = new Payment(1, 5, 2, 3, 10m, "CASH");
             payment.DateConfirmedSeller = null;
             payment.DateConfirmedBuyer = null;
             repository.ById[1] = payment;
@@ -72,7 +73,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(2, 42, 2, 3, 10m, "CASH");
+            var payment = new Payment(2, 42, 2, 3, 10m, "CASH");
             payment.DateConfirmedSeller = DateTime.Now.AddMinutes(-1);
             payment.DateConfirmedBuyer = null;
             repository.ById[2] = payment;
@@ -91,7 +92,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(3, 8, 2, 3, 10m, "CASH");
+            var payment = new Payment(3, 8, 2, 3, 10m, "CASH");
             payment.DateConfirmedBuyer = null;
             payment.DateConfirmedSeller = null;
             repository.ById[3] = payment;
@@ -111,7 +112,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(4, 71, 2, 3, 10m, "CASH");
+            var payment = new Payment(4, 71, 2, 3, 10m, "CASH");
             payment.DateConfirmedBuyer = DateTime.Now.AddMinutes(-1);
             payment.DateConfirmedSeller = null;
             repository.ById[4] = payment;
@@ -130,7 +131,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(5, 9, 2, 3, 10m, "CASH");
+            var payment = new Payment(5, 9, 2, 3, 10m, "CASH");
             payment.DateConfirmedBuyer = DateTime.Now;
             payment.DateConfirmedSeller = DateTime.Now;
             repository.ById[5] = payment;
@@ -148,7 +149,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var mapper = new FakeCashPaymentMapper();
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(6, 9, 2, 3, 10m, "CASH");
+            var payment = new Payment(6, 9, 2, 3, 10m, "CASH");
             payment.DateConfirmedBuyer = DateTime.Now;
             payment.DateConfirmedSeller = null;
             repository.ById[6] = payment;
@@ -166,11 +167,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
 
-            var confirmed = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(7, 9, 2, 3, 10m, "CASH")
+            var confirmed = new Payment(7, 9, 2, 3, 10m, "CASH")
             {
                 DateConfirmedBuyer = DateTime.Now
             };
-            var notConfirmed = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(8, 9, 2, 3, 10m, "CASH")
+            var notConfirmed = new Payment(8, 9, 2, 3, 10m, "CASH")
             {
                 DateConfirmedBuyer = null
             };
@@ -189,11 +190,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var receiptService = new FakeReceiptService();
             var service = new CashPaymentService(repository, mapper, receiptService);
 
-            var confirmed = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(9, 9, 2, 3, 10m, "CASH")
+            var confirmed = new Payment(9, 9, 2, 3, 10m, "CASH")
             {
                 DateConfirmedSeller = DateTime.Now
             };
-            var notConfirmed = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(10, 9, 2, 3, 10m, "CASH")
+            var notConfirmed = new Payment(10, 9, 2, 3, 10m, "CASH")
             {
                 DateConfirmedSeller = null
             };
@@ -206,35 +207,35 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
 
         private sealed class FakePaymentRepository : IPaymentRepository
         {
-            public Dictionary<int, BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment> ById { get; } = new();
-            public BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment? LastAddedPayment { get; private set; }
-            public BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment? LastUpdatedPayment { get; private set; }
+            public Dictionary<int, Payment> ById { get; } = new();
+            public Payment? LastAddedPayment { get; private set; }
+            public Payment? LastUpdatedPayment { get; private set; }
             public int LastGetByIdArgument { get; private set; }
 
-            public IReadOnlyList<BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment> GetAll()
+            public IReadOnlyList<Payment> GetAll()
             {
                 return ById.Values.ToList();
             }
 
-            public BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment GetById(int tid)
+            public Payment GetById(int tid)
             {
                 LastGetByIdArgument = tid;
                 return ById[tid];
             }
 
-            public int AddPayment(BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment transaction)
+            public int AddPayment(Payment transaction)
             {
                 LastAddedPayment = transaction;
                 ById[transaction.Tid] = transaction;
                 return 99;
             }
 
-            public bool DeletePayment(BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment transaction)
+            public bool DeletePayment(Payment transaction)
             {
                 return ById.Remove(transaction.Tid);
             }
 
-            public BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment UpdatePayment(BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment transaction)
+            public Payment UpdatePayment(Payment transaction)
             {
                 LastUpdatedPayment = transaction;
                 ById[transaction.Tid] = transaction;
@@ -245,17 +246,17 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
         private sealed class FakeCashPaymentMapper : ICashPaymentMapper
         {
             public CashPaymentDto? LastToEntityInput { get; private set; }
-            public BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment? LastToDtoInput { get; private set; }
+            public Payment? LastToDtoInput { get; private set; }
             public CashPaymentDto? ToDtoResult { get; set; }
 
-            public BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment ToEntity(CashPaymentDto paymentDto)
+            public Payment ToEntity(CashPaymentDto paymentDto)
             {
                 LastToEntityInput = paymentDto;
-                return new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(
+                return new Payment(
                     paymentDto.Id, paymentDto.Requestd, paymentDto.ClientId, paymentDto.OwnerId, paymentDto.Amount, "CASH");
             }
 
-            public CashPaymentDto ToDto(BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment payment)
+            public CashPaymentDto ToDto(Payment payment)
             {
                 LastToDtoInput = payment;
                 return ToDtoResult ?? new CashPaymentDto(payment.Tid, payment.RequestId, payment.ClientId, payment.OwnerId, payment.Amount);
@@ -274,7 +275,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
                 return $"receipt-{rentalId}.pdf";
             }
 
-            public string GetReceiptDocument(BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment payment)
+            public string GetReceiptDocument(Payment payment)
             {
                 return payment.FilePath ?? string.Empty;
             }
