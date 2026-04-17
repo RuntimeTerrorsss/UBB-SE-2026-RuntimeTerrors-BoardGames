@@ -196,7 +196,6 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.ViewModel
 
             Assert.False(canExecute);
         }
-
     }
 
     public class TestSyncContext : SynchronizationContext
