@@ -23,7 +23,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             mockPaymentRepository = new Mock<PaymentRepository>();
             mockUserService = new Mock<UserService>();
 
-            var mockGameService = new Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService>();
+            Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService> mockGameService = new Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService>();
             mockRequestService = new Mock<RequestService>(mockGameService.Object);
 
             mockReceiptService = new Mock<ReceiptService>(
@@ -41,150 +41,373 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
         [Fact]
         public void CheckBalanceSufficiency_ClientHasMoreThanRequestPrice_ReturnsTrue()
         {
-            int requestId = 1;
-            int clientId = 2;
-            mockRequestService.Setup(rs => rs.GetRequestPrice(requestId)).Returns(50.0m);
-            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(100.0m);
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            decimal requestPrice = 50.0m;
+            decimal clientBalance = 100.0m;
 
-            bool result = cardPaymentService.CheckBalanceSufficiency(requestId, clientId);
-            Assert.True(result);
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+
+            bool isBalanceSufficient = cardPaymentService.CheckBalanceSufficiency(requestIdentifier, clientIdentifier);
+
+            Assert.True(isBalanceSufficient);
         }
 
         [Fact]
         public void CheckBalanceSufficiency_ClientHasLessThanRequestPrice_ReturnsFalse()
         {
-            int requestId = 1;
-            int clientId = 2;
-            mockRequestService.Setup(rs => rs.GetRequestPrice(requestId)).Returns(100.0m);
-            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(50.0m);
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 50.0m;
 
-            bool result = cardPaymentService.CheckBalanceSufficiency(requestId, clientId);
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
 
-            Assert.False(result);
+            bool isBalanceSufficient = cardPaymentService.CheckBalanceSufficiency(requestIdentifier, clientIdentifier);
+
+            Assert.False(isBalanceSufficient);
         }
 
         [Fact]
-        public void AddCardPayment_InsufficientFunds_ThrowsException()
+        public void AddCardPayment_InsufficientFunds_ThrowsExceptionMessage()
         {
-            int requestId = 1;
-            int clientId = 2;
-            int ownerId = 3;
-            decimal amount = 100.0m;
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 50.0m;
+            string expectedExceptionMessage = "Insufficient Funds";
 
-            mockRequestService.Setup(rs => rs.GetRequestPrice(requestId)).Returns(100.0m);
-            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(50.0m);
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
 
-            var exception = Assert.Throws<Exception>(() =>
-                cardPaymentService.AddCardPayment(requestId, clientId, ownerId, amount));
+            Exception thrownException = Assert.Throws<Exception>(() =>
+                cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount));
 
-            Assert.Equal("Insufficient Funds", exception.Message);
-            mockPaymentRepository.Verify(repo => repo.AddPayment(It.IsAny<Payment>()), Times.Never);
+            Assert.Equal(expectedExceptionMessage, thrownException.Message);
         }
 
         [Fact]
-        public void AddCardPayment_SufficientFunds_ProcessesPaymentAndReturnsDataTransferObject()
+        public void AddCardPayment_InsufficientFunds_DoesNotCallRepository()
         {
-            int requestId = 1;
-            int clientId = 2;
-            int ownerId = 3;
-            decimal amount = 100.0m;
-            int expectedTransactionId = 999;
-            string expectedReceiptPath = "/receipts/1.pdf";
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 50.0m;
 
-            mockRequestService.Setup(rs => rs.GetRequestPrice(requestId)).Returns(100.0m);
-            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(150.0m);
-            mockUserService.Setup(us => us.GetUserBalance(ownerId)).Returns(500.0m);
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
 
-            mockPaymentRepository.Setup(repo => repo.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionId);
-            mockReceiptService.Setup(rs => rs.GenerateReceiptRelativePath(requestId)).Returns(expectedReceiptPath);
-
-            var result = cardPaymentService.AddCardPayment(requestId, clientId, ownerId, amount);
-
-            Assert.NotNull(result);
-            Assert.Equal(expectedTransactionId, result.TransactionIdentifier);
-            Assert.Equal("CARD", result.PaymentMethod);
-
-            mockUserService.Verify(us => us.UpdateBalance(clientId, 50.0m), Times.Once);
-            mockUserService.Verify(us => us.UpdateBalance(ownerId, 600.0m), Times.Once);
-            mockPaymentRepository.Verify(repo => repo.UpdatePayment(It.IsAny<Payment>()), Times.Once);
-        }
-        [Fact]
-        public void GetRequestDataTransferObject_FetchesAndReturnsDto()
-        {
-            int requestId = 1;
-
-            var result = cardPaymentService.GetRequestDataTransferObject(requestId);
-            Assert.NotNull(result);
-        }
-
-        [Fact]
-        public void GetCardPayment_FetchesAndReturnsPayment()
-        {
-            int expectedTransactionId = 999;
-
-            var fakePayment = new Payment
+            try
             {
-                Tid = expectedTransactionId,
-                Amount = 50.0m,
-                PaymentMethod = "CARD",
-                RequestId = 1,
-                ClientId = 2,
-                OwnerId = 3
+                cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+            }
+            catch (Exception)
+            {
+            }
+
+            mockPaymentRepository.Verify(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>()), Times.Never);
+        }
+
+        [Fact]
+        public void AddCardPayment_SufficientFunds_ReturnsNotNull()
+        {
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            int expectedTransactionIdentifier = 999;
+            string expectedReceiptPath = "/receipts/1.pdf";
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 150.0m;
+            decimal ownerBalance = 500.0m;
+
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionIdentifier);
+            mockReceiptService.Setup(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(requestIdentifier)).Returns(expectedReceiptPath);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+
+            Assert.NotNull(resultDataTransferObject);
+        }
+
+        [Fact]
+        public void AddCardPayment_SufficientFunds_ReturnsCorrectTransactionIdentifier()
+        {
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            int expectedTransactionIdentifier = 999;
+            string expectedReceiptPath = "/receipts/1.pdf";
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 150.0m;
+            decimal ownerBalance = 500.0m;
+
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionIdentifier);
+            mockReceiptService.Setup(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(requestIdentifier)).Returns(expectedReceiptPath);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+
+            Assert.Equal(expectedTransactionIdentifier, resultDataTransferObject.TransactionIdentifier);
+        }
+
+        [Fact]
+        public void AddCardPayment_SufficientFunds_ReturnsCorrectPaymentMethod()
+        {
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            int expectedTransactionIdentifier = 999;
+            string expectedReceiptPath = "/receipts/1.pdf";
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 150.0m;
+            decimal ownerBalance = 500.0m;
+            string expectedPaymentMethod = "CARD";
+
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionIdentifier);
+            mockReceiptService.Setup(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(requestIdentifier)).Returns(expectedReceiptPath);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+
+            Assert.Equal(expectedPaymentMethod, resultDataTransferObject.PaymentMethod);
+        }
+
+        [Fact]
+        public void AddCardPayment_SufficientFunds_UpdatesClientBalance()
+        {
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            int expectedTransactionIdentifier = 999;
+            string expectedReceiptPath = "/receipts/1.pdf";
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 150.0m;
+            decimal ownerBalance = 500.0m;
+            decimal expectedNewClientBalance = 50.0m;
+
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionIdentifier);
+            mockReceiptService.Setup(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(requestIdentifier)).Returns(expectedReceiptPath);
+
+            cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+
+            mockUserService.Verify(userServiceMock => userServiceMock.UpdateBalance(clientIdentifier, expectedNewClientBalance), Times.Once);
+        }
+
+        [Fact]
+        public void AddCardPayment_SufficientFunds_UpdatesOwnerBalance()
+        {
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            int expectedTransactionIdentifier = 999;
+            string expectedReceiptPath = "/receipts/1.pdf";
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 150.0m;
+            decimal ownerBalance = 500.0m;
+            decimal expectedNewOwnerBalance = 600.0m;
+
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionIdentifier);
+            mockReceiptService.Setup(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(requestIdentifier)).Returns(expectedReceiptPath);
+
+            cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+
+            mockUserService.Verify(userServiceMock => userServiceMock.UpdateBalance(ownerIdentifier, expectedNewOwnerBalance), Times.Once);
+        }
+
+        [Fact]
+        public void AddCardPayment_SufficientFunds_UpdatesPaymentInRepository()
+        {
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal paymentAmount = 100.0m;
+            int expectedTransactionIdentifier = 999;
+            string expectedReceiptPath = "/receipts/1.pdf";
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 150.0m;
+            decimal ownerBalance = 500.0m;
+
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.AddPayment(It.IsAny<Payment>())).Returns(expectedTransactionIdentifier);
+            mockReceiptService.Setup(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(requestIdentifier)).Returns(expectedReceiptPath);
+
+            cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentAmount);
+
+            mockPaymentRepository.Verify(paymentRepositoryMock => paymentRepositoryMock.UpdatePayment(It.IsAny<Payment>()), Times.Once);
+        }
+
+        [Fact]
+        public void GetRequestDataTransferObject_FetchesAndReturnsDataTransferObject()
+        {
+            int requestIdentifier = 1;
+
+            var resultDataTransferObject = cardPaymentService.GetRequestDataTransferObject(requestIdentifier);
+
+            Assert.NotNull(resultDataTransferObject);
+        }
+
+        [Fact]
+        public void GetCardPayment_FetchesAndReturnsNotNull()
+        {
+            int expectedTransactionIdentifier = 999;
+            decimal paymentAmount = 50.0m;
+            string paymentMethod = "CARD";
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+
+            Payment fakePayment = new Payment
+            {
+                Tid = expectedTransactionIdentifier,
+                Amount = paymentAmount,
+                PaymentMethod = paymentMethod,
+                RequestId = requestIdentifier,
+                ClientId = clientIdentifier,
+                OwnerId = ownerIdentifier
             };
 
-            mockPaymentRepository.Setup(repo => repo.GetById(expectedTransactionId)).Returns(fakePayment);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.GetById(expectedTransactionIdentifier)).Returns(fakePayment);
 
-            var fetchedPayment = cardPaymentService.GetCardPayment(expectedTransactionId);
+            var fetchedPayment = cardPaymentService.GetCardPayment(expectedTransactionIdentifier);
 
             Assert.NotNull(fetchedPayment);
-            Assert.Equal(expectedTransactionId, fetchedPayment.TransactionIdentifier);
         }
+
+        [Fact]
+        public void GetCardPayment_FetchesAndReturnsCorrectTransactionIdentifier()
+        {
+            int expectedTransactionIdentifier = 999;
+            decimal paymentAmount = 50.0m;
+            string paymentMethod = "CARD";
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+
+            Payment fakePayment = new Payment
+            {
+                Tid = expectedTransactionIdentifier,
+                Amount = paymentAmount,
+                PaymentMethod = paymentMethod,
+                RequestId = requestIdentifier,
+                ClientId = clientIdentifier,
+                OwnerId = ownerIdentifier
+            };
+
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.GetById(expectedTransactionIdentifier)).Returns(fakePayment);
+
+            var fetchedPayment = cardPaymentService.GetCardPayment(expectedTransactionIdentifier);
+
+            Assert.Equal(expectedTransactionIdentifier, fetchedPayment.TransactionIdentifier);
+        }
+
         [Fact]
         public void GetCurrentBalance_FetchesAndReturnsBalance()
         {
-            int clientId = 2;
-            decimal expectedBalance = 250.0m;
-            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(expectedBalance);
+            int clientIdentifier = 2;
+            decimal expectedClientBalance = 250.0m;
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(expectedClientBalance);
 
-            var result = cardPaymentService.GetCurrentBalance(clientId);
+            decimal retrievedBalance = cardPaymentService.GetCurrentBalance(clientIdentifier);
 
-            Assert.Equal(expectedBalance, result);
+            Assert.Equal(expectedClientBalance, retrievedBalance);
         }
 
         [Fact]
         public void ProcessPayment_InsufficientFunds_ThrowsException()
         {
-            int requestId = 1;
-            int clientId = 2;
-            int ownerId = 3;
+            int requestIdentifier = 1;
+            int clientIdentifier = 2;
+            int ownerIdentifier = 3;
+            decimal requestPrice = 100.0m;
+            decimal clientBalance = 50.0m;
+            decimal ownerBalance = 500.0m;
+            string expectedExceptionMessage = "Insufficient Funds";
 
-            mockRequestService.Setup(rs => rs.GetRequestPrice(requestId)).Returns(100.0m);
-            mockUserService.Setup(us => us.GetUserBalance(clientId)).Returns(50.0m);
-            mockUserService.Setup(us => us.GetUserBalance(ownerId)).Returns(500.0m);
+            mockRequestService.Setup(requestServiceMock => requestServiceMock.GetRequestPrice(requestIdentifier)).Returns(requestPrice);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(clientIdentifier)).Returns(clientBalance);
+            mockUserService.Setup(userServiceMock => userServiceMock.GetUserBalance(ownerIdentifier)).Returns(ownerBalance);
 
-            var exception = Assert.Throws<Exception>(() =>
-                cardPaymentService.ProcessPayment(requestId, clientId, ownerId));
+            Exception thrownException = Assert.Throws<Exception>(() =>
+                cardPaymentService.ProcessPayment(requestIdentifier, clientIdentifier, ownerIdentifier));
 
-            Assert.Equal("Insufficient Funds", exception.Message);
+            Assert.Equal(expectedExceptionMessage, thrownException.Message);
+        }
+
+        [Fact]
+        public void ConvertToDataTransferObject_NullTransactionDate_ReturnsNotNull()
+        {
+            int transactionIdentifier = 1;
+            int requestIdentifier = 1;
+            int clientIdentifier = 1;
+            int ownerIdentifier = 1;
+            decimal paymentAmount = 10m;
+            string paymentMethod = "CARD";
+
+            Payment fakePayment = new Payment
+            {
+                Tid = transactionIdentifier,
+                RequestId = requestIdentifier,
+                ClientId = clientIdentifier,
+                OwnerId = ownerIdentifier,
+                Amount = paymentAmount,
+                PaymentMethod = paymentMethod,
+                DateOfTransaction = null
+            };
+
+            var convertedDataTransferObject = cardPaymentService.ConvertToDataTransferObject(fakePayment);
+
+            Assert.NotNull(convertedDataTransferObject);
         }
 
         [Fact]
         public void ConvertToDataTransferObject_NullTransactionDate_UsesCurrentDate()
         {
-            var fakePayment = new Payment
+            int transactionIdentifier = 1;
+            int requestIdentifier = 1;
+            int clientIdentifier = 1;
+            int ownerIdentifier = 1;
+            decimal paymentAmount = 10m;
+            string paymentMethod = "CARD";
+
+            Payment fakePayment = new Payment
             {
-                Tid = 1,
-                RequestId = 1,
-                ClientId = 1,
-                OwnerId = 1,
-                Amount = 10m,
-                PaymentMethod = "CARD",
+                Tid = transactionIdentifier,
+                RequestId = requestIdentifier,
+                ClientId = clientIdentifier,
+                OwnerId = ownerIdentifier,
+                Amount = paymentAmount,
+                PaymentMethod = paymentMethod,
                 DateOfTransaction = null
             };
 
-            var result = cardPaymentService.ConvertToDataTransferObject(fakePayment);
-            Assert.NotNull(result);
-            Assert.Equal(DateTime.Now.Date, result.DateOfTransaction.Date);
+            var convertedDataTransferObject = cardPaymentService.ConvertToDataTransferObject(fakePayment);
+
+            Assert.Equal(DateTime.Now.Date, convertedDataTransferObject.DateOfTransaction.Date);
         }
     }
 }

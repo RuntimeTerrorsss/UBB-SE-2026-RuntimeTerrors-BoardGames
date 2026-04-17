@@ -10,69 +10,112 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.Converters
         [Fact]
         public void BoolToVisibility_True_ReturnsVisible()
         {
-            var converter = new BoolToVisibilityConverter();
-            var result = converter.Convert(true, typeof(Visibility), null, null);
-            Assert.Equal(Visibility.Visible, result);
+            BoolToVisibilityConverter boolToVisibilityConverter = new BoolToVisibilityConverter();
+            bool booleanValue = true;
+            Type targetType = typeof(Visibility);
+            object nullParameter = null;
+            string nullLanguage = null;
+
+            object conversionResult = boolToVisibilityConverter.Convert(booleanValue, targetType, nullParameter, nullLanguage);
+
+            Assert.Equal(Visibility.Visible, conversionResult);
         }
 
         [Fact]
         public void BoolToVisibility_False_ReturnsCollapsed()
         {
-            var converter = new BoolToVisibilityConverter();
-            var result = converter.Convert(false, typeof(Visibility), null, null);
-            Assert.Equal(Visibility.Collapsed, result);
+            BoolToVisibilityConverter boolToVisibilityConverter = new BoolToVisibilityConverter();
+            bool booleanValue = false;
+            Type targetType = typeof(Visibility);
+            object nullParameter = null;
+            string nullLanguage = null;
+
+            object conversionResult = boolToVisibilityConverter.Convert(booleanValue, targetType, nullParameter, nullLanguage);
+
+            Assert.Equal(Visibility.Collapsed, conversionResult);
         }
 
         [Fact]
         public void InverseBoolToVisibility_True_ReturnsCollapsed()
         {
-            var converter = new InverseBoolToVisibilityConverter();
-            var result = converter.Convert(true, typeof(Visibility), null, null);
-            Assert.Equal(Visibility.Collapsed, result);
+            InverseBoolToVisibilityConverter inverseBoolToVisibilityConverter = new InverseBoolToVisibilityConverter();
+            bool booleanValue = true;
+            Type targetType = typeof(Visibility);
+            object nullParameter = null;
+            string nullLanguage = null;
+
+            object conversionResult = inverseBoolToVisibilityConverter.Convert(booleanValue, targetType, nullParameter, nullLanguage);
+
+            Assert.Equal(Visibility.Collapsed, conversionResult);
         }
 
         [Fact]
         public void InverseBoolToVisibility_False_ReturnsVisible()
         {
-            var converter = new InverseBoolToVisibilityConverter();
-            var result = converter.Convert(false, typeof(Visibility), null, null);
-            Assert.Equal(Visibility.Visible, result);
+            InverseBoolToVisibilityConverter inverseBoolToVisibilityConverter = new InverseBoolToVisibilityConverter();
+            bool booleanValue = false;
+            Type targetType = typeof(Visibility);
+            object nullParameter = null;
+            string nullLanguage = null;
+
+            object conversionResult = inverseBoolToVisibilityConverter.Convert(booleanValue, targetType, nullParameter, nullLanguage);
+
+            Assert.Equal(Visibility.Visible, conversionResult);
         }
+
         [Fact]
         public void BoolToVisibility_ConvertBack_Visible_ReturnsTrue()
         {
-            var converter = new BoolToVisibilityConverter();
+            BoolToVisibilityConverter boolToVisibilityConverter = new BoolToVisibilityConverter();
+            Visibility visibilityValue = Visibility.Visible;
+            Type targetType = typeof(bool);
+            object nullParameter = null;
+            string nullLanguage = null;
 
-            var result = converter.ConvertBack(Visibility.Visible, typeof(bool), null, null);
+            object conversionResult = boolToVisibilityConverter.ConvertBack(visibilityValue, targetType, nullParameter, nullLanguage);
 
-            Assert.True((bool)result);
+            Assert.True((bool)conversionResult);
         }
 
         [Fact]
         public void BoolToVisibility_ConvertBack_Collapsed_ReturnsFalse()
         {
-            var converter = new BoolToVisibilityConverter();
-            var result = converter.ConvertBack(Visibility.Collapsed, typeof(bool), null, null);
+            BoolToVisibilityConverter boolToVisibilityConverter = new BoolToVisibilityConverter();
+            Visibility visibilityValue = Visibility.Collapsed;
+            Type targetType = typeof(bool);
+            object nullParameter = null;
+            string nullLanguage = null;
 
-            Assert.False((bool)result);
+            object conversionResult = boolToVisibilityConverter.ConvertBack(visibilityValue, targetType, nullParameter, nullLanguage);
+
+            Assert.False((bool)conversionResult);
         }
 
         [Fact]
         public void BoolToVisibility_ConvertBack_Null_ReturnsFalse()
         {
-            var converter = new BoolToVisibilityConverter();
+            BoolToVisibilityConverter boolToVisibilityConverter = new BoolToVisibilityConverter();
+            object nullVisibilityValue = null;
+            Type targetType = typeof(bool);
+            object nullParameter = null;
+            string nullLanguage = null;
 
-            var result = converter.ConvertBack(null, typeof(bool), null, null);
-            Assert.False((bool)result);
+            object conversionResult = boolToVisibilityConverter.ConvertBack(nullVisibilityValue, targetType, nullParameter, nullLanguage);
+
+            Assert.False((bool)conversionResult);
         }
 
         [Fact]
         public void InverseBoolToVisibility_ConvertBack_ThrowsNotImplementedException()
         {
-            var converter = new InverseBoolToVisibilityConverter();
+            InverseBoolToVisibilityConverter inverseBoolToVisibilityConverter = new InverseBoolToVisibilityConverter();
+            object nullVisibilityValue = null;
+            Type targetType = typeof(bool);
+            object nullParameter = null;
+            string nullLanguage = null;
 
             Assert.Throws<NotImplementedException>(() =>
-                converter.ConvertBack(null, typeof(bool), null, null));
+                inverseBoolToVisibilityConverter.ConvertBack(nullVisibilityValue, targetType, nullParameter, nullLanguage));
         }
     }
 }

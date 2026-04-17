@@ -15,38 +15,157 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
         {
             DatabaseBootstrap.Initialize();
         }
+
         [Fact]
-        public void AddCardPayment_ValidPipeline_SuccessfullySavesToDatabase()
+        public void AddCardPayment_ValidPipeline_ReturnsNotNullResult()
         {
-            var repository = new PaymentRepository();
-            var userService = new UserService();
+            PaymentRepository paymentRepository = new PaymentRepository();
+            UserService userService = new UserService();
+            GameService gameService = new GameService();
+            RequestService requestService = new RequestService(gameService);
+            ReceiptService receiptService = new ReceiptService(userService, requestService, gameService);
+            CardPaymentService cardPaymentService = new CardPaymentService(paymentRepository, userService, receiptService, requestService);
 
-            var gameService = new GameService();
-            var requestService = new RequestService(gameService);
-            var receiptService = new ReceiptService(userService, requestService, gameService);
+            int clientIdentifier = 5;
+            int ownerIdentifier = 2;
+            int requestIdentifier = 5;
+            decimal paymentPrice = 1.50m;
 
-            var paymentService = new CardPaymentService(repository, userService, receiptService, requestService);
+            decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
+            decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
 
-            int clientId = 5;
-            int ownerId = 2;
-            int requestId = 5;
-            decimal price = 15m;
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
 
-            var result = paymentService.AddCardPayment(requestId, clientId, ownerId, price);
-            var retrievedPayment = paymentService.GetCardPayment(result.TransactionIdentifier);
+            Assert.NotNull(resultDataTransferObject);
 
-            Assert.NotNull(result);
-            Assert.Equal("CARD", result.PaymentMethod);
+            userService.UpdateBalance(clientIdentifier, currentClientBalance);
+            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+        }
+
+        [Fact]
+        public void AddCardPayment_ValidPipeline_ReturnsCardPaymentMethod()
+        {
+            PaymentRepository paymentRepository = new PaymentRepository();
+            UserService userService = new UserService();
+            GameService gameService = new GameService();
+            RequestService requestService = new RequestService(gameService);
+            ReceiptService receiptService = new ReceiptService(userService, requestService, gameService);
+            CardPaymentService cardPaymentService = new CardPaymentService(paymentRepository, userService, receiptService, requestService);
+
+            int clientIdentifier = 5;
+            int ownerIdentifier = 2;
+            int requestIdentifier = 5;
+            decimal paymentPrice = 1.50m;
+            string expectedPaymentMethod = "CARD";
+
+            decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
+            decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+
+            Assert.Equal(expectedPaymentMethod, resultDataTransferObject.PaymentMethod);
+
+            userService.UpdateBalance(clientIdentifier, currentClientBalance);
+            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+        }
+
+        [Fact]
+        public void GetCardPayment_ValidTransaction_ReturnsNotNull()
+        {
+            PaymentRepository paymentRepository = new PaymentRepository();
+            UserService userService = new UserService();
+            GameService gameService = new GameService();
+            RequestService requestService = new RequestService(gameService);
+            ReceiptService receiptService = new ReceiptService(userService, requestService, gameService);
+            CardPaymentService cardPaymentService = new CardPaymentService(paymentRepository, userService, receiptService, requestService);
+
+            int clientIdentifier = 5;
+            int ownerIdentifier = 2;
+            int requestIdentifier = 5;
+            decimal paymentPrice = 1.50m;
+
+            decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
+            decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+            var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
 
             Assert.NotNull(retrievedPayment);
-            Assert.Equal(price, retrievedPayment.Amount);
-            Assert.Equal(clientId, retrievedPayment.ClientIdentifier);
-            decimal currentClientBalance = userService.GetUserBalance(clientId);
-            decimal currentOwnerBalance = userService.GetUserBalance(ownerId);
 
-            userService.UpdateBalance(clientId, currentClientBalance + price);
-            userService.UpdateBalance(ownerId, currentOwnerBalance - price);
+            userService.UpdateBalance(clientIdentifier, currentClientBalance);
+            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+        }
 
+        [Fact]
+        public void GetCardPayment_ValidTransaction_ReturnsCorrectAmount()
+        {
+            PaymentRepository paymentRepository = new PaymentRepository();
+            UserService userService = new UserService();
+            GameService gameService = new GameService();
+            RequestService requestService = new RequestService(gameService);
+            ReceiptService receiptService = new ReceiptService(userService, requestService, gameService);
+            CardPaymentService cardPaymentService = new CardPaymentService(paymentRepository, userService, receiptService, requestService);
+
+            int clientIdentifier = 5;
+            int ownerIdentifier = 2;
+            int requestIdentifier = 5;
+            decimal paymentPrice = 1.50m;
+
+            decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
+            decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+            var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
+
+            Assert.Equal(paymentPrice, retrievedPayment.Amount);
+
+            userService.UpdateBalance(clientIdentifier, currentClientBalance);
+            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+        }
+
+        [Fact]
+        public void GetCardPayment_ValidTransaction_ReturnsCorrectClientIdentifier()
+        {
+            PaymentRepository paymentRepository = new PaymentRepository();
+            UserService userService = new UserService();
+            GameService gameService = new GameService();
+            RequestService requestService = new RequestService(gameService);
+            ReceiptService receiptService = new ReceiptService(userService, requestService, gameService);
+            CardPaymentService cardPaymentService = new CardPaymentService(paymentRepository, userService, receiptService, requestService);
+
+            int clientIdentifier = 5;
+            int ownerIdentifier = 2;
+            int requestIdentifier = 5;
+            decimal paymentPrice = 1.50m;
+
+            decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
+            decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
+
+            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+            var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
+
+            Assert.Equal(clientIdentifier, retrievedPayment.ClientIdentifier);
+
+            userService.UpdateBalance(clientIdentifier, currentClientBalance);
+            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+        }
+
+        [Fact]
+        public void AddCardPayment_InsufficientFunds_ThrowsException()
+        {
+            PaymentRepository paymentRepository = new PaymentRepository();
+            UserService userService = new UserService();
+            GameService gameService = new GameService();
+            RequestService requestService = new RequestService(gameService);
+            ReceiptService receiptService = new ReceiptService(userService, requestService, gameService);
+            CardPaymentService cardPaymentService = new CardPaymentService(paymentRepository, userService, receiptService, requestService);
+
+            int lowBalanceClientIdentifier = 8;
+            int ownerIdentifier = 2;
+            int requestIdentifier = 5;
+            decimal paymentPrice = 1.50m;
+
+            Assert.Throws<Exception>(() => cardPaymentService.AddCardPayment(requestIdentifier, lowBalanceClientIdentifier, ownerIdentifier, paymentPrice));
         }
     }
 }

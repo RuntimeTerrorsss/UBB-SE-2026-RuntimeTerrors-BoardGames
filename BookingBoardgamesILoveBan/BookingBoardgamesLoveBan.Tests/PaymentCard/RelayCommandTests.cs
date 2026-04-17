@@ -10,9 +10,10 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.Commands
         public void Execute_InvokesAction()
         {
             bool actionWasInvoked = false;
-            var command = new RelayCommand(() => actionWasInvoked = true);
+            RelayCommand executeRelayCommand = new RelayCommand(() => actionWasInvoked = true);
+            object nullCommandParameter = null;
 
-            command.Execute(null);
+            executeRelayCommand.Execute(nullCommandParameter);
 
             Assert.True(actionWasInvoked);
         }
@@ -20,38 +21,48 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.Commands
         [Fact]
         public void CanExecute_NoConditionProvided_ReturnsTrue()
         {
-            var command = new RelayCommand(() => { });
+            RelayCommand canExecuteRelayCommand = new RelayCommand(() => { });
+            object nullCommandParameter = null;
 
-            bool canExecute = command.CanExecute(null);
+            bool canExecuteResult = canExecuteRelayCommand.CanExecute(nullCommandParameter);
 
-            Assert.True(canExecute);
+            Assert.True(canExecuteResult);
         }
 
         [Fact]
-        public void CanExecute_ConditionProvided_ReturnsConditionResult()
+        public void CanExecute_ConditionProvidedAndFalse_ReturnsFalse()
         {
-            bool condition = false;
-            var command = new RelayCommand(() => { }, () => condition);
+            bool executeCondition = false;
+            RelayCommand conditionalRelayCommand = new RelayCommand(() => { }, () => executeCondition);
+            object nullCommandParameter = null;
 
-            bool canExecuteFalse = command.CanExecute(null);
+            bool canExecuteResult = conditionalRelayCommand.CanExecute(nullCommandParameter);
 
-            condition = true;
-            bool canExecuteTrue = command.CanExecute(null);
+            Assert.False(canExecuteResult);
+        }
 
-            Assert.False(canExecuteFalse);
-            Assert.True(canExecuteTrue);
+        [Fact]
+        public void CanExecute_ConditionProvidedAndTrue_ReturnsTrue()
+        {
+            bool executeCondition = true;
+            RelayCommand conditionalRelayCommand = new RelayCommand(() => { }, () => executeCondition);
+            object nullCommandParameter = null;
+
+            bool canExecuteResult = conditionalRelayCommand.CanExecute(nullCommandParameter);
+
+            Assert.True(canExecuteResult);
         }
 
         [Fact]
         public void NotifyCanExecuteChanged_FiresEvent()
         {
-            var command = new RelayCommand(() => { });
-            bool eventFired = false;
-            command.CanExecuteChanged += (sender, args) => eventFired = true;
+            RelayCommand eventRelayCommand = new RelayCommand(() => { });
+            bool commandEventFired = false;
+            eventRelayCommand.CanExecuteChanged += (eventSender, eventArguments) => commandEventFired = true;
 
-            command.NotifyCanExecuteChanged();
+            eventRelayCommand.NotifyCanExecuteChanged();
 
-            Assert.True(eventFired);
+            Assert.True(commandEventFired);
         }
     }
 }
