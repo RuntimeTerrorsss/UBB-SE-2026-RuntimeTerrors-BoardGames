@@ -1,5 +1,6 @@
 using BookingBoardgamesILoveBan.Src.PaymentCash.Mapper;
 using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentCash
 {
@@ -25,7 +26,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
         public void ToDto_MapsAllFields()
         {
             var mapper = new CashPaymentMapper();
-            var payment = new BookingBoardgamesILoveBan.Src.PaymentCommon.Model.Payment(3, 5, 7, 9, 12.34m, "CASH");
+            var payment = new Payment(3, 5, 7, 9, 12.34m, "CASH");
 
             var dto = mapper.ToDto(payment);
 
