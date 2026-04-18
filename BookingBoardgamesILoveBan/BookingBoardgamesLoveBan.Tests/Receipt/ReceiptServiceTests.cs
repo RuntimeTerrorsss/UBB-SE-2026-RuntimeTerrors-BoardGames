@@ -21,7 +21,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         {
             public User GetById(int id)
             {
-                return new User(id, $"user_{id}", "country", "city", "str", "number"); 
+                return new User(id, $"user_{id}", "country", "city", "str", "number");
             }
             public void SaveAddress(int id, Address address)
             {
