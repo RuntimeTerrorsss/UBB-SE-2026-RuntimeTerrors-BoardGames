@@ -15,15 +15,15 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 			Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
 			"BookingBoardgames");
 
-		private readonly IUserService userService;
+		private readonly IUserRepository userService;
 		private readonly IRequestService requestService;
-		private readonly IGameService gameService;
+		private readonly IGameRepository gameRepository;
 
-		public ReceiptService(IUserService userService, IRequestService requestService, IGameService gameService)
+		public ReceiptService(IUserRepository userService, IRequestService requestService, IGameRepository gameRepository)
 		{
 			this.userService = userService;
 			this.requestService = requestService;
-			this.gameService = gameService;
+			this.gameRepository = gameRepository;
 		}
 
 		/// <summary>
@@ -137,11 +137,11 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 				$"Rental ID: {payment.RequestId}\n" +
 				$"Date Issued: {this.GetIssuedDateFromFilename(payment.FilePath.Split("\\")[1])}";
 
-			Request request = this.requestService.GetById(payment.RequestId);
+			Request request = this.requestService.GetRequestById(payment.RequestId);
 
 			string requestInfo = $"Rental Information\n" +
 				$"- Rental ID: {payment.RequestId}\n" +
-				$"- Boardgame: {this.gameService.GetById(request.GameId).Name}\n" +
+				$"- Boardgame: {this.gameRepository.GetById(request.GameId).Name}\n" +
 				$"- Rental Period: {request.StartDate:dd/MM/yyyy} - {request.EndDate:dd/MM/yyyy}\n" +
 				$"- Client: {this.userService.GetById(payment.ClientId).Username}\n" +
 				$"- Owner: {this.userService.GetById(payment.OwnerId).Username}";

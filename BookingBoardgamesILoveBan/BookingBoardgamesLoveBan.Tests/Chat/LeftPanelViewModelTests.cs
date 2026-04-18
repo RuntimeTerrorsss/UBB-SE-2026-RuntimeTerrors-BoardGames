@@ -12,7 +12,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class LeftPanelViewModelTests
     {
-        private Mock<IUserService> userService = new Mock<IUserService>();
+        private Mock<IUserRepository> userService = new Mock<IUserRepository>();
 
         private LeftPanelViewModel CreateVM()
         {
@@ -21,9 +21,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
             return new LeftPanelViewModel();
         }
-        private IUserService CreateUserService()
+        private IUserRepository CreateUserService()
         {
-            var service = new Moq.Mock<IUserService>();
+            var service = new Moq.Mock<IUserRepository>();
 
             service.Setup(s => s.GetById(It.IsAny<int>()))
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));

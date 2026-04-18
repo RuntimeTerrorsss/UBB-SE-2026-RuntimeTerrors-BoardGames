@@ -13,7 +13,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
     public class CardPaymentServiceTests
     {
         private readonly Mock<PaymentRepository> mockPaymentRepository;
-        private readonly Mock<UserService> mockUserService;
+        private readonly Mock<UserRepository> mockUserService;
         private readonly Mock<ReceiptService> mockReceiptService;
         private readonly Mock<RequestService> mockRequestService;
         private readonly CardPaymentService cardPaymentService;
@@ -21,15 +21,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
         public CardPaymentServiceTests()
         {
             mockPaymentRepository = new Mock<PaymentRepository>();
-            mockUserService = new Mock<UserService>();
+            mockUserService = new Mock<UserRepository>();
 
-            Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService> mockGameService = new Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService>();
-            mockRequestService = new Mock<RequestService>(mockGameService.Object);
+            Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameRepository> mockGameRepository = new Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameRepository>();
+            mockRequestService = new Mock<RequestService>(mockGameRepository.Object);
 
             mockReceiptService = new Mock<ReceiptService>(
                 mockUserService.Object,
                 mockRequestService.Object,
-                mockGameService.Object);
+                mockGameRepository.Object);
 
             cardPaymentService = new CardPaymentService(
                 mockPaymentRepository.Object,

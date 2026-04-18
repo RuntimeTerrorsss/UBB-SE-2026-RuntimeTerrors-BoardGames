@@ -148,7 +148,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
             HandleIncomingMessage(message, senderName, App.UserService);
         }
 
-        public void HandleIncomingMessage(MessageDTO message, string senderName, IUserService userService)
+        public void HandleIncomingMessage(MessageDTO message, string senderName, IUserRepository userService)
         {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == message.conversationId);
 
@@ -190,7 +190,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
             HandleIncomingConversation(conversation, displayName, userId, App.UserService);
         }
 
-        public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserService service)
+        public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserRepository service)
         {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversation.Id);
             if (existing != null)

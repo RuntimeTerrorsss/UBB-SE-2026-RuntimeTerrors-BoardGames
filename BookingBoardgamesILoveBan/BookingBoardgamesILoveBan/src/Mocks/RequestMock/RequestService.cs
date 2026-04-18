@@ -1,65 +1,45 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
-using Microsoft.Data.SqlClient;
 
 namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
 {
-	public class RequestService : IRequestService
-	{
-		private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
-		private readonly IGameService gameService;
+    public class RequestService : IRequestService
+    {
+        private readonly IRequestRepository requestRepository;
+        private readonly IGameRepository gameRepository;
 
-        public RequestService(IGameService gameservice)
+        public RequestService(IRequestRepository requestRepository, IGameRepository gameRepository)
         {
-			gameService = gameservice;
-        }
-        public Request GetById(int id)
-		{
-			const string query = @"SELECT rid, GameId, ClientId, OwnerId, StartDate, EndDate FROM Request WHERE rid = @id";
-			Request foundRequest = null;
-
-			using (var connection = new SqlConnection(this.connectionString))
-			{
-				using (var command = new SqlCommand(query, connection))
-				{
-					command.Parameters.AddWithValue("@id", id);
-
-					connection.Open();
-
-					using (var reader = command.ExecuteReader())
-					{
-						while (reader.Read())
-						{
-							foundRequest = new Request(
-								reader.GetInt32(reader.GetOrdinal("rid")),
-								reader.GetInt32(reader.GetOrdinal("GameId")),
-								reader.GetInt32(reader.GetOrdinal("ClientId")),
-								reader.GetInt32(reader.GetOrdinal("OwnerId")),
-								reader.GetDateTime(reader.GetOrdinal("StartDate")),
-								reader.GetDateTime(reader.GetOrdinal("EndDate")));
-						}
-					}
-
-					connection.Close();
-				}
-			}
-
-			return foundRequest;
-		}
-
-        public virtual decimal GetRequestPrice(int requestId)
-        {
-            Request request = this.GetById(requestId);
-            int daysOfBooking = (request.EndDate - request.StartDate).Days;
-            decimal gamePricePerDay = gameService.GetPriceGameById(request.GameId);
-            return gamePricePerDay * daysOfBooking;
+            this.requestRepository = requestRepository;
+            this.gameRepository = gameRepository;
         }
 
-		public string GetGameName(int requestId)
-		{
-			Request request = this.GetById(requestId);
-			Game game = this.gameService.GetById(request.GameId);
-			return game.Name;
+        public Request GetRequestById(int requestId)
+        {
+            return requestRepository.GetById(requestId);
+        }
+
+        public decimal GetRequestPrice(int requestId)
+        {
+            var request = requestRepository.GetById(requestId);
+            int days = (request.EndDate - request.StartDate).Days;
+            if (days == 0)
+            {
+                days = 1;
+            }
+            var price = gameRepository.GetPriceGameById(request.GameId);
+
+            return price * days;
+        }
+
+        public string GetGameName(int requestId)
+        {
+            var request = requestRepository.GetById(requestId);
+            return gameRepository.GetById(request.GameId).Name;
         }
     }
 }

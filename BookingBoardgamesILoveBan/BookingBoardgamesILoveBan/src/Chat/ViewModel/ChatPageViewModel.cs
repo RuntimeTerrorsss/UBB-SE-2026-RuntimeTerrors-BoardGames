@@ -58,7 +58,7 @@ public class ChatPageViewModel
     {
     }
 
-    public ChatPageViewModel(int currentUser, ConversationService service, IUserService uService)
+    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository uService)
     {
         LeftPanel = new LeftPanelViewModel();
         Chat = new ChatViewModel(currentUser);

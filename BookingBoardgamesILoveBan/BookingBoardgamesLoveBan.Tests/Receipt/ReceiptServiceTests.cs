@@ -15,7 +15,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
     public class ReceiptServiceTests
     {
         // ================================ fakes ======================================
-        private class FakeUserService : IUserService
+        private class FakeUserService : IUserRepository
         {
             public User GetById(int id)
             { return new User(id, $"user_{id}", "country", "city", "str", "number"); }
@@ -27,7 +27,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             public void UpdateBalance(int userId, decimal newBalance) { }
         }
 
-        private class FakeGameService : IGameService
+        private class FakeGameService : IGameRepository
         {
             public Game GetById(int id) { return new Game(id, $"game_{id}", 100m); }
             public decimal GetPriceGameById(int gameId)
@@ -38,7 +38,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
 
         private class FakeRequestService : IRequestService
         {
-            public Request GetById(int id) => new Request
+            public Request GetRequestById(int id) => new Request
             (
                 id,
                 1, 1, 2,

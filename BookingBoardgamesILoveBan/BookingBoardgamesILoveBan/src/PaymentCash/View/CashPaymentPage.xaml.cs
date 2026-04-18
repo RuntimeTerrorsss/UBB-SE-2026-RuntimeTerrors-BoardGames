@@ -27,7 +27,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
                     App.CashPaymentService,
                     App.UserService,
                     App.RequestService,
-                    App.GameService,
+                    App.GameRepository,
                     booking.RequestIdentifier,
                     booking.DeliveryAddress,
                     booking.BookingMessageIdentifier,

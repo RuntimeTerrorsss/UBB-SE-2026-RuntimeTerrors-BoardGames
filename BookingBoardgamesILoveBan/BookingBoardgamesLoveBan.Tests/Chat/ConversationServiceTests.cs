@@ -16,13 +16,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     public class ConversationServiceTests
     {
         private readonly Mock<IConversationRepository> _repoMock;
-        private readonly Mock<IUserService> _userServiceMock;
+        private readonly Mock<IUserRepository> _userServiceMock;
         private readonly ConversationService _service;
 
         public ConversationServiceTests()
         {
             _repoMock = new Mock<IConversationRepository>();
-            _userServiceMock = new Mock<IUserService>();
+            _userServiceMock = new Mock<IUserRepository>();
 
             _userServiceMock
                 .Setup(u => u.GetById(It.IsAny<int>()))

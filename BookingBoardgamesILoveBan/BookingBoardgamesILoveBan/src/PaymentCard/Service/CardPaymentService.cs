@@ -7,17 +7,18 @@ using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
 using BookingBoardgamesILoveBan.Src.PaymentCard.DataTransferObjects;
+using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 {
     public class CardPaymentService : PaymentService
     {
-        private readonly IUserService userService;
+        private readonly IUserRepository userService;
         private readonly IRequestService requestService;
 
         public CardPaymentService(
             PaymentRepository paymentRepository,
-            UserService userService,
+            UserRepository userService,
             ReceiptService receiptService,
             IRequestService requestService) : base(paymentRepository, receiptService)
         {
@@ -101,7 +102,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 
         public virtual RequestDto GetRequestDataTransferObject(int requestIdentifier)
         {
-            Request request = this.requestService.GetById(requestIdentifier);
+            Request request = this.requestService.GetRequestById(requestIdentifier);
             string gameName = this.requestService.GetGameName(request.Id);
             string ownerName = this.userService.GetById(request.OwnerId).Username;
             string clientName = this.userService.GetById(request.ClientId).Username;

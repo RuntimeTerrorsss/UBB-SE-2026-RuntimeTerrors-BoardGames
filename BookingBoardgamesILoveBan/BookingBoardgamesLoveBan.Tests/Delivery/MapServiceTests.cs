@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 using BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices;
+using Xunit;
 
 namespace BookingBoardgamesLoveBan.Tests.Delivery
 {
-    public class MapServiceTests // integration tests
+    public class MapServiceTests
     {
         private readonly MapService service = new MapService();
-
-
-        // ================================ GetAddressFromMapAsync ======================================
 
         [Fact]
         public async Task GetAddressFromMapAsync_ZeroCoordinates_ReturnsNull()
@@ -46,7 +43,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public async Task GetAddressFromMapAsync_InvalidCoordinates_ReturnsNull()
         {
-            // coordinate in ocean
             var result = await service.GetAddressFromMapAsync(0.1, 0.1);
 
             Assert.Null(result);
@@ -57,6 +53,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             await Task.Delay(1500);
             var result = await service.GetAddressFromMapAsync(46.80, 23.70);
+
             Assert.NotNull(result);
             Assert.NotEmpty(result.City);
         }

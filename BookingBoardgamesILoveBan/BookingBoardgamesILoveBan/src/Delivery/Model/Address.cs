@@ -8,21 +8,26 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Model
 {
     public class Address
     {
-        public string Street { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public string StreetNumber { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-
         public Address(string country, string city, string street, string streetNumber)
         {
-            this.Street = street;
-            this.City = city;
-            this.StreetNumber = streetNumber;
-            this.Country = country;
+            Street = street;
+            City = city;
+            StreetNumber = streetNumber;
+            Country = country;
         }
+
         public Address()
         {
         }
+
+        public string Street { get; set; } = string.Empty;
+
+        public string City { get; set; } = string.Empty;
+
+        public string StreetNumber { get; set; } = string.Empty;
+
+        public string Country { get; set; } = string.Empty;
+
         public override string ToString()
         {
             return $"{Street} {StreetNumber}, {City}, {Country}";

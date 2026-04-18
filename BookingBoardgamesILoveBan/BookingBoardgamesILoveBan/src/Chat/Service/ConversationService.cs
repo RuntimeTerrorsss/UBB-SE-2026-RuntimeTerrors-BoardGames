@@ -16,7 +16,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
     public class ConversationService : IConversationService
     {
         private IConversationRepository ConversationRepository { get; set; }
-        private IUserService userService;
+        private IUserRepository userService;
         private int UserId { get; set; }
 
         public event Action<MessageDTO, string> MessageProcessed;
@@ -28,7 +28,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
         }
 
-        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserService uService)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserRepository uService)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;
@@ -36,7 +36,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
 
             ConversationRepository.Subscribe(UserId, this);
         }
-        public ConversationService(IConversationRepository conversationRepo, IUserService userService, int userIdInput)
+        public ConversationService(IConversationRepository conversationRepo, IUserRepository userService, int userIdInput)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;

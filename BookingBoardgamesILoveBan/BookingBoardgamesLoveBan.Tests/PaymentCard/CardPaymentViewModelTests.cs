@@ -13,14 +13,14 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.ViewModel
     public class CardPaymentViewModelTests
     {
         private readonly Mock<CardPaymentService> mockCardPaymentService;
-        private readonly Mock<UserService> mockUserService;
+        private readonly Mock<UserRepository> mockUserService;
 
         public CardPaymentViewModelTests()
         {
             SynchronizationContext.SetSynchronizationContext(new TestSyncContext());
 
             mockCardPaymentService = new Mock<CardPaymentService>(null, null, null, null);
-            mockUserService = new Mock<UserService>();
+            mockUserService = new Mock<UserRepository>();
 
             int requestIdentifier = 1;
             string gameName = "Catan";

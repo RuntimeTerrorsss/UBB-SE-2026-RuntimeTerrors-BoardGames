@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -6,10 +7,6 @@ using BookingBoardgamesILoveBan.Src.Delivery.Model;
 
 namespace BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices
 {
-    /// <summary>
-    /// Reverse-geocodes coordinates using OpenStreetMap Nominatim (free, no API key).
-    /// Policy: max 1 request/sec, User-Agent must be set.
-    /// </summary>
     public class MapService : IMapService
     {
         private readonly HttpClient httpClient = new HttpClient();
@@ -28,24 +25,27 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices
 
             try
             {
-                string url = System.FormattableString.Invariant($"https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json");
+                string url = FormattableString.Invariant($"https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json");
 
                 HttpResponseMessage response = await httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
                 string json = await response.Content.ReadAsStringAsync();
-                using JsonDocument doc = JsonDocument.Parse(json);
-                JsonElement addr = doc.RootElement.GetProperty("address");
 
-                return new Address
+                using (JsonDocument doc = JsonDocument.Parse(json))
                 {
-                    Country = addr.TryGetProperty("country", out JsonElement country) ? country.GetString() ?? string.Empty : string.Empty,
-                    City = addr.TryGetProperty("city", out JsonElement city) ? city.GetString() ?? string.Empty
-                                 : addr.TryGetProperty("town", out JsonElement town) ? town.GetString() ?? string.Empty
-                                 : addr.TryGetProperty("village", out JsonElement village) ? village.GetString() ?? string.Empty : string.Empty,
-                    Street = addr.TryGetProperty("road", out JsonElement road) ? road.GetString() ?? string.Empty : string.Empty,
-                    StreetNumber = addr.TryGetProperty("house_number", out JsonElement number) ? number.GetString() ?? string.Empty : string.Empty,
-                };
+                    JsonElement addr = doc.RootElement.GetProperty("address");
+
+                    return new Address
+                    {
+                        Country = addr.TryGetProperty("country", out JsonElement country) ? country.GetString() ?? string.Empty : string.Empty,
+                        City = addr.TryGetProperty("city", out JsonElement city) ? city.GetString() ?? string.Empty
+                                     : addr.TryGetProperty("town", out JsonElement town) ? town.GetString() ?? string.Empty
+                                     : addr.TryGetProperty("village", out JsonElement village) ? village.GetString() ?? string.Empty : string.Empty,
+                        Street = addr.TryGetProperty("road", out JsonElement road) ? road.GetString() ?? string.Empty : string.Empty,
+                        StreetNumber = addr.TryGetProperty("house_number", out JsonElement number) ? number.GetString() ?? string.Empty : string.Empty,
+                    };
+                }
             }
             catch
             {

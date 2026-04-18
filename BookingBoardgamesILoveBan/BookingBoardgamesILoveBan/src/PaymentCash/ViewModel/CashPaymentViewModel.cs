@@ -11,9 +11,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 	public class CashPaymentViewModel
 	{
 		private ICashPaymentService service;
-		private readonly IUserService userService;
+		private readonly IUserRepository userService;
 		private readonly IRequestService requestService;
-		private readonly IGameService gameService;
+		private readonly IGameRepository gameRepository;
 		private readonly ConversationService conversationService;
 
 		public string OwnerName { get; set; }
@@ -26,9 +26,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 
 		public CashPaymentViewModel(
 			ICashPaymentService service,
-			IUserService userService,
+			IUserRepository userService,
 			IRequestService requestService,
-			IGameService gameService,
+			IGameRepository gameRepository,
 			int requestId,
 			string deliveryAddress,
 			int messageId,
@@ -37,12 +37,12 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 			this.service = service;
 			this.userService = userService;
 			this.requestService = requestService;
-			this.gameService = gameService;
+			this.gameRepository = gameRepository;
 			this.conversationService = conversationService;
 			this.rentalRequestMessageId = messageId;
 
-			Request request = this.requestService.GetById(requestId);
-			Game game = this.gameService.GetById(request.GameId);
+			Request request = this.requestService.GetRequestById(requestId);
+			Game game = this.gameRepository.GetById(request.GameId);
 			User client = this.userService.GetById(request.ClientId);
 			User owner = this.userService.GetById(request.OwnerId);
 

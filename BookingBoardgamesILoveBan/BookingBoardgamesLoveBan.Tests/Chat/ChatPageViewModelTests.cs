@@ -17,7 +17,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     public class ChatPageViewModelTests
     {
         private readonly int currentUserId = 1;
-        private Mock<IUserService> userService;
+        private Mock<IUserRepository> userService;
 
         private ConversationService CreateService()
         {
@@ -38,7 +38,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             )
                 });
 
-            userService = new Mock<IUserService>();
+            userService = new Mock<IUserRepository>();
 
             userService
                 .Setup(u => u.GetById(It.IsAny<int>()))
