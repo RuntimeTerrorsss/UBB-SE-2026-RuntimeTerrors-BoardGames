@@ -14,12 +14,21 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
             canExecutePredicate = canExecute;
         }
 
-        public bool CanExecute(object parameter) => canExecutePredicate == null || canExecutePredicate((T)parameter);
+        public bool CanExecute(object parameter)
+        {
+            return canExecutePredicate == null || canExecutePredicate((T)parameter);
+        }
 
-        public void Execute(object parameter) => executeAction((T)parameter);
+        public void Execute(object parameter)
+        {
+            executeAction((T)parameter);
+        }
 
         public event EventHandler CanExecuteChanged;
-        public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        public void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public class RelayCommandNoParam : ICommand
@@ -33,11 +42,20 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
             canExecuteFunc = canExecute;
         }
 
-        public bool CanExecute(object parameter) => canExecuteFunc == null || canExecuteFunc();
+        public bool CanExecute(object parameter)
+        {
+            return canExecuteFunc == null || canExecuteFunc();
+        }
 
-        public void Execute(object parameter) => executeAct();
+        public void Execute(object parameter)
+        {
+            executeAct();
+        }
 
         public event EventHandler CanExecuteChanged;
-        public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        public void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 }
