@@ -174,7 +174,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
             {
                 return 0;
             }
-            return displayedPayments.Sum(t => t.Amount);
+            return displayedPayments.Sum(transaction => transaction.Amount);
         }
 
         /// <summary>
@@ -205,17 +205,17 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <returns>A mapped list of TransactionDto objects.</returns>
         private List<PaymentDto> MapToDto(IEnumerable<HistoryPayment> payments)
         {
-            return payments.Select(t =>
+            return payments.Select(transaction =>
             {
                 return new PaymentDto
                 {
-                    Id = t.Tid,
-                    DateText = t.DateOfTransaction?.ToString("d") ?? "Pending",
-                    ProductName = !string.IsNullOrWhiteSpace(t.GameName) ? t.GameName : "Unknown Game",
-                    ReceiverName = !string.IsNullOrWhiteSpace(t.OwnerName) ? t.OwnerName : "Unknown Owner",
-                    Amount = t.Amount,
-                    PaymentMethod = t.PaymentMethod,
-                    FilePath = t.FilePath
+                    Id = transaction.Tid,
+                    DateText = transaction.DateOfTransaction?.ToString("d") ?? "Pending",
+                    ProductName = !string.IsNullOrWhiteSpace(transaction.GameName) ? transaction.GameName : "Unknown Game",
+                    ReceiverName = !string.IsNullOrWhiteSpace(transaction.OwnerName) ? transaction.OwnerName : "Unknown Owner",
+                    Amount = transaction.Amount,
+                    PaymentMethod = transaction.PaymentMethod,
+                    FilePath = transaction.FilePath
                 };
             }).ToList();
         }
