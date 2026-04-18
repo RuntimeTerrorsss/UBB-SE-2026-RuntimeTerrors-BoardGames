@@ -22,33 +22,6 @@ public class ChatPageViewModel
         get => conversationService;
     }
     private List<ConversationDTO> conversations = new ();
-
-    /*public ChatPageViewModel(int currentUser)
-    {
-        LeftPanel = new LeftPanelViewModel();
-        Chat = new ChatViewModel(currentUser);
-        currentUserId = currentUser;
-
-        LeftPanel.PropertyChanged += OnLeftPanelPropertyChanged;
-        Chat.MessageSent += OnMessageSent;
-        Chat.BookingRequestUpdate += UpdateBookingRequest;
-        Chat.CashAgreementAccept += UpdateCashAgreement;
-
-        conversationService = new ConversationService(App.ConversationRepository, currentUser);
-
-        conversations = conversationService.FetchConversations();
-
-        foreach (var convo in conversations)
-        {
-            LeftPanel.HandleIncomingConversation(convo, conversationService.GetOtherUserNameByConversationDTO(convo), currentUserId);
-        }
-
-        conversationService.MessageProcessed += OnMessageReceived;
-        conversationService.ConversationProcessed += OnConversationReceived;
-        conversationService.ReadReceiptProcessed += OnReadReceiptReceived;
-        conversationService.MessageUpdateProcessed += OnMessageUpdateReceived;
-    }*/
-
     public ChatPageViewModel(int currentUser)
     : this(currentUser, new ConversationService(App.ConversationRepository, currentUser))
     {
@@ -58,7 +31,7 @@ public class ChatPageViewModel
     {
     }
 
-    public ChatPageViewModel(int currentUser, ConversationService service, IUserService uService)
+    public ChatPageViewModel(int currentUser, ConversationService service, IUserService userService)
     {
         LeftPanel = new LeftPanelViewModel();
         Chat = new ChatViewModel(currentUser);
@@ -73,13 +46,13 @@ public class ChatPageViewModel
 
         conversations = conversationService.FetchConversations();
 
-        foreach (var convo in conversations)
+        foreach (var conversation in conversations)
         {
             LeftPanel.HandleIncomingConversation(
-                convo,
-                conversationService.GetOtherUserNameByConversationDTO(convo),
+                conversation,
+                conversationService.GetOtherUserNameByConversationDTO(conversation),
                 currentUserId,
-                uService);
+                userService);
         }
 
         conversationService.MessageProcessed += OnMessageReceived;
@@ -94,10 +67,10 @@ public class ChatPageViewModel
     /// It also sends a read receipt for that conversation.
     /// </summary>
     /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void OnLeftPanelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    /// <param name="eventArgs"></param>
+    private void OnLeftPanelPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
     {
-        if (e.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
+        if (eventArgs.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
         {
             return;
         }
@@ -106,15 +79,15 @@ public class ChatPageViewModel
             return;
         }
 
-        var convo = conversations.FirstOrDefault(c => c.Id == LeftPanel.SelectedConversation.ConversationId);
-        if (convo == null)
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == LeftPanel.SelectedConversation.ConversationId);
+        if (conversation == null)
         {
             return;
         }
-        int selectedConversationOtherUserUnreadCount = convo.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
-        Chat.LoadConversation(LeftPanel.SelectedConversation, convo.MessageList, selectedConversationOtherUserUnreadCount);
+        int selectedConversationOtherUserUnreadCount = conversation.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
+        Chat.LoadConversation(LeftPanel.SelectedConversation, conversation.MessageList, selectedConversationOtherUserUnreadCount);
 
-        SendReadReceipt(convo);
+        SendReadReceipt(conversation);
     }
 
     /// <summary>
@@ -125,8 +98,8 @@ public class ChatPageViewModel
     /// <param name="message"></param>
     private void OnMessageSent(MessageDTO message)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == message.conversationId);
-        message = message with { receiverId = convo.Participants[0] == message.senderId ? convo.Participants[1] : convo.Participants[0] };
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == message.conversationId);
+        message = message with { receiverId = conversation.Participants[0] == message.senderId ? conversation.Participants[1] : conversation.Participants[0] };
         conversationService.SendMessage(message);
     }
 
@@ -157,15 +130,15 @@ public class ChatPageViewModel
     /// <param name="senderName"></param>
     private void OnMessageReceived(MessageDTO message, string senderName)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == message.conversationId);
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == message.conversationId);
 
-        convo?.AddMessageDTO(message);
+        conversation?.AddMessageDTO(message);
 
         LeftPanel.HandleIncomingMessage(message, senderName);
         Chat.HandleIncomingMessage(message);
         if (Chat.ConversationId == message.conversationId)
         {
-            SendReadReceipt(convo);
+            SendReadReceipt(conversation);
         }
     }
 
@@ -179,8 +152,8 @@ public class ChatPageViewModel
     /// <param name="resolved"></param>
     private void UpdateBookingRequest(int messageId, int conversationId, bool accepted, bool resolved)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == conversationId);
-        var message = convo?.MessageList.FirstOrDefault(m => m.id == messageId);
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == conversationId);
+        var message = conversation?.MessageList.FirstOrDefault(firstMessage => firstMessage.id == messageId);
         if (message == null)
         {
             return;
@@ -196,8 +169,8 @@ public class ChatPageViewModel
     /// <param name="conversationId"></param>
     private void UpdateCashAgreement(int messageId, int conversationId)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == conversationId);
-        var message = convo?.MessageList.FirstOrDefault(m => m.id == messageId);
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == conversationId);
+        var message = conversation?.MessageList.FirstOrDefault(firstMessage => firstMessage.id == messageId);
         if (message == null)
         {
             return;
@@ -217,12 +190,12 @@ public class ChatPageViewModel
     /// This method is called when a new conversation is received from the conversation service.
     /// This is to handle the case when someone wants to start a conversation with a user thats currently logged in.
     /// </summary>
-    /// <param name="convo"></param>
+    /// <param name="conversation"></param>
     /// <param name="otherUsername"></param>
-    private void OnConversationReceived(ConversationDTO convo, string otherUsername)
+    private void OnConversationReceived(ConversationDTO conversation, string otherUsername)
     {
-        conversations.Add(convo);
-        LeftPanel.HandleIncomingConversation(convo, otherUsername, currentUserId);
+        conversations.Add(conversation);
+        LeftPanel.HandleIncomingConversation(conversation, otherUsername, currentUserId);
     }
 
     /// <summary>
@@ -231,12 +204,12 @@ public class ChatPageViewModel
     /// <param name="readReceipt"></param>
     private void OnReadReceiptReceived(ReadReceiptDTO readReceipt)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == readReceipt.conversationId);
-        convo.LastRead[readReceipt.readerId] = readReceipt.timeStamp;
-        convo.UpdateUnreadCounts();
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == readReceipt.conversationId);
+        conversation.LastRead[readReceipt.readerId] = readReceipt.timeStamp;
+        conversation.UpdateUnreadCounts();
         if (Chat.ConversationId == readReceipt.conversationId && readReceipt.readerId != currentUserId)
         {
-            Chat.LoadConversation(LeftPanel.SelectedConversation, convo.MessageList, convo.UnreadCount[readReceipt.readerId]);
+            Chat.LoadConversation(LeftPanel.SelectedConversation, conversation.MessageList, conversation.UnreadCount[readReceipt.readerId]);
         }
     }
 
@@ -247,19 +220,19 @@ public class ChatPageViewModel
     /// <param name="senderName"></param>
     private void OnMessageUpdateReceived(MessageDTO updatedMessage, string senderName)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == updatedMessage.conversationId);
-        if (convo == null)
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == updatedMessage.conversationId);
+        if (conversation == null)
         {
             return;
         }
-        for (int i = 0; i < convo.MessageList.Count; i++)
+        for (int i = 0; i < conversation.MessageList.Count; i++)
         {
-            if (convo.MessageList[i].id == updatedMessage.id)
+            if (conversation.MessageList[i].id == updatedMessage.id)
             {
-                convo.MessageList[i] = updatedMessage;
+                conversation.MessageList[i] = updatedMessage;
                 if (Chat.ConversationId == updatedMessage.conversationId)
                 {
-                    Chat.LoadConversation(LeftPanel.SelectedConversation, convo.MessageList, 0); // unreadcount is 0 cus like think about it how could they have possibly sent an update if they handnt read the convo!
+                    Chat.LoadConversation(LeftPanel.SelectedConversation, conversation.MessageList, 0); // unreadcount is 0 cus like think about it how could they have possibly sent an update if they handnt read the convo!
                 }
                 break;
             }

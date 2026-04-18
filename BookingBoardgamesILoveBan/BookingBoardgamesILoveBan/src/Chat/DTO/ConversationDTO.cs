@@ -16,9 +16,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.DTO
         public int[] Participants { get; set; }
         public Dictionary<int, DateTime> LastRead { get; set; }
         public Dictionary<int, int> UnreadCount { get; set; } // <id, count>
-        public ConversationDTO(int convId, int[] participants, List<MessageDTO> messages, Dictionary<int, DateTime> lastRead)
+        public ConversationDTO(int conversationId, int[] participants, List<MessageDTO> messages, Dictionary<int, DateTime> lastRead)
         {
-            Id = convId;
+            Id = conversationId;
             Participants = participants;
             MessageList = messages;
             LastRead = lastRead;

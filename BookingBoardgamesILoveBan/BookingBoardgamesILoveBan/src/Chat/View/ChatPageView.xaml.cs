@@ -24,7 +24,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
     /// </summary>
     public sealed partial class ChatPageView : Page
     {
-        private ChatPageViewModel vm;
+        private ChatPageViewModel viewModel;
         private int currentUserId;
 
         public ChatPageView()
@@ -33,19 +33,19 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         }
         public void Initialize(int currentUserId)
         {
-            vm = new ChatPageViewModel(currentUserId);
-            LeftPanel.ViewModel = vm.LeftPanel;
-            RightPanel.ChatViewModel = vm.Chat;
+            viewModel = new ChatPageViewModel(currentUserId);
+            LeftPanel.ViewModel = viewModel.LeftPanel;
+            RightPanel.ChatViewModel = viewModel.Chat;
             RightPanel.CurrentUserId = currentUserId;
             RightPanel.ProceedToPaymentRequested += OnProceedToPayment;
 
-            vm.LeftPanel.PropertyChanged += (s, e) =>
+            viewModel.LeftPanel.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
                 {
                     return;
                 }
-                RightPanel.IsConversationSelected = vm.LeftPanel.SelectedConversation != null;
+                RightPanel.IsConversationSelected = viewModel.LeftPanel.SelectedConversation != null;
             };
         }
 
@@ -54,7 +54,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             var deliveryWindow = new Window();
             var deliveryFrame = new Frame();
             deliveryWindow.Content = deliveryFrame;
-            deliveryFrame.Navigate(typeof(DeliveryView), (args.userId, args.requestId, args.messageId, vm.ConversationService, deliveryWindow));
+            deliveryFrame.Navigate(typeof(DeliveryView), (args.userId, args.requestId, args.messageId, viewModel.ConversationService, deliveryWindow));
             deliveryWindow.Activate();
             // this.Frame?.Navigate(typeof(DeliveryView), args);
         }

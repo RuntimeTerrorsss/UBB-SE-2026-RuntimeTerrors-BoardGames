@@ -38,11 +38,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <summary>
         /// Gets a single conversation by id, including messages and last read info.
         /// </summary>
-        /// <param name="convId"></param>
+        /// <param name="conversationId"></param>
         /// <returns></returns>
-        public Conversation GetConversation(int convId)
+        public Conversation GetConversation(int conversationId)
         {
-            return LoadConversationFromDB(convId);
+            return LoadConversationFromDB(conversationId);
         }
 
         // CRUD HANDLERS
@@ -327,14 +327,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <returns></returns>
         private Conversation LoadConversationFromDB(int conversationId)
         {
-            Conversation ret = null;
+            Conversation conversation = null;
             using (var connection = new SqlConnection(appConnectionString))
             {
                 connection.Open();
-                ret = LoadSingleConversationFromDB(conversationId, connection);
+                conversation = LoadSingleConversationFromDB(conversationId, connection);
                 connection.Close();
             }
-            return ret;
+            return conversation;
         }
 
         /// <summary>

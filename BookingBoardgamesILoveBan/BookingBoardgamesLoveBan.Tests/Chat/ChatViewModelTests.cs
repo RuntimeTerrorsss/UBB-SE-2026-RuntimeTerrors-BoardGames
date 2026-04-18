@@ -11,7 +11,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ChatViewModelTests
     {
-        private ChatViewModel CreateVM()
+        private ChatViewModel CreateViewModel()
         {
             return new ChatViewModel(1);
         }
@@ -52,8 +52,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void LoadConversation_Should_SetHeaderAndMessages()
         {
-            var vm = CreateVM();
-            var convo = CreateConversation();
+            var viewModel = CreateViewModel();
+            var conversation = CreateConversation();
 
             var messages = new List<MessageDTO>
             {
@@ -61,96 +61,96 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 CreateMessage()
             };
 
-            vm.LoadConversation(convo, messages, theirUnreadCount: 1);
+            viewModel.LoadConversation(conversation, messages, theirUnreadCount: 1);
 
-            Assert.Equal(1, vm.ConversationId);
-            Assert.Equal("John Doe", vm.DisplayName);
-            Assert.Equal("JD", vm.Initials);
-            Assert.Equal("avatar.png", vm.AvatarUrl);
+            Assert.Equal(1, viewModel.ConversationId);
+            Assert.Equal("John Doe", viewModel.DisplayName);
+            Assert.Equal("JD", viewModel.Initials);
+            Assert.Equal("avatar.png", viewModel.AvatarUrl);
 
-            Assert.Equal(2, vm.Messages.Count);
+            Assert.Equal(2, viewModel.Messages.Count);
         }
 
         [Fact]
         public void SendMessage_Should_AddMessage_And_ClearInput()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
             bool invoked = false;
-            vm.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += _ => invoked = true;
 
-            vm.InputText = "hello world";
-            vm.SendMessage();
+            viewModel.InputText = "hello world";
+            viewModel.SendMessage();
 
-            Assert.Single(vm.Messages);
-            Assert.Equal(string.Empty, vm.InputText);
+            Assert.Single(viewModel.Messages);
+            Assert.Equal(string.Empty, viewModel.InputText);
             Assert.True(invoked);
         }
 
         [Fact]
         public void SendMessage_Should_DoNothing_WhenInputEmpty()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
-            vm.InputText = "";
+            viewModel.InputText = "";
 
-            vm.SendMessage();
+            viewModel.SendMessage();
 
-            Assert.Empty(vm.Messages);
+            Assert.Empty(viewModel.Messages);
         }
 
         [Fact]
         public void HandleIncomingMessage_Should_AddMessage_WhenSameConversation()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
-            var msg = CreateMessage(1);
+            var message = CreateMessage(1);
 
-            vm.HandleIncomingMessage(msg);
+            viewModel.HandleIncomingMessage(message);
 
-            Assert.Single(vm.Messages);
+            Assert.Single(viewModel.Messages);
         }
 
         [Fact]
         public void HandleIncomingMessage_Should_IgnoreDifferentConversation()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
-            var msg = CreateMessage(99);
+            var message = CreateMessage(99);
 
-            vm.HandleIncomingMessage(msg);
+            viewModel.HandleIncomingMessage(message);
 
-            Assert.Empty(vm.Messages);
+            Assert.Empty(viewModel.Messages);
         }
 
         [Fact]
         public void HandleIncomingMessage_Should_PreventDuplicates()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
-            var msg = CreateMessage(1);
+            var message = CreateMessage(1);
 
-            vm.HandleIncomingMessage(msg);
-            vm.HandleIncomingMessage(msg);
+            viewModel.HandleIncomingMessage(message);
+            viewModel.HandleIncomingMessage(message);
 
-            Assert.Single(vm.Messages);
+            Assert.Single(viewModel.Messages);
         }
 
         [Fact]
         public void ResolveBookingRequest_Should_InvokeEvent()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
 
             bool invoked = false;
-            vm.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
+            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
 
-            vm.ResolveBookingRequest(1, true);
+            viewModel.ResolveBookingRequest(1, true);
 
             Assert.True(invoked);
         }
@@ -158,21 +158,21 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void ResolveBookingRequest_Should_NotThrow_WhenMessageMissing()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            vm.ResolveBookingRequest(999, true);
+            viewModel.ResolveBookingRequest(999, true);
         }
 
         [Fact]
         public void UpdateCashAgreement_Should_InvokeEvent()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
 
             bool invoked = false;
-            vm.CashAgreementAccept += (_, __) => invoked = true;
+            viewModel.CashAgreementAccept += (_, __) => invoked = true;
 
-            vm.UpdateCashAgreement(1);
+            viewModel.UpdateCashAgreement(1);
 
             Assert.True(invoked);
         }
@@ -180,21 +180,21 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void UpdateCashAgreement_Should_NotThrow_WhenMissing()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            vm.UpdateCashAgreement(999);
+            viewModel.UpdateCashAgreement(999);
         }
 
         [Fact]
         public void SendImage_Should_InvokeEvent()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
             bool invoked = false;
-            vm.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += _ => invoked = true;
 
-            vm.SendImage("file.png");
+            viewModel.SendImage("file.png");
 
             Assert.True(invoked);
         }
@@ -202,12 +202,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void RaiseBookingRequestUpdate_Should_FireEvent()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
             bool invoked = false;
-            vm.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
+            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
 
-            vm.RaiseBookingRequestUpdate(1, 1, true, false);
+            viewModel.RaiseBookingRequestUpdate(1, 1, true, false);
 
             Assert.True(invoked);
         }
@@ -215,12 +215,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void RaiseCashAgreementAccept_Should_FireEvent()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
             bool invoked = false;
-            vm.CashAgreementAccept += (_, __) => invoked = true;
+            viewModel.CashAgreementAccept += (_, __) => invoked = true;
 
-            vm.RaiseCashAgreementAccept(1, 1);
+            viewModel.RaiseCashAgreementAccept(1, 1);
 
             Assert.True(invoked);
         }
@@ -228,12 +228,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void RaiseMessageSent_Should_FireEvent()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
             bool invoked = false;
-            vm.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += _ => invoked = true;
 
-            vm.RaiseMessageSent(CreateMessage());
+            viewModel.RaiseMessageSent(CreateMessage());
 
             Assert.True(invoked);
         }

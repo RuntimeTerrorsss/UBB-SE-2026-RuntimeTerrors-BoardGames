@@ -14,9 +14,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Model
         public int[] ParticipantIds { get; set; }
         public Dictionary<int, DateTime> LastRead { get; set; }
         public Dictionary<int, int> UnreadCount { get; set; } // <id, count>
-        public Conversation(int convId, int[] participants, List<Message> messages, Dictionary<int, DateTime> lastRead)
+        public Conversation(int conversationId, int[] participants, List<Message> messages, Dictionary<int, DateTime> lastRead)
         {
-            Id = convId;
+            Id = conversationId;
             ParticipantIds = participants;
             MessageList = messages;
             LastRead = lastRead;

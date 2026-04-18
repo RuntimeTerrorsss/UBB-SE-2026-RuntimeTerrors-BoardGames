@@ -28,11 +28,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
         }
 
-        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserService uService)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserService userService)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;
-            userService = uService;
+            this.userService = userService;
 
             ConversationRepository.Subscribe(UserId, this);
         }
@@ -53,13 +53,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public List<ConversationDTO> FetchConversations()
         {
-            List<ConversationDTO> convList = new List<ConversationDTO>();
+            List<ConversationDTO> conversationList = new List<ConversationDTO>();
 
-            foreach (var conv in ConversationRepository.GetConversationsForUser(UserId))
+            foreach (var conversation in ConversationRepository.GetConversationsForUser(UserId))
             {
-                convList.Add(ConversationToConversationDTO(conv));
+                conversationList.Add(ConversationToConversationDTO(conversation));
             }
-            return convList;
+            return conversationList;
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
             ConversationRepository.HandleReadReceipt(new ReadReceipt(
                 conversation.Id,
                 UserId,
-                conversation.Participants.First(p => p != UserId),
+                conversation.Participants.First(id => id != UserId),
                 DateTime.Now));
         }
 
@@ -300,7 +300,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             var messageDTOs = conversation.MessageList.Select(mess => MessageToMessageDTO(mess)).ToList();
             return new ConversationDTO(
-                convId: conversation.Id,
+                conversationId: conversation.Id,
                 participants: conversation.ParticipantIds,
                 messages: messageDTOs,
                 lastRead: conversation.LastRead);
