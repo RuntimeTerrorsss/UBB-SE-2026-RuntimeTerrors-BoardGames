@@ -14,6 +14,55 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
             connectionString = DatabaseBootstrap.GetAppConnection();
         }
 
+        private HistoryPayment GetPaymentFromReader(SqlDataReader reader)
+        {
+            int tidIndex = reader.GetOrdinal("tid");
+            int requestIdIndex = reader.GetOrdinal("RequestId");
+            int renterIdIndex = reader.GetOrdinal("ClientId");
+            int ownerIdIndex = reader.GetOrdinal("OwnerId");
+            int methodIndex = reader.GetOrdinal("PaymentMethod");
+            int amountIndex = reader.GetOrdinal("Amount");
+            int dateOfTransactionIndex = reader.GetOrdinal("DateOfTransaction");
+            int dateConfirmedBuyerIndex = reader.GetOrdinal("DateConfirmedBuyer");
+            int dateConfirmedSellerIndex = reader.GetOrdinal("DateConfirmedSeller");
+            int filePathIndex = reader.GetOrdinal("FilePath");
+            int gameNameIndex = reader.GetOrdinal("GameName");
+            int ownerNameIndex = reader.GetOrdinal("OwnerName");
+
+            var returnedPayment = new HistoryPayment(
+                id: reader.GetInt32(tidIndex),
+                requestId: reader.IsDBNull(requestIdIndex) ? 0 : reader.GetInt32(requestIdIndex),
+                renterId: reader.IsDBNull(renterIdIndex) ? 0 : reader.GetInt32(renterIdIndex),
+                ownerId: reader.IsDBNull(ownerIdIndex) ? 0 : reader.GetInt32(ownerIdIndex),
+                method: reader.IsDBNull(methodIndex) ? "UNKNOWN" : reader.GetString(methodIndex),
+                amount: reader.IsDBNull(amountIndex) ? 0m : reader.GetDecimal(amountIndex));
+
+            if (!reader.IsDBNull(dateOfTransactionIndex))
+            {
+                returnedPayment.DateOfTransaction = reader.GetDateTime(dateOfTransactionIndex);
+            }
+
+            if (!reader.IsDBNull(dateConfirmedBuyerIndex))
+            {
+                returnedPayment.DateConfirmedBuyer = reader.GetDateTime(dateConfirmedBuyerIndex);
+            }
+
+            if (!reader.IsDBNull(dateConfirmedSellerIndex))
+            {
+                returnedPayment.DateConfirmedSeller = reader.GetDateTime(dateConfirmedSellerIndex);
+            }
+
+            if (!reader.IsDBNull(filePathIndex))
+            {
+                returnedPayment.FilePath = reader.GetString(filePathIndex);
+            }
+
+            returnedPayment.GameName = reader.IsDBNull(gameNameIndex) ? "Unknown Game" : reader.GetString(gameNameIndex);
+            returnedPayment.OwnerName = reader.IsDBNull(ownerNameIndex) ? "Unknown Owner" : reader.GetString(ownerNameIndex);
+
+            return returnedPayment;
+        }
+
         public IReadOnlyList<HistoryPayment> GetAllPayments()
     {
             List<HistoryPayment> payments = new List<HistoryPayment>();
@@ -38,38 +87,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
                 {
                     while (reader.Read())
                     {
-                        var t = new HistoryPayment(
-                            id: reader.GetInt32(0),
-                            requestId: reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
-                            renterId: reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                            ownerId: reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                            method: reader.IsDBNull(4) ? "UNKNOWN" : reader.GetString(4),
-                            amount: reader.IsDBNull(5) ? 0m : reader.GetDecimal(5));
-
-                        if (!reader.IsDBNull(6))
-                        {
-                            t.DateOfTransaction = reader.GetDateTime(6);
-                        }
-
-                        if (!reader.IsDBNull(7))
-                        {
-                            t.DateConfirmedBuyer = reader.GetDateTime(7);
-                        }
-
-                        if (!reader.IsDBNull(8))
-                        {
-                            t.DateConfirmedSeller = reader.GetDateTime(8);
-                        }
-
-                        if (!reader.IsDBNull(9))
-                        {
-                            t.FilePath = reader.GetString(9);
-                        }
-
-                        t.GameName = reader.IsDBNull(10) ? "Unknown Game" : reader.GetString(10);
-                        t.OwnerName = reader.IsDBNull(11) ? "Unknown Owner" : reader.GetString(11);
-
-                        payments.Add(t);
+                        var returnedPayment = GetPaymentFromReader(reader);
+                        payments.Add(returnedPayment);
                     }
                 }
             }
@@ -101,38 +120,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
                 {
                     if (reader.Read())
                     {
-                        var t = new HistoryPayment(
-                            id: reader.GetInt32(0),
-                            requestId: reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
-                            renterId: reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                            ownerId: reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                            method: reader.IsDBNull(4) ? "UNKNOWN" : reader.GetString(4),
-                            amount: reader.IsDBNull(5) ? 0m : reader.GetDecimal(5));
-
-                        if (!reader.IsDBNull(6))
-                        {
-                            t.DateOfTransaction = reader.GetDateTime(6);
-                        }
-
-                        if (!reader.IsDBNull(7))
-                        {
-                            t.DateConfirmedBuyer = reader.GetDateTime(7);
-                        }
-
-                        if (!reader.IsDBNull(8))
-                        {
-                            t.DateConfirmedSeller = reader.GetDateTime(8);
-                        }
-
-                        if (!reader.IsDBNull(9))
-                        {
-                            t.FilePath = reader.GetString(9);
-                        }
-
-                        t.GameName = reader.IsDBNull(10) ? "Unknown Game" : reader.GetString(10);
-                        t.OwnerName = reader.IsDBNull(11) ? "Unknown Owner" : reader.GetString(11);
-
-                        return t;
+                        var returnedPayment = GetPaymentFromReader(reader);
+                        return returnedPayment;
                     }
                 }
             }
