@@ -96,7 +96,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
             return payments;
         }
 
-        public HistoryPayment GetPaymentById(int id)
+        public HistoryPayment GetPaymentById(int searchedPaymentId)
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -113,7 +113,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
                     WHERE t.tid = @id";
 
                 var command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@id", searchedPaymentId);
 
                 connection.Open();
                 using (var reader = command.ExecuteReader())

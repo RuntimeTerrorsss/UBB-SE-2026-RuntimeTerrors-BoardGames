@@ -15,8 +15,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
     /// </summary>
     public class ServicePayment : IServicePayment
     {
-        private readonly IRepositoryPayment repository;
-        private readonly IReceiptService receiptservice; // changed to interface
+        private readonly IRepositoryPayment paymentRepository;
+        private readonly IReceiptService receiptService;
 
         /// <summary>
         /// Initializes a new instance of the ServiceTransactions class.
@@ -25,8 +25,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <param name="receiptService">Service to handle generating and opening receipts.</param>
         public ServicePayment(IRepositoryPayment paymentRepository, IReceiptService receiptService)
         {
-            repository = paymentRepository;
-            receiptservice = receiptService;
+            this.paymentRepository = paymentRepository;
+            this.receiptService = receiptService;
         }
 
         /// <summary>
@@ -35,60 +35,48 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <returns>A list of all mapped TransactionDto objects.</returns>
         public List<PaymentDto> GetAllPaymentsForUI()
         {
-            var payments = repository.GetAllPayments();
+            var payments = paymentRepository.GetAllPayments();
             return MapToDto(payments);
         }
 
-        /// <summary>
-        /// Retrieves transactions mapped to DTOs, filtered or sorted by the given criteria and payment method.
-        /// </summary>
-        /// <param name="filter">The chosen filter or sort type (e.g. Last3Months, Newest, AlphabeticalAsc).</param>
-        /// <param name="paymentMethod">The chosen payment method filter.</param>
-        /// <param name="searchQuery">Text used to search by Product Name.</param>
-        /// <returns>A filtered/sorted list of mapped TransactionDto objects.</returns>
-        public PagedResult<PaymentDto> GetFilteredPayments(FilterType filter, PaymentMethod paymentMethod = PaymentMethod.ALL, string searchQuery = "", int pageNumber = 1, int pageSize = 10)
+        private bool IsPaymentMethodFilterApplied(PaymentMethod paymentMethod)
         {
-            var payments = repository.GetAllPayments().AsEnumerable();
+            return paymentMethod != PaymentMethod.ALL;
+        }
 
-            if (paymentMethod != PaymentMethod.ALL) // filter was applied
+        private IEnumerable<HistoryPayment> FilterPaymentsByPaymentMethod(string paymentMethod, IEnumerable<HistoryPayment> payments)
+        {
+            return payments.Where(transaction => transaction.PaymentMethod?.ToLower() == paymentMethod);
+        }
+
+        private bool IsUserSearching(string searchQuery)
+        {
+            return !string.IsNullOrWhiteSpace(searchQuery);
+        }
+
+        private IEnumerable<HistoryPayment> FilterPaymentsBySearchQuery(string searchQuery, IEnumerable<HistoryPayment> payments)
+        {
+            return payments.Where(transaction =>
             {
-                string pMethodString = paymentMethod.ToString().ToLower(); // "cash" or "card"
-                payments = payments.Where(t => t.PaymentMethod?.ToLower() == pMethodString);
-            }
+                string gameName = transaction.GameName ?? string.Empty;
+                return gameName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+            });
+        }
 
-            if (!string.IsNullOrWhiteSpace(searchQuery)) // user is searching
-            {
-                payments = payments.Where(t =>
-                {
-                    string gName = t.GameName ?? string.Empty;
-                    return gName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
-                });
-            }
-
-            DateTime now = DateTime.Now;
+        private IEnumerable<HistoryPayment> ApplyDateFilters(IEnumerable<HistoryPayment> payments, FilterType filter)
+        {
+            DateTime currentDateTime = DateTime.Now;
 
             switch (filter)
             {
-                case FilterType.AlphabeticalAsc:
-                    payments = payments.OrderBy(t => t.GameName ?? "z");
-                    break;
-                case FilterType.AlphabeticalDesc:
-                    payments = payments.OrderByDescending(t => t.GameName ?? "a");
-                    break;
-                case FilterType.Newest:
-                    payments = payments.OrderByDescending(t => t.DateOfTransaction ?? DateTime.MinValue);
-                    break;
-                case FilterType.Oldest:
-                    payments = payments.OrderBy(t => t.DateOfTransaction ?? DateTime.MinValue);
-                    break;
                 case FilterType.Last3Months:
-                    payments = payments.Where(t => t.DateOfTransaction.HasValue && t.DateOfTransaction.Value >= now.AddMonths(-3));
+                    payments = payments.Where(transaction => transaction.DateOfTransaction.HasValue && transaction.DateOfTransaction.Value >= currentDateTime.AddMonths(-3));
                     break;
                 case FilterType.Last6Months:
-                    payments = payments.Where(t => t.DateOfTransaction.HasValue && t.DateOfTransaction.Value >= now.AddMonths(-6));
+                    payments = payments.Where(transaction => transaction.DateOfTransaction.HasValue && transaction.DateOfTransaction.Value >= currentDateTime.AddMonths(-6));
                     break;
                 case FilterType.Last9Months:
-                    payments = payments.Where(t => t.DateOfTransaction.HasValue && t.DateOfTransaction.Value >= now.AddMonths(-9));
+                    payments = payments.Where(transaction => transaction.DateOfTransaction.HasValue && transaction.DateOfTransaction.Value >= currentDateTime.AddMonths(-9));
                     break;
                 case FilterType.AllTime:
                 default:
@@ -96,7 +84,55 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
                     break;
             }
 
+            return payments;
+        }
+
+        private IEnumerable<HistoryPayment> ApplyFilters(IEnumerable<HistoryPayment> payments, PaymentMethod paymentMethod, string searchQuery, FilterType filter)
+        {
+            if (IsPaymentMethodFilterApplied(paymentMethod))
+            {
+                string paymentMethodString = paymentMethod.ToString().ToLower();
+                payments = FilterPaymentsByPaymentMethod(paymentMethodString, payments);
+            }
+
+            if (IsUserSearching(searchQuery))
+            {
+                payments = FilterPaymentsBySearchQuery(searchQuery, payments);
+            }
+
+            payments = ApplyDateFilters(payments, filter);
+
+            return payments;
+        }
+
+        private IEnumerable<HistoryPayment> ApplySorting(IEnumerable<HistoryPayment> payments, FilterType filter)
+        {
+            switch (filter)
+            {
+                case FilterType.AlphabeticalAsc:
+                    payments = payments.OrderBy(transaction => transaction.GameName ?? "z");
+                    break;
+                case FilterType.AlphabeticalDesc:
+                    payments = payments.OrderByDescending(transaction => transaction.GameName ?? "a");
+                    break;
+                case FilterType.Newest:
+                    payments = payments.OrderByDescending(transaction => transaction.DateOfTransaction ?? DateTime.MinValue);
+                    break;
+                case FilterType.Oldest:
+                    payments = payments.OrderBy(transaction => transaction.DateOfTransaction ?? DateTime.MinValue);
+                    break;
+                default:
+                    // Return all as is
+                    break;
+            }
+
+            return payments;
+        }
+
+        private PagedResult<PaymentDto> GetPagedResult(IEnumerable<HistoryPayment> payments, int pageSize, int pageNumber)
+        {
             int totalCount = payments.Count();
+
             var pagedSource = payments
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize);
@@ -108,6 +144,23 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
+        }
+
+        /// <summary>
+        /// Retrieves transactions mapped to DTOs, filtered or sorted by the given criteria and payment method.
+        /// </summary>
+        /// <param name="filter">The chosen filter or sort type (e.g. Last3Months, Newest, AlphabeticalAsc).</param>
+        /// <param name="paymentMethod">The chosen payment method filter.</param>
+        /// <param name="searchQuery">Text used to search by Product Name.</param>
+        /// <returns>A filtered/sorted list of mapped TransactionDto objects.</returns>
+        public PagedResult<PaymentDto> GetFilteredPayments(FilterType filter, PaymentMethod paymentMethod = PaymentMethod.ALL, string searchQuery = "", int pageNumber = 1, int pageSize = 10)
+        {
+            var payments = paymentRepository.GetAllPayments().AsEnumerable();
+
+            payments = ApplyFilters(payments, paymentMethod, searchQuery, filter);
+            payments = ApplySorting(payments, filter);
+
+            return GetPagedResult(payments, pageSize, pageNumber);
         }
 
         /// <summary>
@@ -131,18 +184,18 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <returns>The string file path to the Receipt PDF.</returns>
         public string GetReceiptDocumentPath(int paymentId)
         {
-            PaymentCommon.Model.Payment payment = repository.GetPaymentById(paymentId);
+            PaymentCommon.Model.Payment payment = paymentRepository.GetPaymentById(paymentId);
 
             if (string.IsNullOrEmpty(payment.FilePath))
             {
-                payment.FilePath = receiptservice.GenerateReceiptRelativePath(payment.RequestId);
+                payment.FilePath = receiptService.GenerateReceiptRelativePath(payment.RequestId);
             }
             else if (!payment.FilePath.Contains("\\"))
             {
                 payment.FilePath = "receipts\\" + payment.FilePath;
             }
 
-            return receiptservice.GetReceiptDocument(payment);
+            return receiptService.GetReceiptDocument(payment);
         }
 
         /// <summary>

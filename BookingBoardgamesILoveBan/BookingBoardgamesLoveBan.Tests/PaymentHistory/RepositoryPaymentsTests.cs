@@ -1,9 +1,9 @@
-﻿using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 {
@@ -18,7 +18,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         // ================================ GetAllPayments ======================================
-
         [Fact]
         public void GetAllPayments_ReturnsNonNullList()
         {
@@ -83,7 +82,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         // ================================ GetPaymentById ======================================
-
         [Fact]
         public void GetPaymentById_NonExistingId()
         {
@@ -143,7 +141,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var all = repositoryPayment.GetAllPayments();
             var withTransaction = all.FirstOrDefault(p => p.DateOfTransaction != null);
             if (withTransaction == null)
+            {
                 return;
+            }
 
             var result = repositoryPayment.GetPaymentById(withTransaction.Tid);
             Assert.NotNull(result.DateOfTransaction);
@@ -154,8 +154,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         {
             var all = repositoryPayment.GetAllPayments();
             var withSeller = all.FirstOrDefault(p => p.DateConfirmedSeller != null);
-            if (withSeller == null) 
+            if (withSeller == null)
+            {
                 return;
+            }
 
             var result = repositoryPayment.GetPaymentById(withSeller.Tid);
             Assert.NotNull(result.DateConfirmedSeller);
@@ -167,7 +169,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var all = repositoryPayment.GetAllPayments();
             var withBuyer = all.FirstOrDefault(p => p.DateConfirmedBuyer != null);
             if (withBuyer == null)
+            {
                 return;
+            }
 
             var result = repositoryPayment.GetPaymentById(withBuyer.Tid);
             Assert.NotNull(result.DateConfirmedBuyer);
@@ -178,8 +182,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         {
             var all = repositoryPayment.GetAllPayments();
             var withFile = all.FirstOrDefault(p => p.FilePath != null);
-            if (withFile == null) 
+            if (withFile == null)
+            {
                 return;
+            }
 
             var result = repositoryPayment.GetPaymentById(withFile.Tid);
             Assert.NotNull(result.FilePath);
