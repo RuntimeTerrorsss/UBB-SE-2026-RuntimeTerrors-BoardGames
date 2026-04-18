@@ -16,10 +16,18 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
     public class ConversationRepository : IConversationRepository
     {
         private Dictionary<int, IConversationService> Subscribers { get; set; }
-
-        public ConversationRepository()
+        private static string appConnectionString;
+        public ConversationRepository(bool isTest = false)
         {
             Subscribers = new Dictionary<int, IConversationService>();
+            if (isTest)
+            {
+                appConnectionString = "Server=localhost\\MSSQLSERVER02;Database=ChatTestDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+            }
+            else
+            {
+                appConnectionString = DatabaseBootstrap.GetAppConnection();
+            }
         }
 
         #region Public Methods
@@ -38,11 +46,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <summary>
         /// Gets a single conversation by id, including messages and last read info.
         /// </summary>
-        /// <param name="conversationId"></param>
+        /// <param name="convId"></param>
         /// <returns></returns>
-        public Conversation GetConversation(int conversationId)
+        public Conversation GetConversation(int convId)
         {
-            return LoadConversationFromDB(conversationId);
+            return LoadConversationFromDB(convId);
         }
 
         // CRUD HANDLERS
@@ -100,8 +108,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="senderId"></param>
         /// <param name="receiverId"></param>
         /// <returns></returns>
-        public int CreateConversation(int senderId, int receiverId)
+        public int CreateConversation(int senderId, int receiverId, bool isTest = false)
         {
+            if (isTest)
+            {
+                appConnectionString = "Server=localhost\\MSSQLSERVER02;Database=ChatTestDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+            }
+
             Conversation newConversation = CreateConversationInDB(senderId, receiverId);
             if (newConversation.MessageList.Count == 0)
             {
@@ -136,7 +149,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         #endregion
 
         #region Database Communication
-        private static string appConnectionString = DatabaseBootstrap.GetAppConnection();
 
         // GETTERS
 
@@ -327,14 +339,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <returns></returns>
         private Conversation LoadConversationFromDB(int conversationId)
         {
-            Conversation conversation = null;
+            Conversation ret = null;
             using (var connection = new SqlConnection(appConnectionString))
             {
                 connection.Open();
-                conversation = LoadSingleConversationFromDB(conversationId, connection);
+                ret = LoadSingleConversationFromDB(conversationId, connection);
                 connection.Close();
             }
-            return conversation;
+            return ret;
         }
 
         /// <summary>
@@ -577,7 +589,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                                DEFAULT VALUES;";
                 var insertCommand = new SqlCommand(insertConversationQuery, connection);
                 int newConversationId = (int)insertCommand.ExecuteScalar();
-                insertCommand.ExecuteScalar();
 
                 var insertConversationUsersQuery = @"INSERT INTO ConversationUser (cid, uid, LastRead) VALUES (@cid, @uid, @lastRead)";
                 var insertUserCommand = new SqlCommand(insertConversationUsersQuery, connection);
