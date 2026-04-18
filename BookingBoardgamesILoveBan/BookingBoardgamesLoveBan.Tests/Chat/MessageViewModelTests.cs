@@ -3,6 +3,7 @@ using Xunit;
 using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Enum;
+using Microsoft.UI.Xaml;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
 {
@@ -176,6 +177,43 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             viewModel.AcceptedBy = new[] { 1 };
 
             Assert.False(viewModel.BothAccepted);
+        }
+
+        [Fact]
+        public void IsMineToAlignment_Should_Return_Correct_Value()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.Equal(HorizontalAlignment.Right, viewModel.IsMineToAlignment(true));
+            Assert.Equal(HorizontalAlignment.Left, viewModel.IsMineToAlignment(false));
+        }
+
+        [Fact]
+        public void IsMineToCornerRadius_Should_Return_Different_Values()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.NotEqual(
+                viewModel.IsMineToCornerRadius(true),
+                viewModel.IsMineToCornerRadius(false)
+            );
+        }
+
+        [Fact]
+        public void IsMineToBorderThickness_Should_Return_Correct()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.Equal(new Thickness(0), viewModel.IsMineToTheirsOnlyBorderThickness(true));
+            Assert.Equal(new Thickness(1), viewModel.IsMineToTheirsOnlyBorderThickness(false));
+        }
+
+        [Fact]
+        public void Constructor_Should_Set_AcceptedBy_Zero_When_NotAccepted()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.All(viewModel.AcceptedBy, id => Assert.Equal(0, id));
         }
     }
 }

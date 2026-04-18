@@ -311,5 +311,45 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             Assert.True(triggered);
         }
+
+        [Fact]
+        public void Search_With_NoMatches_Should_Show_NoMatchesState()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+
+            viewModel.SearchText = "ZZZ";
+
+            Assert.True(viewModel.IsNoMatchesVisible);
+        }
+
+        [Fact]
+        public void SelectingConversation_WithZeroUnread_Should_NotChange()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+
+            var conversation = viewModel.Conversations.First();
+            conversation.UnreadCount = 0;
+
+            viewModel.SelectedConversation = conversation;
+
+            Assert.Equal(0, conversation.UnreadCount);
+        }
+
+        [Fact]
+        public void Search_Should_Remove_NonMatching_Items()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(1), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(2), "Mike", userService.Object);
+
+            viewModel.SearchText = "John";
+
+            Assert.DoesNotContain(viewModel.Conversations, c => c.DisplayName == "Mike");
+        }
     }
 }

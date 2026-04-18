@@ -237,5 +237,57 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             Assert.True(invoked);
         }
+
+        [Fact]
+        public void LoadConversation_Should_Set_Read_Status_Correctly()
+        {
+            var viewModel = CreateViewModel();
+            var conversation = CreateConversation();
+
+            var messages = new List<MessageDTO>
+            {
+                CreateMessage(),
+                CreateMessage()
+            };
+
+            viewModel.LoadConversation(conversation, messages, theirUnreadCount: 1);
+
+            Assert.True(viewModel.Messages[0].IsRead);
+            Assert.False(viewModel.Messages[1].IsRead);
+        }
+
+        [Fact]
+        public void CanSend_Should_Be_False_For_Whitespace()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.InputText = "   ";
+
+            Assert.False(viewModel.CanSend);
+        }
+
+        [Fact]
+        public void ProceedToPayment_Should_NotThrow()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.ProceedToPayment(1);
+        }
+
+        [Fact]
+        public void HandleIncomingMessage_Should_Prevent_Duplicate_By_Time()
+        {
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+
+            var message1 = CreateMessage();
+            var message2 = CreateMessage();
+            message2 = message2 with { sentAt = message1.sentAt.AddMilliseconds(500) };
+
+            viewModel.HandleIncomingMessage(message1);
+            viewModel.HandleIncomingMessage(message2);
+
+            Assert.Single(viewModel.Messages);
+        }
     }
 }

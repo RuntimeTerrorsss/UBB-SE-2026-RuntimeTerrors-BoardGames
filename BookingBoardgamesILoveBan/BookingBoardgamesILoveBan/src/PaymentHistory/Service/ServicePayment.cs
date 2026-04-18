@@ -50,13 +50,13 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         {
             var payments = repository.GetAllPayments().AsEnumerable();
 
-            if (paymentMethod != PaymentMethod.ALL) // filter was applied
+            if (paymentMethod != PaymentMethod.ALL)
             {
-                string pMethodString = paymentMethod.ToString().ToLower(); // "cash" or "card"
+                string pMethodString = paymentMethod.ToString().ToLower();
                 payments = payments.Where(t => t.PaymentMethod?.ToLower() == pMethodString);
             }
 
-            if (!string.IsNullOrWhiteSpace(searchQuery)) // user is searching
+            if (!string.IsNullOrWhiteSpace(searchQuery))
             {
                 payments = payments.Where(t =>
                 {

@@ -106,5 +106,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             model.UnreadCount = 3;
             model.Timestamp = model.Timestamp;
         }
+
+        [Fact]
+        public void TimestampString_ShouldUpdateWhenTimestampChanges()
+        {
+            var model = CreateModel();
+
+            model.Timestamp = new DateTime(2024, 1, 1, 15, 45, 0);
+
+            Assert.Equal("15:45", model.TimestampString);
+        }
     }
 }
