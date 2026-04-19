@@ -15,7 +15,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         void HandleMessageUpdate(Message message);
         void HandleReadReceipt(ReadReceipt readReceipt);
 
-        int CreateConversation(int senderId, int receiverId, bool isTest = false);
+        int CreateConversation(int senderId, int receiverId);
 
         void HandleRentalRequestFinalization(int messageId);
 

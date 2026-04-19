@@ -15,13 +15,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ConversationServiceTests
     {
-        private readonly Mock<IConversationRepository> repoMock;
+        private readonly Mock<IConversationRepository> repositoryMock;
         private readonly Mock<IUserRepository> userServiceMock;
         private readonly ConversationService service;
 
         public ConversationServiceTests()
         {
-            repoMock = new Mock<IConversationRepository>();
+            repositoryMock = new Mock<IConversationRepository>();
             userServiceMock = new Mock<IUserRepository>();
 
             userServiceMock
@@ -38,7 +38,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     0));
 
             service = new ConversationService(
-                repoMock.Object,
+                repositoryMock.Object,
                 1,
                 userServiceMock.Object);
         }
@@ -46,7 +46,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void FetchConversations_ReturnsEmptyList_WhenRepoEmpty()
         {
-            repoMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
+            repositoryMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
                      .Returns(new List<Conversation>());
 
             var result = service.FetchConversations();
@@ -67,7 +67,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     { 2, DateTime.Now }
                 });
 
-            repoMock.Setup(r => r.GetConversationsForUser(1))
+            repositoryMock.Setup(r => r.GetConversationsForUser(1))
                      .Returns(new List<Conversation> { conversation });
 
             var result = service.FetchConversations();
@@ -95,11 +95,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 paymentId: -1,
                 requestId: -1);
 
-            repoMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
+            repositoryMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
 
             service.SendMessage(dto);
 
-            repoMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
+            repositoryMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
@@ -107,11 +107,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var dto = CreateTextDTO();
 
-            repoMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
+            repositoryMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
 
             service.UpdateMessage(dto);
 
-            repoMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
+            repositoryMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
@@ -127,11 +127,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     { 2, DateTime.Now }
                 });
 
-            repoMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
+            repositoryMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
 
             service.SendReadReceipt(convDto);
 
-            repoMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
+            repositoryMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
         }
 
         [Fact]
@@ -149,13 +149,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             ReadReceipt? captured = null;
 
-            repoMock
+            repositoryMock
                 .Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()))
                 .Callback<ReadReceipt>(r => captured = r);
 
             service.SendReadReceipt(convDto);
 
-            Assert.NotNull(captured);
             Assert.Equal(1, captured!.messageReaderId);
             Assert.Equal(2, captured.messageReceiverId);
         }
@@ -262,12 +261,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnCardPaymentSelected_CallsFinalizeOnly()
         {
-            repoMock
+            repositoryMock
                 .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
 
             service.OnCardPaymentSelected(10);
 
-            repoMock.Verify(r =>
+            repositoryMock.Verify(r =>
                 r.HandleRentalRequestFinalization(10),
                 Times.Once);
         }
@@ -275,19 +274,19 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnCashPaymentSelected_CallsFinalizeAndCashAgreement()
         {
-            repoMock
+            repositoryMock
                 .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
 
-            repoMock
+            repositoryMock
                 .Setup(r => r.CreateCashAgreementMessage(It.IsAny<int>(), It.IsAny<int>()));
 
             service.OnCashPaymentSelected(10, 99);
 
-            repoMock.Verify(r =>
+            repositoryMock.Verify(r =>
                 r.HandleRentalRequestFinalization(10),
                 Times.Once);
 
-            repoMock.Verify(r =>
+            repositoryMock.Verify(r =>
                 r.CreateCashAgreementMessage(10, 99),
                 Times.Once);
         }
@@ -447,9 +446,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void ReadReceiptToReadReceiptDTO_MapsCorrectly()
         {
-            var rr = new ReadReceipt(1, 1, 2, DateTime.Now);
+            var readReceipt = new ReadReceipt(1, 1, 2, DateTime.Now);
 
-            var dto = service.ReadReceiptToReadReceiptDTO(rr);
+            var dto = service.ReadReceiptToReadReceiptDTO(readReceipt);
 
             Assert.Equal(1, dto.conversationId);
             Assert.Equal(1, dto.readerId);
@@ -459,13 +458,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void FetchConversations_MultipleConversations()
         {
-            var convs = new List<Conversation>
+            var conversation = new List<Conversation>
             {
                 new Conversation(1, new[] {1,2}, new List<Message>(), new()),
                 new Conversation(2, new[] {1,3}, new List<Message>(), new())
             };
 
-            repoMock.Setup(r => r.GetConversationsForUser(1)).Returns(convs);
+            repositoryMock.Setup(r => r.GetConversationsForUser(1)).Returns(conversation);
 
             var result = service.FetchConversations();
 

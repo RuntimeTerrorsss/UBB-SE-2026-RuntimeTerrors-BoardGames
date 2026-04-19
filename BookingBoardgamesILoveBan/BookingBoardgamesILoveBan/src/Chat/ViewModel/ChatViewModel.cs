@@ -102,7 +102,6 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="message"></param>
     public void HandleIncomingMessage(MessageDTO message)
     {
-        // FIX: UGLYYYY but this avoids weird duplicates when a message is received in the active conversation
         if (message.conversationId != ConversationId)
         {
             return;

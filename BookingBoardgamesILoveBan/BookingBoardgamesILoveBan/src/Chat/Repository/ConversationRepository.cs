@@ -17,17 +17,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
     {
         private Dictionary<int, IConversationService> Subscribers { get; set; }
         private static string appConnectionString;
-        public ConversationRepository(bool isTest = false)
+        public ConversationRepository()
         {
             Subscribers = new Dictionary<int, IConversationService>();
-            if (isTest)
-            {
-                appConnectionString = "Server=localhost\\MSSQLSERVER02;Database=ChatTestDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
-            }
-            else
-            {
-                appConnectionString = DatabaseBootstrap.GetAppConnection();
-            }
+            appConnectionString = DatabaseBootstrap.GetAppConnection();
         }
 
         #region Public Methods
@@ -108,13 +101,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="senderId"></param>
         /// <param name="receiverId"></param>
         /// <returns></returns>
-        public int CreateConversation(int senderId, int receiverId, bool isTest = false)
+        public int CreateConversation(int senderId, int receiverId)
         {
-            if (isTest)
-            {
-                appConnectionString = "Server=localhost\\MSSQLSERVER02;Database=ChatTestDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
-            }
-
             Conversation newConversation = CreateConversationInDB(senderId, receiverId);
             if (newConversation.ConversationMessageList.Count == 0)
             {
@@ -393,7 +381,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                 break;
 
                             case "CASH_AGREEMENT":
-                                string cashContent = (string)reader[7];
+                                string cashContent = reader[7] as string;
                                 int sellerId = reader.IsDBNull(9) ? -1 : reader.GetInt32(9);
                                 int buyerId = reader.IsDBNull(10) ? -1 : reader.GetInt32(10);
                                 bool acceptedBySeller = reader.IsDBNull(11) ? false : reader.GetBoolean(11);
@@ -413,7 +401,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                 break;
 
                             case "RENTAL_REQUEST":
-                                string rentalContent = (string)reader[8];
+                                string rentalContent = reader[8] as string;
                                 int requestId = reader.IsDBNull(13) ? -1 : reader.GetInt32(13);
                                 bool isResolved = reader.IsDBNull(14) ? false : reader.GetBoolean(14);
                                 bool isAccepted = reader.IsDBNull(15) ? false : reader.GetBoolean(15);

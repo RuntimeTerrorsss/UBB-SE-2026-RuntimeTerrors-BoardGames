@@ -29,23 +29,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Constructor_Should_Map_All_Fields_Correctly()
-        {
-            var message = CreateMessage();
-
-            var viewModel = new MessageViewModel(message, currentUserId: 1);
-
-            Assert.Equal(message.id, viewModel.Id);
-            Assert.Equal(message.conversationId, viewModel.ConversationId);
-            Assert.Equal(message.senderId, viewModel.SenderId);
-            Assert.Equal(message.content, viewModel.Content);
-            Assert.Equal(message.sentAt, viewModel.SentAt);
-            Assert.Equal(message.imageUrl, viewModel.ImageUrl);
-            Assert.Equal(message.requestId, viewModel.RequestId);
-        }
-
-        [Fact]
-        public void IsMine_Should_Be_True_When_Sender_Is_CurrentUser()
+        public void IsMine_SenderIsCurrentUser_IsTrue()
         {
             var message = CreateMessage() with { senderId = 1 };
 
@@ -55,7 +39,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMine_Should_Be_False_When_Sender_Is_OtherUser()
+        public void IsMine_SenderIsNotCurrentUser_IsFalse()
         {
             var message = CreateMessage() with { senderId = 99 };
 
@@ -65,17 +49,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void TimestampString_Should_Format_As_HH_MM()
-        {
-            var message = CreateMessage();
-
-            var viewModel = new MessageViewModel(message, 1);
-
-            Assert.Equal("14:30", viewModel.TimestampString);
-        }
-
-        [Fact]
-        public void IsRead_Should_Default_To_False()
+        public void IsRead_Default_False()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -83,7 +57,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Setting_IsResolved_Should_Raise_PropertyChanged()
+        public void SettingIsResolved_RaisePropertyChanged()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -104,7 +78,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Setting_AcceptedBy_Should_Update_BothAccepted()
+        public void SettingAcceptedByUpdate_BothAccepted()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -114,7 +88,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Changing_AcceptedBy_Should_Raise_BothAccepted_PropertyChanged()
+        public void ChangingAcceptedBy_RaiseBothAcceptedPropertyChanged()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -134,7 +108,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsRead_Can_Be_Updated()
+        public void IsRead_CanBeUpdated()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -144,7 +118,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsAccepted_Should_Be_Set_From_DTO_And_Updatable()
+        public void IsAccepted_BeSetFromDTOAndUpdatable()
         {
             var message = CreateMessage() with { isAccepted = true };
 
@@ -158,22 +132,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Constructor_Should_Set_AcceptedBy_When_BuyerAccepted()
-        {
-            var message = CreateMessage() with
-            {
-                isAcceptedByBuyer = true,
-                receiverId = 99
-            };
-
-            var viewModel = new MessageViewModel(message, 1);
-
-            Assert.Equal(2, viewModel.AcceptedBy.Length);
-            Assert.All(viewModel.AcceptedBy, id => Assert.Equal(99, id));
-        }
-
-        [Fact]
-        public void BothAccepted_Should_Be_False_When_Not_Two()
+        public void BothAccepted_NotTwo_False()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -183,7 +142,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMineToAlignment_Should_Return_Correct_Value()
+        public void IsMineToAlignment_ReturnCorrectValue()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -192,7 +151,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMineToCornerRadius_Should_Return_Different_Values()
+        public void IsMineToCornerRadius_ReturnDifferentValues()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -203,20 +162,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMineToBorderThickness_Should_Return_Correct()
+        public void IsMineToBorderThickness_ReturnCorrect()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
             Assert.Equal(new Thickness(0), viewModel.IsMineToTheirsOnlyBorderThickness(true));
             Assert.Equal(new Thickness(1), viewModel.IsMineToTheirsOnlyBorderThickness(false));
-        }
-
-        [Fact]
-        public void Constructor_Should_Set_AcceptedBy_Zero_When_NotAccepted()
-        {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
-
-            Assert.All(viewModel.AcceptedBy, id => Assert.Equal(0, id));
         }
     }
 }

@@ -65,7 +65,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Constructor_Loads_Conversations()
+        public void Constructor_LoadsConversations()
         {
             var chatPageViewModel = CreateChatPageViewModel();
 
@@ -73,7 +73,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void MessageSent_Sets_Correct_Receiver_And_Calls_Repository()
+        public void MessageSent_SetsCorrectReceiver()
         {
             var conversationService = CreateConversationService();
 
@@ -115,7 +115,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IncomingMessage_Is_Added_To_LeftPanel()
+        public void OnMessageReceived_MessageAddedToLeftPanel()
         {
             var conversationService = CreateConversationService();
 
@@ -135,7 +135,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ReadReceipt_Updates_LastRead()
+        public void ReadReceipt_UpdatesLastRead()
         {
             var conversationService = CreateConversationService();
 
@@ -158,7 +158,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void BookingRequest_Triggers_Message_Update()
+        public void BookingRequest_TriggersMessageUpdate()
         {
             var conversationService = CreateConversationService();
 
@@ -177,7 +177,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CashAgreement_Triggers_Message_Update()
+        public void CashAgreement_TriggersMessageUpdate()
         {
             var conversationService = CreateConversationService();
 
@@ -196,7 +196,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void MessageUpdate_Replaces_Message_Content()
+        public void MessageUpdate_ReplacesMessageContent()
         {
             var conversationService = CreateConversationService();
 
@@ -206,7 +206,6 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
-            // select conversation so Chat gets loaded
             var selectedConversation = chatPageViewModel.LeftPanelModelView.Conversations.First();
             chatPageViewModel.LeftPanelModelView.SelectedConversation = selectedConversation;
 
@@ -221,7 +220,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void InvalidConversation_DoesNotCrash()
+        public void RaiseBookingRequestUpdate_InvalidConversation_DoesNotCrash()
         {
             var chatPageViewModel = CreateChatPageViewModel();
 
