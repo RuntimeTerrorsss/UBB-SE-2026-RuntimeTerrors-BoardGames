@@ -30,7 +30,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             int clientIdentifier = 5;
             int ownerIdentifier = 2;
             int requestIdentifier = 5;
-            decimal paymentPrice = 1.50m;
+            decimal paymentPrice = 15m;
 
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
@@ -57,7 +57,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             int clientIdentifier = 5;
             int ownerIdentifier = 2;
             int requestIdentifier = 5;
-            decimal paymentPrice = 1.50m;
+            decimal paymentPrice = 15m;
             string expectedPaymentMethod = "CARD";
 
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
@@ -85,7 +85,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             int clientIdentifier = 5;
             int ownerIdentifier = 2;
             int requestIdentifier = 5;
-            decimal paymentPrice = 1.50m;
+            decimal paymentPrice = 15m;
 
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
@@ -113,7 +113,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             int clientIdentifier = 5;
             int ownerIdentifier = 2;
             int requestIdentifier = 5;
-            decimal paymentPrice = 1.50m;
+            decimal paymentPrice = 15m;
 
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
@@ -141,7 +141,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             int clientIdentifier = 5;
             int ownerIdentifier = 2;
             int requestIdentifier = 5;
-            decimal paymentPrice = 1.50m;
+            decimal paymentPrice = 15m;
 
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
@@ -169,7 +169,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             int lowBalanceClientIdentifier = 8;
             int ownerIdentifier = 2;
             int requestIdentifier = 5;
-            decimal paymentPrice = 1.50m;
+            decimal paymentPrice = 15m;
 
             Assert.Throws<Exception>(() => cardPaymentService.AddCardPayment(requestIdentifier, lowBalanceClientIdentifier, ownerIdentifier, paymentPrice));
         }

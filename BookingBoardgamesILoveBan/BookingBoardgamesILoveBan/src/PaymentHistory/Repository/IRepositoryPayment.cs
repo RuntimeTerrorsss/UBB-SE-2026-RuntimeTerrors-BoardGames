@@ -6,6 +6,6 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
     public interface IRepositoryPayment
     {
         IReadOnlyList<HistoryPayment> GetAllPayments();
-        HistoryPayment GetPaymentById(int id);
+        HistoryPayment GetPaymentById(int searchedPaymentId);
     }
 }
