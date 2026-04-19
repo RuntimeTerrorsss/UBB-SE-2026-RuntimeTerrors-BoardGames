@@ -13,7 +13,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 {
     public class CardPaymentService : PaymentService
     {
-        private readonly IUserRepository userService;
+        private readonly IUserRepository userRepository;
         private readonly IRequestService requestService;
 
         public CardPaymentService(
@@ -22,7 +22,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
             ReceiptService receiptService,
             IRequestService requestService) : base(paymentRepository, receiptService)
         {
-            this.userService = userService;
+            this.userRepository = userService;
             this.requestService = requestService;
         }
 
@@ -59,7 +59,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 
         public bool CheckBalanceSufficiency(int requestIdentifier, int clientIdentifier)
         {
-            return requestService.GetRequestPrice(requestIdentifier) <= userService.GetUserBalance(clientIdentifier);
+            return requestService.GetRequestPrice(requestIdentifier) <= userRepository.GetUserBalance(clientIdentifier);
         }
 
         public CardPaymentDataTransferObject GetCardPayment(int paymentIdentifier)
@@ -69,14 +69,14 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 
         public decimal GetCurrentBalance(int clientIdentifier)
         {
-            return userService.GetUserBalance(clientIdentifier);
+            return userRepository.GetUserBalance(clientIdentifier);
         }
 
         public void ProcessPayment(int requestIdentifier, int clientIdentifier, int ownerIdentifier)
         {
             decimal requestPrice = requestService.GetRequestPrice(requestIdentifier);
-            decimal clientBalance = userService.GetUserBalance(clientIdentifier);
-            decimal ownerBalance = userService.GetUserBalance(ownerIdentifier);
+            decimal clientBalance = userRepository.GetUserBalance(clientIdentifier);
+            decimal ownerBalance = userRepository.GetUserBalance(ownerIdentifier);
             decimal newClientBalance = clientBalance - requestPrice;
 
             if (newClientBalance < 0)
@@ -84,8 +84,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
                 throw new Exception("Insufficient Funds");
             }
 
-            userService.UpdateBalance(clientIdentifier, newClientBalance);
-            userService.UpdateBalance(ownerIdentifier, ownerBalance + requestPrice);
+            userRepository.UpdateBalance(clientIdentifier, newClientBalance);
+            userRepository.UpdateBalance(ownerIdentifier, ownerBalance + requestPrice);
         }
 
         public CardPaymentDataTransferObject ConvertToDataTransferObject(PaymentCommon.Model.Payment cardPayment)
@@ -104,8 +104,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
         {
             Request request = this.requestService.GetRequestById(requestIdentifier);
             string gameName = this.requestService.GetGameName(request.Id);
-            string ownerName = this.userService.GetById(request.OwnerId).Username;
-            string clientName = this.userService.GetById(request.ClientId).Username;
+            string ownerName = this.userRepository.GetById(request.OwnerId).Username;
+            string clientName = this.userRepository.GetById(request.ClientId).Username;
             decimal gamePrice = this.requestService.GetRequestPrice(request.Id);
 
             return new RequestDto(request.Id, gameName, request.ClientId, request.OwnerId, ownerName, clientName, request.StartDate, request.EndDate, gamePrice);
