@@ -1,15 +1,15 @@
-﻿using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Model;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit.Sdk;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
@@ -58,10 +58,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         // ================================ setup ======================================
-
         private IRepositoryPayment repositoryPayment;
         private IReceiptService receiptService;
         private IServicePayment servicePayment;
+
         private void InitializeService(List<HistoryPayment> payments)
         {
             repositoryPayment = new FakeRepositoryPayment(payments);
@@ -81,22 +81,19 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         // ================================ GetAllPaymentsForUI ======================================
-
         [Fact]
         public void GetAllPaymentsForUI_EmptyRepo_ReturnsEmptyList()
         {
             InitializeService(new List<HistoryPayment>());
             var result = servicePayment.GetAllPaymentsForUI();
+
             Assert.Empty(result);
         }
 
         [Fact]
         public void GetAllPaymentsForUI_ReturnsAllPayments()
         {
-            InitializeService(new List<HistoryPayment> {
-                MakePayment(1, "Game1", "Name1", "Card", 10),
-                MakePayment(2, "Game2", "Name2", "Cash", 20)
-            });
+            InitializeService(new List<HistoryPayment> { MakePayment(1, "Game1", "Name1", "Card", 10), MakePayment(2, "Game2", "Name2", "Cash", 20) });
             var result = servicePayment.GetAllPaymentsForUI();
 
             Assert.Equal(2, result.Count);
@@ -105,12 +102,19 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void GetAllPaymentsForUI_NullInput()
+        public void GetAllPaymentsForUI_ReturnsMatchingNames()
         {
-            var payments = new List<HistoryPayment>
-                {
-                    MakePayment(1, null, null, "Card", 10)
-                };
+            InitializeService(new List<HistoryPayment> { MakePayment(1, "Game1", "Name1", "Card", 10), MakePayment(2, "Game2", "Name2", "Cash", 20) });
+            var result = servicePayment.GetAllPaymentsForUI();
+
+            Assert.Equal("Game1", result[0].ProductName);
+            Assert.Equal("Game2", result[1].ProductName);
+        }
+
+        [Fact]
+        public void GetAllPaymentsForUI_NullInput_UsesDefaultValues()
+        {
+            var payments = new List<HistoryPayment> { MakePayment(1, null, null, "Card", 10) };
             InitializeService(payments);
 
             var result = servicePayment.GetAllPaymentsForUI();
@@ -120,7 +124,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         // ================================ CalculateTotalAmount ======================================
-
         [Fact]
         public void CalculateTotalAmount_NullInput_ReturnsZero()
         {
@@ -143,20 +146,18 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void CalculateTotalAmount_SumsAmountsCorrectly()
         {
             InitializeService(new List<HistoryPayment>());
-            var dtos = new List<PaymentDto>
+            var payments = new List<PaymentDto>
                 {
                     new PaymentDto { Amount = 10.50m },
                     new PaymentDto { Amount = 20.00m },
                     new PaymentDto { Amount = 5.25m }
                 };
-
-            var result = servicePayment.CalculateTotalAmount(dtos);
+            var result = servicePayment.CalculateTotalAmount(payments);
 
             Assert.Equal(35.75m, result);
         }
 
         // ================================ GetFilteredPayments ======================================
-
         [Fact]
         public void GetFilteredPayments_FilterByCard_ReturnsOnlyCardPayments()
         {
@@ -215,6 +216,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
             var result = servicePayment.GetFilteredPayments(FilterType.AllTime, searchQuery: "monopoly");
+
             Assert.Empty(result.Items);
         }
 
@@ -232,6 +234,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var result = servicePayment.GetFilteredPayments(FilterType.AlphabeticalAsc);
 
             Assert.Equal("Catan", result.Items.ElementAt(0).ProductName);
+            Assert.Equal("Chess", result.Items.ElementAt(1).ProductName);
             Assert.Equal("Risk", result.Items.ElementAt(2).ProductName);
         }
 
@@ -249,6 +252,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var result = servicePayment.GetFilteredPayments(FilterType.AlphabeticalDesc);
 
             Assert.Equal("Risk", result.Items.ElementAt(0).ProductName);
+            Assert.Equal("Chess", result.Items.ElementAt(1).ProductName);
             Assert.Equal("Catan", result.Items.ElementAt(2).ProductName);
         }
 
@@ -335,27 +339,40 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void GetFilteredPayments_Pagination_ReturnsCorrectPage()
         {
-            var payments = Enumerable.Range(1, 20)
+            var payments = Enumerable.Range(1, 25)
                 .Select(i => MakePayment(i, $"Game{i}", "Alice", "Card", i * 10))
                 .ToList();
             InitializeService(payments);
 
             var result = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 2, pageSize: 10);
 
-            Assert.Equal(20, result.TotalCount);
+            Assert.Equal(10, result.Items.Count());
             Assert.Equal(2, result.PageNumber);
         }
 
-        // ================================ GetReceiptDocumentPath ======================================
+        [Fact]
+        public void GetFilteredPayments_Pagination_LastPageHasRemainingItems()
+        {
+            var payments = Enumerable.Range(1, 25)
+                .Select(i => MakePayment(i, $"Game{i}", "Alice", "Card", i * 10))
+                .ToList();
+            InitializeService(payments);
 
+            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 3, pageSize: 10);
+
+            Assert.Equal(5, result.Items.Count());
+            Assert.Equal(3, result.PageNumber);
+        }
+
+        // ================================ GetReceiptDocumentPath ======================================
         [Fact]
         public void GetReceiptDocumentPath_NullFilePath_GeneratesNewPath()
         {
             var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = null };
-            var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
-            var fakeReceipt = new FakeReceiptService();
-            var service = new ServicePayment(fakeRepo, fakeReceipt);
-            var result = service.GetReceiptDocumentPath(1);
+            var payments = new List<HistoryPayment> { payment };
+            InitializeService(payments);
+
+            var result = servicePayment.GetReceiptDocumentPath(1);
             Assert.NotNull(result);
             Assert.NotEmpty(result);
         }
@@ -364,10 +381,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void GetReceiptDocumentPath_FilePathWithoutBackslashes_AddsBackslashes()
         {
             var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipt_1_test.pdf" };
-            var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
-            var fakeReceipt = new FakeReceiptService();
-            var service = new ServicePayment(fakeRepo, fakeReceipt);
-            var result = service.GetReceiptDocumentPath(1);
+            var payments = new List<HistoryPayment> { payment };
+            InitializeService(payments);
+
+            var result = servicePayment.GetReceiptDocumentPath(1);
             Assert.NotNull(result);
         }
 
@@ -375,10 +392,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void GetReceiptDocumentPath_FilePathWithBackslashes_ReturnsDocument()
         {
             var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipts\\receipt_1_test.pdf" };
-            var fakeRepo = new FakeRepositoryPayment(new List<HistoryPayment> { payment });
-            var fakeReceipt = new FakeReceiptService();
-            var service = new ServicePayment(fakeRepo, fakeReceipt);
-            var result = service.GetReceiptDocumentPath(1);
+            var payments = new List<HistoryPayment> { payment };
+            InitializeService(payments);
+
+            var result = servicePayment.GetReceiptDocumentPath(1);
             Assert.NotNull(result);
         }
     }

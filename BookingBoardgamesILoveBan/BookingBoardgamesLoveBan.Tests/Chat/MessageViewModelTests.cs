@@ -18,15 +18,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 receiverId: 1,
                 sentAt: new DateTime(2026, 1, 1, 14, 30, 0),
                 content: "hello",
-                type: MessageType.Text,
+                type: MessageType.MessageText,
                 imageUrl: null,
                 isAccepted: false,
                 isResolved: false,
                 isAcceptedByBuyer: false,
                 isAcceptedBySeller: false,
                 requestId: -1,
-                paymentId: -1
-            );
+                paymentId: -1);
         }
 
         [Fact]
@@ -92,8 +91,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             viewModel.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(viewModel.IsResolved))
+                if (e.PropertyName == nameof(vm.IsResolved))
+                {
                     raised = true;
+                }
             };
 
             viewModel.IsResolved = true;
@@ -121,8 +122,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             viewModel.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(viewModel.BothAccepted))
+                if (e.PropertyName == nameof(vm.BothAccepted))
+                {
                     raised = true;
+                }
             };
 
             viewModel.AcceptedBy = new[] { 1, 2 };

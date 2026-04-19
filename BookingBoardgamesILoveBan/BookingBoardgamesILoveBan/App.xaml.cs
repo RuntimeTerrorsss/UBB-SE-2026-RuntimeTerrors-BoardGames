@@ -12,6 +12,7 @@ using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
 using Microsoft.UI.Xaml;
+using Windows.Media.Streaming.Adaptive;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -29,15 +30,16 @@ namespace BookingBoardgamesILoveBan
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
         ///
-        public static Src.Mocks.UserMock.UserService UserService { get; private set; } = new UserService();
+        public static Src.Mocks.UserMock.UserRepository UserRepository { get; private set; } = new UserRepository();
 
-        public static IGameService GameService { get; private set; } = new GameService();
-        public static IRequestService RequestService { get; private set; } = new RequestService(App.GameService);
+        public static IGameRepository GameRepository { get; private set; } = new GameRepository();
+        public static IRequestRepository RequestRepository { get; private set; } = new RequestRepository();
 
+        public static IRequestService RequestService { get; private set; } = new RequestService(App.RequestRepository, App.GameRepository);
         public static PaymentRepository PaymentRepository { get; private set; } = new PaymentRepository();
-        public static ReceiptService ReceiptService { get; private set; } = new ReceiptService(App.UserService, App.RequestService, App.GameService);
+        public static ReceiptService ReceiptService { get; private set; } = new ReceiptService(App.UserRepository, App.RequestService, App.GameRepository);
         public static CardPaymentService CardPaymentService { get; private set; } = new CardPaymentService(App.PaymentRepository,
-            App.UserService, App.ReceiptService, App.RequestService);
+            App.UserRepository, App.ReceiptService, App.RequestService);
 
         public static MapService MapService { get; private set; } = new MapService();
 

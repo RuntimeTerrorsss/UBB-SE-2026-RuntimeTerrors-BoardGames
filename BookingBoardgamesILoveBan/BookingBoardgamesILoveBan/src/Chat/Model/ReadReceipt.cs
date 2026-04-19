@@ -8,7 +8,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Model
 {
     public record ReadReceipt(
         int conversationId,
-        int readerId,
-        int receiverId,
+        int messageReaderId,
+        int messageReceiverId,
         DateTime timeStamp);
 }

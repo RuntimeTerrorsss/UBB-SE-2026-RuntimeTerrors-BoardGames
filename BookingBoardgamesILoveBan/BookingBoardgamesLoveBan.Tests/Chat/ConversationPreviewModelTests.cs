@@ -15,8 +15,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 lastMessageTextInput: "hello",
                 timestampInput: new DateTime(2024, 1, 1, 10, 30, 0),
                 unreadCountInput: 3,
-                avatarUrl: "avatar.png"
-            );
+                avatarUrl: "avatar.png");
         }
 
         [Fact]
@@ -49,7 +48,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             model.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(model.LastMessageText))
+                {
                     raised = true;
+                }
             };
 
             model.LastMessageText = "new message";
@@ -68,10 +69,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             model.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(model.Timestamp))
+                {
                     timestampRaised = true;
+                }
 
                 if (e.PropertyName == nameof(model.TimestampString))
+                {
                     stringRaised = true;
+                }
             };
 
             model.Timestamp = new DateTime(2024, 1, 1, 11, 0, 0);
@@ -89,7 +94,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             model.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(model.UnreadCount))
+                {
                     raised = true;
+                }
             };
 
             model.UnreadCount = 10;

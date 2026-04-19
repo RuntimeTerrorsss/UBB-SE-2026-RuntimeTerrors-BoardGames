@@ -7,10 +7,9 @@ using BookingBoardgamesILoveBan.Src.Delivery.Model;
 
 namespace BookingBoardgamesILoveBan.Src.Mocks.UserMock
 {
-    public interface IUserService
+    public interface IUserRepository
     {
         public User GetById(int id);
-
         public void SaveAddress(int id, Address address);
         public decimal GetUserBalance(int userId);
         public void UpdateBalance(int userId, decimal newBalance);

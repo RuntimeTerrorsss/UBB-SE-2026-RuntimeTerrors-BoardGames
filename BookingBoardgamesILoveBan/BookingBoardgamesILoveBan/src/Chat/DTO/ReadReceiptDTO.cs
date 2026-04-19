@@ -11,5 +11,5 @@ namespace BookingBoardgamesILoveBan.Src.Chat.DTO
         int conversationId,
         int readerId,
         int receiverId,
-        DateTime timeStamp);
+        DateTime receiptTimeStamp);
 }

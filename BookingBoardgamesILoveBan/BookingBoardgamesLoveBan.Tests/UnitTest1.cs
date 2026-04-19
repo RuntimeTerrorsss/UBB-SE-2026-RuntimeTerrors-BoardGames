@@ -5,7 +5,6 @@ namespace BookingBoardgamesLoveBan.Tests
         [Fact]
         public void Test1()
         {
-
         }
     }
 }

@@ -8,50 +8,12 @@ using BookingBoardgamesILoveBan.Src.Delivery.Model.Validators;
 using BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices;
 using BookingBoardgamesILoveBan.Src.Delivery.ViewModel;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using Xunit;
 
 namespace BookingBoardgamesLoveBan.Tests.Delivery
 {
-    public class DeliveryViewModelTests // unit tests
+    public class DeliveryViewModelTests
     {
-        // ================================ fakes ======================================
-        private class FakeMapService : IMapService
-        {
-            public Address AddressToReturn { get; set; } = null;
-
-            public Task<Address> GetAddressFromMapAsync(double latitude, double longitude)
-            {
-                return Task.FromResult(AddressToReturn);
-            }
-        }
-
-        private class FakeUserService : IUserService
-        {
-            public User UserToReturn { get; set; } = null;
-
-            public User GetById(int id)
-            {
-                return UserToReturn;
-            }
-            public void SaveAddress(int id, Address address) { }
-            public decimal GetUserBalance(int userId)
-            {
-                return 0;
-            }
-            public void UpdateBalance(int userId, decimal newBalance) { }
-        }
-
-        private class FakeValidator : IValidator<Dictionary<string, string>, Address>
-        {
-            public Dictionary<string, string> ErrorsToReturn { get; set; } = new();
-
-            public Dictionary<string, string> Validate(Address address)
-            {
-                return ErrorsToReturn;
-            }
-        }
-
-        // ================================ setup ======================================
-
         private readonly FakeMapService fakeMapService;
         private readonly FakeUserService fakeUserService;
         private readonly FakeValidator fakeValidator;
@@ -67,11 +29,8 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
                 currentUserId: 1,
                 mapService: fakeMapService,
                 userService: fakeUserService,
-                validator: fakeValidator
-            );
+                validator: fakeValidator);
         }
-
-        // ================================ OpenMap ======================================
 
         [Fact]
         public void OpenMap_SetsIsMapVisibleTrue()
@@ -89,8 +48,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             Assert.True(fired);
         }
 
-        // ================================ CloseMap ======================================
-
         [Fact]
         public void CloseMap_SetsIsMapVisibleFalse()
         {
@@ -100,7 +57,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             Assert.False(viewModel.IsMapVisible);
         }
 
-
         [Fact]
         public void CloseMap_TriggersStateChanged()
         {
@@ -109,8 +65,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             viewModel.CloseMap();
             Assert.True(fired);
         }
-
-        // ================================ SubmitDelivery ======================================
 
         [Fact]
         public void SubmitDelivery_WithErrors_DoesNotNavigateToPayment()
@@ -160,7 +114,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public void SubmitDelivery_WithNoErrors_SavesAddress_WhenIsSaveAddressAndUserNotNull()
         {
-            fakeUserService.UserToReturn = new User ( 1, "name", "Romania","Cluj", "street", "no" );
+            fakeUserService.UserToReturn = new User(1, "name", "Romania", "Cluj", "street", "no");
             fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
 
             var vm = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
@@ -171,8 +125,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
 
             Assert.Null(exception);
         }
-
-        // ================================ OnFieldChange ======================================
 
         [Fact]
         public void OnFieldChange_RemovesValidationError_WhenKeyExists()
@@ -207,8 +159,6 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             Assert.False(fired);
         }
 
-        // ================================ ConfirmMapLocationAsync ======================================
-
         [Fact]
         public async Task ConfirmMapLocationAsync_ValidAddress_UpdatesCurrentAddress()
         {
@@ -216,8 +166,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
 
             await viewModel.ConfirmMapLocationAsync(46.77, 23.59);
 
-            Assert.Equal("Romania", viewModel.CurrentAddress.Country);
-            Assert.Equal("Cluj-Napoca", viewModel.CurrentAddress.City);
+            Assert.Equal(
+                new { Country = "Romania", City = "Cluj-Napoca" },
+                new { viewModel.CurrentAddress.Country, viewModel.CurrentAddress.City });
         }
 
         [Fact]
@@ -253,17 +204,16 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             Assert.True(viewModel.IsMapVisible);
         }
 
-        // ================================ Initialize ======================================
-
         [Fact]
         public void Initialize_WithValidUser_UpdatesCurrentAddress()
         {
-            fakeUserService.UserToReturn = new User (2,"name", "Romania", "Sibiu", "Strada Mare",  "5" );
+            fakeUserService.UserToReturn = new User(2, "name", "Romania", "Sibiu", "Strada Mare", "5");
 
             viewModel.Initialize(2);
 
-            Assert.Equal("Sibiu", viewModel.CurrentAddress.City);
-            Assert.Equal("Romania", viewModel.CurrentAddress.Country);
+            Assert.Equal(
+                new { Country = "Romania", City = "Sibiu" },
+                new { viewModel.CurrentAddress.Country, viewModel.CurrentAddress.City });
         }
 
         [Fact]
@@ -275,6 +225,48 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
 
             Assert.Null(exception);
         }
+
+        private class FakeMapService : IMapService
+        {
+            public Address AddressToReturn { get; set; } = null;
+
+            public Task<Address> GetAddressFromMapAsync(double latitude, double longitude)
+            {
+                return Task.FromResult(AddressToReturn);
+            }
+        }
+
+        private class FakeUserService : IUserRepository
+        {
+            public User UserToReturn { get; set; } = null;
+
+            public User GetById(int id)
+            {
+                return UserToReturn;
+            }
+
+            public void SaveAddress(int id, Address address)
+            {
+            }
+
+            public decimal GetUserBalance(int userId)
+            {
+                return 0;
+            }
+
+            public void UpdateBalance(int userId, decimal newBalance)
+            {
+            }
+        }
+
+        private class FakeValidator : IValidator<Dictionary<string, string>, Address>
+        {
+            public Dictionary<string, string> ErrorsToReturn { get; set; } = new Dictionary<string, string>();
+
+            public Dictionary<string, string> Validate(Address address)
+            {
+                return ErrorsToReturn;
+            }
+        }
     }
 }
-

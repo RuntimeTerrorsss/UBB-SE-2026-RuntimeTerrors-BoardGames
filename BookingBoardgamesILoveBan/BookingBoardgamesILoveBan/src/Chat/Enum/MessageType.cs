@@ -8,28 +8,28 @@ namespace BookingBoardgamesILoveBan.Src.Enum
 {
     public enum MessageType
     {
-        System,
-        Text,
-        Image,
-        RentalRequest,
-        CashAgreement
+        MessageSystem,
+        MessageText,
+        MessageImage,
+        MessageRentalRequest,
+        MessageCashAgreement
     }
 
     public static class MessageTypeExtensions
     {
-        public static string ToString(this MessageType messageType)
+        public static string MessageTypeToString(this MessageType messageType)
         {
             switch (messageType)
             {
-                case MessageType.Text:
+                case MessageType.MessageText:
                     return "TEXT";
-                case MessageType.Image:
+                case MessageType.MessageImage:
                     return "IMAGE";
-                case MessageType.RentalRequest:
+                case MessageType.MessageRentalRequest:
                     return "RENTAL_REQUEST";
-                case MessageType.CashAgreement:
+                case MessageType.MessageCashAgreement:
                     return "CASH_AGREEMENT";
-                case MessageType.System:
+                case MessageType.MessageSystem:
                     return "SYSTEM";
                 default:
                     return "Unknown";

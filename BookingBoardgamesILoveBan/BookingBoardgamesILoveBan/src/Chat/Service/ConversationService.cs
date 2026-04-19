@@ -16,23 +16,23 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
     public class ConversationService : IConversationService
     {
         private IConversationRepository ConversationRepository { get; set; }
-        private IUserService userService;
+        private IUserRepository userRepository;
         private int UserId { get; set; }
 
-        public event Action<MessageDTO, string> MessageProcessed;
-        public event Action<ConversationDTO, string> ConversationProcessed;
-        public event Action<ReadReceiptDTO> ReadReceiptProcessed;
-        public event Action<MessageDTO, string> MessageUpdateProcessed;
+        public event Action<MessageDTO, string> ActionMessageProcessed;
+        public event Action<ConversationDTO, string> ActionConversationProcessed;
+        public event Action<ReadReceiptDTO> ActionReadReceiptProcessed;
+        public event Action<MessageDTO, string> ActionMessageUpdateProcessed;
 
-        public ConversationService(IConversationRepository conversationRepo, int userIdInput) : this(conversationRepo, userIdInput, App.UserService)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput) : this(conversationRepo, userIdInput, App.UserRepository)
         {
         }
 
-        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserService userService)
+        public ConversationService(IConversationRepository conversationRepo, int userIdInput, IUserRepository userRepo)
         {
             UserId = userIdInput;
             ConversationRepository = conversationRepo;
-            this.userService = userService;
+            userRepository = userRepo;
 
             ConversationRepository.Subscribe(UserId, this);
         }
@@ -61,7 +61,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public string GetOtherUserNameByConversationDTO(ConversationDTO conversation)
         {
-            var user = userService.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]);
+            var user = userRepository.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]);
             return user?.Username ?? "Unknown User";
         }
 
@@ -72,7 +72,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public string GetOtherUserNameByMessageDTO(MessageDTO message)
         {
-            return userService.GetById(message.senderId == UserId ? message.receiverId : message.senderId).Username ?? "Unknown User";
+            return userRepository.GetById(message.senderId == UserId ? message.receiverId : message.senderId).Username ?? "Unknown User";
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
             ConversationRepository.HandleReadReceipt(new ReadReceipt(
                 conversation.Id,
                 UserId,
-                conversation.Participants.First(id => id != UserId),
+                conversation.Participants.First(p => p != UserId),
                 DateTime.Now));
         }
 
@@ -161,7 +161,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             MessageDTO messageDTO = MessageToMessageDTO(message);
             string userName = GetOtherUserNameByMessageDTO(messageDTO);
-            MessageProcessed?.Invoke(messageDTO, userName);
+            ActionMessageProcessed?.Invoke(messageDTO, userName);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             ConversationDTO conversationDTO = ConversationToConversationDTO(conversation);
             string userName = GetOtherUserNameByConversationDTO(conversationDTO);
-            ConversationProcessed?.Invoke(conversationDTO, userName);
+            ActionConversationProcessed?.Invoke(conversationDTO, userName);
         }
 
         /// <summary>
@@ -183,7 +183,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <param name="readReceipt"></param>
         public void OnReadReceiptReceived(ReadReceipt readReceipt)
         {
-            ReadReceiptProcessed?.Invoke(ReadReceiptToReadReceiptDTO(readReceipt));
+            ActionReadReceiptProcessed?.Invoke(ReadReceiptToReadReceiptDTO(readReceipt));
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             MessageDTO messageDTO = MessageToMessageDTO(message);
             string userName = GetOtherUserNameByMessageDTO(messageDTO);
-            MessageUpdateProcessed?.Invoke(messageDTO, userName);
+            ActionMessageUpdateProcessed?.Invoke(messageDTO, userName);
         }
 
         #region domain-to-dto translations
@@ -211,21 +211,21 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             Message toReturn = messageDto.type switch
             {
-                MessageType.Text => new TextMessage(
+                MessageType.MessageText => new TextMessage(
                     id: messageDto.id,
                     conversationId: messageDto.conversationId,
                     senderId: messageDto.senderId,
                     receiverId: messageDto.receiverId,
                     sentAt: messageDto.sentAt,
                     content: messageDto.content),
-                MessageType.Image => new ImageMessage(
+                MessageType.MessageImage => new ImageMessage(
                     id: messageDto.id,
                     conversationId: messageDto.conversationId,
                     senderId: messageDto.senderId,
                     receiverId: messageDto.receiverId,
                     sentAt: messageDto.sentAt,
                     imageUrl: messageDto.imageUrl),
-                MessageType.RentalRequest => new RentalRequestMessage(
+                MessageType.MessageRentalRequest => new RentalRequestMessage(
                     id: messageDto.id,
                     conversationId: messageDto.conversationId,
                     senderId: messageDto.senderId,
@@ -235,7 +235,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
                     requestId: messageDto.requestId,
                     isResolved: messageDto.isResolved,
                     isAccepted: messageDto.isAccepted),
-                MessageType.CashAgreement => new CashAgreementMessage(
+                MessageType.MessageCashAgreement => new CashAgreementMessage(
                     id: messageDto.id,
                     conversationId: messageDto.conversationId,
                     sellerId: messageDto.senderId,
@@ -246,7 +246,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
                     isResolved: messageDto.isResolved,
                     isAcceptedByBuyer: messageDto.isAcceptedByBuyer,
                     isAcceptedBySeller: messageDto.isAcceptedBySeller),
-                MessageType.System => new SystemMessage(
+                MessageType.MessageSystem => new SystemMessage(
                     id: messageDto.id,
                     conversationId: messageDto.conversationId,
                     sentAt: messageDto.sentAt,
@@ -263,22 +263,22 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         public MessageDTO MessageToMessageDTO(Message message)
         {
             MessageDTO toReturn = new MessageDTO(
-                id: message.Id,
+                id: message.MessageId,
                 conversationId: message.ConversationId,
-                senderId: message.SenderId,
-                receiverId: message.ReceiverId,
-                sentAt: message.SentAt,
-                content: message.ContentAsString,
-                type: message.Type,
-                imageUrl: message is ImageMessage img ? img.ImageUrl : string.Empty,
-                isResolved: message is RentalRequestMessage brm ? brm.IsResolved
-                          : message is CashAgreementMessage cam ? cam.IsResolved
+                senderId: message.MessageSenderId,
+                receiverId: message.MessageReceiverId,
+                sentAt: message.MessageSentTime,
+                content: message.MessageContentAsString,
+                type: message.TypeOfMessage,
+                imageUrl: message is ImageMessage img ? img.MessageImageUrl : string.Empty,
+                isResolved: message is RentalRequestMessage brm ? brm.IsRequestResolved
+                          : message is CashAgreementMessage cam ? cam.IsCashAgreementResolved
                           : false,
-                isAccepted: message is RentalRequestMessage brm2 ? brm2.IsAccepted : false,
-                isAcceptedByBuyer: message is CashAgreementMessage cam3 ? cam3.IsAcceptedByBuyer : false,
-                isAcceptedBySeller: message is CashAgreementMessage cam4 ? cam4.IsAcceptedBySeller : false,
-                paymentId: message is CashAgreementMessage cam5 ? cam5.PaymentId : -1,
-                requestId: message is RentalRequestMessage brm3 ? brm3.RequestId : -1);
+                isAccepted: message is RentalRequestMessage brm2 ? brm2.IsRequestAccepted : false,
+                isAcceptedByBuyer: message is CashAgreementMessage cam3 ? cam3.IsCashAgreementAcceptedByBuyer : false,
+                isAcceptedBySeller: message is CashAgreementMessage cam4 ? cam4.IsCashAgreementAcceptedBySeller : false,
+                paymentId: message is CashAgreementMessage cam5 ? cam5.CashPaymentId : -1,
+                requestId: message is RentalRequestMessage brm3 ? brm3.RentalRequestId : -1);
             return toReturn;
         }
 
@@ -290,12 +290,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public ConversationDTO ConversationToConversationDTO(Conversation conversation)
         {
-            var messageDTOs = conversation.MessageList.Select(mess => MessageToMessageDTO(mess)).ToList();
+            var messageDTOs = conversation.ConversationMessageList.Select(mess => MessageToMessageDTO(mess)).ToList();
             return new ConversationDTO(
-                conversationId: conversation.Id,
-                participants: conversation.ParticipantIds,
+                convId: conversation.ConversationId,
+                participants: conversation.ConversationParticipantIds,
                 messages: messageDTOs,
-                lastRead: conversation.LastRead);
+                lastRead: conversation.LastMessageReadTime);
         }
 
         /// <summary>
@@ -307,8 +307,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             return new ReadReceiptDTO(
                 readReceipt.conversationId,
-                readReceipt.readerId,
-                readReceipt.receiverId,
+                readReceipt.messageReaderId,
+                readReceipt.messageReceiverId,
                 readReceipt.timeStamp);
         }
         #endregion

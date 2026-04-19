@@ -1,12 +1,13 @@
-﻿using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
+﻿using System;
+using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using Microsoft.Data.SqlClient;
 using Xunit;
 
-public class GameServiceIntegrationTests
+public class GameRepositoryIntegrationTests
 {
     private readonly string connectionString;
 
-    public GameServiceIntegrationTests()
+    public GameRepositoryIntegrationTests()
     {
         DatabaseBootstrap.Initialize();
         connectionString = DatabaseBootstrap.GetAppConnection();
@@ -40,13 +41,13 @@ public class GameServiceIntegrationTests
                 new SqlCommand("SET IDENTITY_INSERT Game OFF", conn).ExecuteNonQuery();
             }
 
-            var service = new GameService();
+            var service = new GameRepository();
             var game = service.GetById(testId);
 
             Assert.NotNull(game);
-            Assert.Equal(testId, game.Gid);
-            Assert.Equal("TestGame", game.Name);
-            Assert.Equal(15, game.PricePerDay);
+            Assert.Equal(
+                new { Gid = testId, Name = "TestGame", PricePerDay = (decimal)15 },
+                new { game.Gid, game.Name, game.PricePerDay });
         }
         finally
         {
@@ -85,7 +86,7 @@ public class GameServiceIntegrationTests
                 new SqlCommand("SET IDENTITY_INSERT Game OFF", conn).ExecuteNonQuery();
             }
 
-            var service = new GameService();
+            var service = new GameRepository();
 
             decimal actualPrice = service.GetPriceGameById(testId);
 

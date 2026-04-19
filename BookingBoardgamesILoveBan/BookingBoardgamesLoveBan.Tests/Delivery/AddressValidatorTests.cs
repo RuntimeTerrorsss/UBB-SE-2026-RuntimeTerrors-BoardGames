@@ -1,137 +1,125 @@
 ﻿using BookingBoardgamesILoveBan.Src.Delivery.Model;
 using BookingBoardgamesILoveBan.Src.Delivery.Model.Validators;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookingBoardgamesLoveBan.Tests.Delivery
 {
-    public class AddressValidatorTests // unit tests
+    public class AddressValidatorTests
     {
-        private readonly AddressValidator _addressValidator = new AddressValidator();
+        private readonly AddressValidator addressValidator = new AddressValidator();
 
         [Fact]
         public void EmptyAddressTest()
         {
-            Address emptyAddress = new Address("", "", "", "");
-            Dictionary<string, string> errors = this._addressValidator.Validate(emptyAddress);
+            Address emptyAddress = new Address(string.Empty, string.Empty, string.Empty, string.Empty);
+            Dictionary<string, string> errors = addressValidator.Validate(emptyAddress);
+
             Assert.NotEmpty(errors);
-            Assert.Equal("Country is required", errors["Country"]);
-            Assert.Equal("City is required", errors["City"]);
-            Assert.Equal("Street is required", errors["Street"]);
-            Assert.Equal("StreetNumber is required", errors["StreetNumber"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "Country", "Country is required" },
+                    { "City", "City is required" },
+                    { "Street", "Street is required" },
+                    { "StreetNumber", "StreetNumber is required" }
+                },
+                errors);
         }
 
         [Fact]
         public void ValidAddressTest()
         {
             Address validAddress = new Address("Romania", "Cluj-Napoca", "Teodor Mihali", "58");
-            Dictionary<string, string> errors = this._addressValidator.Validate(validAddress);
+            Dictionary<string, string> errors = addressValidator.Validate(validAddress);
+
             Assert.Empty(errors);
         }
 
         [Fact]
         public void MostlyValidAddressTest()
         {
-            Address invalidCountryAddress = new Address("", "Cluj-Napoca", "Teodor Mihali", "58");
-            Dictionary<string, string> errors = this._addressValidator.Validate(invalidCountryAddress);
-            Assert.Single(errors);
-            Assert.NotNull(errors["Country"]);
-            Assert.Equal("Country is required", errors["Country"]);
+            Assert.Equal(
+                new Dictionary<string, string> { { "Country", "Country is required" } },
+                addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", "Teodor Mihali", "58")));
 
-            Address invalidCityAddress = new Address("Romania", "", "Teodor Mihali", "58");
-            errors = this._addressValidator.Validate(invalidCityAddress);
-            Assert.Single(errors);
-            Assert.NotNull(errors["City"]);
-            Assert.Equal("City is required", errors["City"]);
+            Assert.Equal(
+                new Dictionary<string, string> { { "City", "City is required" } },
+                addressValidator.Validate(new Address("Romania", string.Empty, "Teodor Mihali", "58")));
 
-            Address invalidStreetAddress = new Address("Romania", "Cluj-Napoca", "", "58");
-            errors = this._addressValidator.Validate(invalidStreetAddress);
-            Assert.Single(errors);
-            Assert.NotNull(errors["Street"]);
-            Assert.Equal("Street is required", errors["Street"]);
+            Assert.Equal(
+                new Dictionary<string, string> { { "Street", "Street is required" } },
+                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, "58")));
 
-            Address invalidStreetNoAddress = new Address("Romania", "Cluj-Napoca", "Teodor Mihali", "");
-            errors = this._addressValidator.Validate(invalidStreetNoAddress);
-            Assert.Single(errors);
-            Assert.NotNull(errors["StreetNumber"]);
-            Assert.Equal("StreetNumber is required", errors["StreetNumber"]);
+            Assert.Equal(
+                new Dictionary<string, string> { { "StreetNumber", "StreetNumber is required" } },
+                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", "Teodor Mihali", string.Empty)));
         }
 
         [Fact]
         public void HalfValidAddressTest()
         {
-            Address invalidCountryCityAddress = new Address("", "", "Teodor Mihali", "58");
-            Dictionary<string, string> errors = this._addressValidator.Validate(invalidCountryCityAddress);
-            Assert.Equal(2, errors.Count);
-            Assert.NotNull(errors["Country"]);
-            Assert.NotNull(errors["City"]);
-            Assert.Equal("Country is required", errors["Country"]); 
-            Assert.Equal("City is required", errors["City"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "Country", "Country is required" },
+                    { "City", "City is required" }
+                },
+                addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", "58")));
 
-            Address invalidStreetNoAddress = new Address("Romania", "Cluj-Napoca", "", "");
-            errors = this._addressValidator.Validate(invalidStreetNoAddress);
-            Assert.Equal(2, errors.Count);
-            Assert.NotNull(errors["Street"]);
-            Assert.NotNull(errors["StreetNumber"]);
-            Assert.Equal("Street is required", errors["Street"]);
-            Assert.Equal("StreetNumber is required", errors["StreetNumber"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "Street", "Street is required" },
+                    { "StreetNumber", "StreetNumber is required" }
+                },
+                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, string.Empty)));
 
-            Address invalidCityStreetAddress = new Address("Romania", "", "", "58");
-            errors = this._addressValidator.Validate(invalidCityStreetAddress);
-            Assert.Equal(2, errors.Count);
-            Assert.NotNull(errors["City"]);
-            Assert.NotNull(errors["Street"]);
-            Assert.Equal("City is required", errors["City"]);
-            Assert.Equal("Street is required", errors["Street"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "City", "City is required" },
+                    { "Street", "Street is required" }
+                },
+                addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, "58")));
         }
 
         [Fact]
         public void MostlyEmptyAddressTest()
         {
-            Address validCountryAddress = new Address("Romania", "", "", "");
-            Dictionary<string, string> errors = this._addressValidator.Validate(validCountryAddress);
-            Assert.Equal(3, errors.Count);
-            Assert.NotNull(errors["City"]);
-            Assert.NotNull(errors["Street"]);
-            Assert.NotNull(errors["StreetNumber"]);
-            Assert.Equal("City is required", errors["City"]);
-            Assert.Equal("Street is required", errors["Street"]);
-            Assert.Equal("StreetNumber is required", errors["StreetNumber"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "City", "City is required" },
+                    { "Street", "Street is required" },
+                    { "StreetNumber", "StreetNumber is required" }
+                },
+                addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, string.Empty)));
 
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "Country", "Country is required" },
+                    { "Street", "Street is required" },
+                    { "StreetNumber", "StreetNumber is required" }
+                },
+                addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", string.Empty, string.Empty)));
 
-            Address validCityAddress = new Address("", "Cluj-Napoca", "", "");
-            errors = this._addressValidator.Validate(validCityAddress);
-            Assert.Equal(3, errors.Count);
-            Assert.NotNull(errors["Country"]);
-            Assert.NotNull(errors["Street"]);
-            Assert.NotNull(errors["StreetNumber"]);
-            Assert.Equal("Country is required", errors["Country"]);
-            Assert.Equal("Street is required", errors["Street"]);
-            Assert.Equal("StreetNumber is required", errors["StreetNumber"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "Country", "Country is required" },
+                    { "City", "City is required" },
+                    { "StreetNumber", "StreetNumber is required" }
+                },
+                addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", string.Empty)));
 
-            Address validStreetAddress = new Address("", "", "Teodor Mihali", "");
-            errors = this._addressValidator.Validate(validStreetAddress);
-            Assert.Equal(3, errors.Count);
-            Assert.NotNull(errors["Country"]);
-            Assert.NotNull(errors["City"]);
-            Assert.NotNull(errors["StreetNumber"]);
-            Assert.Equal("Country is required", errors["Country"]);
-            Assert.Equal("City is required", errors["City"]);
-            Assert.Equal("StreetNumber is required", errors["StreetNumber"]);
-
-            Address validStreetNoAddress = new Address("", "", "", "58");
-            errors = this._addressValidator.Validate(validStreetNoAddress);
-            Assert.Equal(3, errors.Count);
-            Assert.NotNull(errors["Country"]);
-            Assert.NotNull(errors["City"]);
-            Assert.NotNull(errors["Street"]);
-            Assert.Equal("Country is required", errors["Country"]);
-            Assert.Equal("City is required", errors["City"]);
-            Assert.Equal("Street is required", errors["Street"]);
+            Assert.Equal(
+                new Dictionary<string, string>
+                {
+                    { "Country", "Country is required" },
+                    { "City", "City is required" },
+                    { "Street", "Street is required" }
+                },
+                addressValidator.Validate(new Address(string.Empty, string.Empty, string.Empty, "58")));
         }
     }
 }

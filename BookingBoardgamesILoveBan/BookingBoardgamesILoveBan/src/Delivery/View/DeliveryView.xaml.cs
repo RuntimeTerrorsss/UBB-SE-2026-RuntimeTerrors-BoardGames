@@ -48,7 +48,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
             deliveryViewModel = new DeliveryViewModel(
                 currentUserId,
                 App.MapService,
-                App.UserService,
+                App.UserRepository,
                 new AddressValidator());
 
             deliveryViewModel.OnNavigateToPayment = () =>

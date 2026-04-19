@@ -16,18 +16,22 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Model.Validators
             {
                 errors["Country"] = "Country is required";
             }
+
             if (string.IsNullOrWhiteSpace(address.City))
             {
                 errors["City"] = "City is required";
             }
+
             if (string.IsNullOrWhiteSpace(address.Street))
             {
                 errors["Street"] = "Street is required";
             }
+
             if (string.IsNullOrWhiteSpace(address.StreetNumber))
             {
                 errors["StreetNumber"] = "StreetNumber is required";
             }
+
             return errors;
         }
     }

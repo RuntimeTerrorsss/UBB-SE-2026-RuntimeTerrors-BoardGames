@@ -145,10 +145,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="senderName"></param>
         public void HandleIncomingMessage(MessageDTO message, string senderName)
         {
-            HandleIncomingMessage(message, senderName, App.UserService);
+            HandleIncomingMessage(message, senderName, App.UserRepository);
         }
 
-        public void HandleIncomingMessage(MessageDTO message, string senderName, IUserService userService)
+        public void HandleIncomingMessage(MessageDTO message, string senderName, IUserRepository userService)
         {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == message.conversationId);
 
@@ -187,10 +187,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="userId"></param>
         public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId)
         {
-            HandleIncomingConversation(conversation, displayName, userId, App.UserService);
+            HandleIncomingConversation(conversation, displayName, userId, App.UserRepository);
         }
 
-        public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserService service)
+        public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserRepository service)
         {
             var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversation.Id);
             if (existing != null)
@@ -204,7 +204,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
                 conversation.Id,
                 displayName,
                 displayName.Substring(0, 1).ToUpper(),
-                conversation.MessageList.LastOrDefault()?.GetPreview() ?? string.Empty,
+                conversation.MessageList.LastOrDefault()?.GetChatMessagePreview() ?? string.Empty,
                 conversation.MessageList.LastOrDefault()?.sentAt ?? DateTime.MinValue,
                 unreadCountInput: conversation.UnreadCount[userId],
                 service.GetById(otherUser).AvatarUrl);

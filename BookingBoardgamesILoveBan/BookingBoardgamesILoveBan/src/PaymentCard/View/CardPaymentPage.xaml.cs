@@ -27,7 +27,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.View
 
             PaymentViewModel = new CardPaymentViewModel(
                 App.CardPaymentService,
-                App.UserService,
+                App.UserRepository,
                 bookingArguments.RequestIdentifier,
                 bookingArguments.DeliveryAddress,
                 bookingArguments.BookingMessageIdentifier,

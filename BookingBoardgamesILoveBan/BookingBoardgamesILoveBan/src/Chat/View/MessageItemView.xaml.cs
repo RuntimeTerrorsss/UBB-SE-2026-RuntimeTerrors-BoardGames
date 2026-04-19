@@ -57,23 +57,23 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         {
             switch (message.Type)
             {
-                case Enum.MessageType.System:
+                case Enum.MessageType.MessageSystem:
                     RenderSystemMessage(message);
                     break;
 
-                case Enum.MessageType.Text:
+                case Enum.MessageType.MessageText:
                     RenderTextMessage(message, currentUserId);
                     break;
 
-                case Enum.MessageType.Image:
+                case Enum.MessageType.MessageImage:
                     RenderImageMessage(message, currentUserId);
                     break;
 
-                case Enum.MessageType.RentalRequest:
+                case Enum.MessageType.MessageRentalRequest:
                     RenderBookingRequest(message, currentUserId);
                     break;
 
-                case Enum.MessageType.CashAgreement:
+                case Enum.MessageType.MessageCashAgreement:
                     RenderCashAgreement(message, currentUserId);
                     break;
             }

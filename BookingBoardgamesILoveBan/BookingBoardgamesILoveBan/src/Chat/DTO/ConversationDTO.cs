@@ -26,7 +26,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.DTO
             UpdateUnreadCounts();
         }
 
-        public void AddMessageDTO(MessageDTO newMessage)
+        public void AddMessageToListDTO(MessageDTO newMessage)
         {
             MessageList.Add(newMessage);
             UpdateUnreadCounts();

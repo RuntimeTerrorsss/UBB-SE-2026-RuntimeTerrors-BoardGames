@@ -1,18 +1,18 @@
-﻿using BookingBoardgamesILoveBan.Src.Chat.DTO;
-using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
-using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
-using BookingBoardgamesILoveBan.Src.Enum;
-using Moq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using Moq;
 using Xunit;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class LeftPanelViewModelTests
     {
-        private Mock<IUserService> userService = new Mock<IUserService>();
+        private Mock<IUserRepository> userService = new Mock<IUserRepository>();
 
         private LeftPanelViewModel CreateViewModel()
         {
@@ -21,9 +21,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
             return new LeftPanelViewModel();
         }
-        private IUserService CreateUserService()
+        private IUserRepository CreateUserService()
         {
-            var service = new Moq.Mock<IUserService>();
+            var service = new Moq.Mock<IUserRepository>();
 
             service.Setup(s => s.GetById(It.IsAny<int>()))
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
@@ -40,8 +40,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.MinValue },
                     { 2, DateTime.MinValue }
-                }
-            );
+                });
         }
         private MessageDTO CreateMessage(int convId = 1)
         {
@@ -52,15 +51,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 receiverId: 2,
                 sentAt: DateTime.Now,
                 content: "hello",
-                type: MessageType.Text,
+                type: MessageType.MessageText,
                 imageUrl: null,
                 isAccepted: false,
                 isResolved: false,
                 isAcceptedBySeller: false,
                 isAcceptedByBuyer: false,
                 requestId: -1,
-                paymentId: -1
-            );
+                paymentId: -1);
         }
 
         [Fact]

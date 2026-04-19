@@ -11,24 +11,10 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
 {
     public class DeliveryViewModel
     {
-        private IMapService MapService { get; set; }
-        private IUserService UserService { get; set; }
-        private IValidator<Dictionary<string, string>, Address> Validator { get; set; }
-
-        public Address CurrentAddress { get; set; }
-        public bool IsMapVisible { get; set; } = false;
-        public bool IsSaveAddress { get; set; } = false;
-        public Dictionary<string, string> ValidationErrors { get; set; } = new Dictionary<string, string>();
-        public User? CurrentUser { get; set; }
-        public int CurrentId { get; set; } = 1;
-        public Action? OnNavigateToPayment { get; set; }
-
-        public event Action? StateChanged;
-
         public DeliveryViewModel(
             int currentUserId,
             IMapService mapService,
-            IUserService userService,
+            IUserRepository userService,
             IValidator<Dictionary<string, string>, Address> validator)
         {
             MapService = mapService;
@@ -36,8 +22,33 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
             Validator = validator;
             CurrentId = currentUserId;
             CurrentUser = UserService.GetById(currentUserId);
-            CurrentAddress = CurrentUser != null ? new Address(CurrentUser.Country, CurrentUser.City, CurrentUser.Street, CurrentUser.StreetNumber) : new Address();
+            CurrentAddress = CurrentUser != null
+                ? new Address(CurrentUser.Country, CurrentUser.City, CurrentUser.Street, CurrentUser.StreetNumber)
+                : new Address();
         }
+
+        public event Action StateChanged;
+
+        public Address CurrentAddress { get; set; }
+
+        public bool IsMapVisible { get; set; } = false;
+
+        public bool IsSaveAddress { get; set; } = false;
+
+        public Dictionary<string, string> ValidationErrors { get; set; } = new Dictionary<string, string>();
+
+        public User CurrentUser { get; set; }
+
+        public int CurrentId { get; set; } = 1;
+
+        public Action OnNavigateToPayment { get; set; }
+
+        private IMapService MapService { get; set; }
+
+        private IUserRepository UserService { get; set; }
+
+        private IValidator<Dictionary<string, string>, Address> Validator { get; set; }
+
         public void Initialize(int userId)
         {
             CurrentId = userId;
@@ -45,7 +56,6 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
 
             if (CurrentUser != null)
             {
-                // Update address based on the found user
                 CurrentAddress = new Address(
                     CurrentUser.Country,
                     CurrentUser.City,
@@ -57,31 +67,30 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
         public void OnFieldChange(string fieldName, string newValue)
         {
             typeof(Address).GetProperty(fieldName)?.SetValue(CurrentAddress, newValue);
+
             if (ValidationErrors.Remove(fieldName))
             {
                 StateChanged?.Invoke();
             }
         }
 
-        /// <summary>Show the map overlay.</summary>
         public void OpenMap()
         {
             IsMapVisible = true;
             StateChanged?.Invoke();
         }
 
-        /// <summary>Hide the map overlay without confirming.</summary>
         public void CloseMap()
         {
             IsMapVisible = false;
             StateChanged?.Invoke();
         }
 
-        /// <summary>Reverse-geocode the pinned location and fill fields.</summary>
         public async Task ConfirmMapLocationAsync(double latitude, double longitude)
         {
             Debug.WriteLine($"--- CONFIRM LOCATION CLICKED --- Lat: {latitude}, Lon: {longitude}");
             Address resolved = await MapService.GetAddressFromMapAsync(latitude, longitude);
+
             if (resolved != null)
             {
                 CurrentAddress = resolved;
@@ -94,7 +103,6 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
             }
         }
 
-        /// <summary>User story 6 & 7: validate then proceed to payment, or show errors.</summary>
         public void SubmitDelivery()
         {
             ValidationErrors = Validator.Validate(CurrentAddress);

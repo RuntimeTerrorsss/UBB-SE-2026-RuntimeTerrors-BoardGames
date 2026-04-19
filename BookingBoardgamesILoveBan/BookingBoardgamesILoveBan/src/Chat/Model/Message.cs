@@ -11,22 +11,22 @@ namespace BookingBoardgamesILoveBan.Src.Model
 {
     public abstract class Message
     {
-        public int Id { get; set; }
+        public int MessageId { get; set; }
         public int ConversationId { get; set; }
-        public int SenderId { get; set; }
-        public int ReceiverId { get; set; }
-        public DateTime SentAt { get; set; }
-        public string ContentAsString { get; set; }
-        public MessageType Type { get; set; }
+        public int MessageSenderId { get; set; }
+        public int MessageReceiverId { get; set; }
+        public DateTime MessageSentTime { get; set; }
+        public string MessageContentAsString { get; set; }
+        public MessageType TypeOfMessage { get; set; }
         public Message(int id, int conversationId, int senderId, int receiverId, DateTime sentAt, string contentAsString, MessageType type)
         {
-            Id = id;
+            MessageId = id;
             ConversationId = conversationId;
-            SenderId = senderId;
-            ReceiverId = receiverId;
-            SentAt = sentAt;
-            ContentAsString = contentAsString;
-            Type = type;
+            MessageSenderId = senderId;
+            MessageReceiverId = receiverId;
+            MessageSentTime = sentAt;
+            MessageContentAsString = contentAsString;
+            TypeOfMessage = type;
         }
     }
 }

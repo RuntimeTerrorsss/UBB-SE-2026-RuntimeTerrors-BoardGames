@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Moq;
 using BookingBoardgamesILoveBan.Src.PaymentCard.Service;
@@ -13,23 +13,23 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
     public class CardPaymentServiceTests
     {
         private readonly Mock<PaymentRepository> mockPaymentRepository;
-        private readonly Mock<UserService> mockUserService;
+        private readonly Mock<IUserRepository> mockUserService;
         private readonly Mock<ReceiptService> mockReceiptService;
-        private readonly Mock<RequestService> mockRequestService;
+        private readonly Mock<IRequestService> mockRequestService;
         private readonly CardPaymentService cardPaymentService;
 
         public CardPaymentServiceTests()
         {
             mockPaymentRepository = new Mock<PaymentRepository>();
-            mockUserService = new Mock<UserService>();
+            mockUserService = new Mock<IUserRepository>();
 
-            Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService> mockGameService = new Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameService>();
-            mockRequestService = new Mock<RequestService>(mockGameService.Object);
+            Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameRepository> mockGameRepository = new Mock<BookingBoardgamesILoveBan.Src.Mocks.GameMock.GameRepository>();
+            mockRequestService = new Mock<IRequestService>();
 
             mockReceiptService = new Mock<ReceiptService>(
                 mockUserService.Object,
                 mockRequestService.Object,
-                mockGameService.Object);
+                mockGameRepository.Object);
 
             cardPaymentService = new CardPaymentService(
                 mockPaymentRepository.Object,
@@ -265,6 +265,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
         public void GetRequestDataTransferObject_FetchesAndReturnsDataTransferObject()
         {
             int requestIdentifier = 1;
+            var fakeRequest = new BookingBoardgamesILoveBan.Src.Mocks.RequestMock.Request(requestIdentifier, 2, 3, 4, DateTime.Now, DateTime.Now.AddDays(1));
+            var fakeUserClient = new BookingBoardgamesILoveBan.Src.Mocks.UserMock.User(3, "Client", "RO", "Cluj", "St.", "1");
+            var fakeUserOwner = new BookingBoardgamesILoveBan.Src.Mocks.UserMock.User(4, "Owner", "RO", "Cluj", "St.", "1");
+
+            mockRequestService.Setup(r => r.GetRequestById(requestIdentifier)).Returns(fakeRequest);
+            mockRequestService.Setup(r => r.GetGameName(fakeRequest.Id)).Returns("TestGame");
+            mockRequestService.Setup(r => r.GetRequestPrice(fakeRequest.Id)).Returns(50.0m);
+            mockUserService.Setup(u => u.GetById(fakeRequest.ClientId)).Returns(fakeUserClient);
+            mockUserService.Setup(u => u.GetById(fakeRequest.OwnerId)).Returns(fakeUserOwner);
 
             var resultDataTransferObject = cardPaymentService.GetRequestDataTransferObject(requestIdentifier);
 

@@ -1,15 +1,15 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.ViewModel;
+﻿using System;
+using System.Collections.Generic;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
 using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Enum;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.Model;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
@@ -17,6 +17,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     public class ChatPageViewModelTests
     {
         private readonly int currentUserId = 1;
+        private Mock<IUserRepository> userService;
         private Mock<IUserService> userServiceMock;
         private Mock<IConversationRepository> conversationRepositoryMock;
 
@@ -28,6 +29,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 .Setup(repository => repository.GetConversationsForUser(It.IsAny<int>()))
                 .Returns(new List<Conversation>
                 {
+            new Conversation(
+                1,
+                new[] { 1, 2 },
+                new List<Message>(),
+                new Dictionary<int, DateTime>
+                {
+                    { 1, DateTime.MinValue },
+                    { 2, DateTime.MinValue }
+                })
                     new Conversation(
                         1,
                         new[] { 1, 2 },
@@ -43,20 +53,27 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     )
                 });
 
+            userService = new Mock<IUserRepository>();
             userServiceMock = new Mock<IUserService>();
             userServiceMock
                 .Setup(service => service.GetById(It.IsAny<int>()))
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
 
+            userService
+                .Setup(u => u.GetById(It.IsAny<int>()))
+                .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
+
             return new ConversationService(
                 conversationRepositoryMock.Object,
                 currentUserId,
+                userService.Object);
                 userServiceMock.Object
             );
         }
 
         private ChatPageViewModel CreateChatPageViewModel()
         {
+            return new ChatPageViewModel(currentUserId, CreateService(), userService.Object);
             return new ChatPageViewModel(
                 currentUserId,
                 CreateConversationService(),
@@ -69,6 +86,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var chatPageViewModel = CreateChatPageViewModel();
 
+            Assert.NotNull(vm.LeftPanelModelView);
+            Assert.NotNull(vm.ChatModelView);
             Assert.Single(chatPageViewModel.LeftPanel.Conversations);
         }
 
@@ -77,6 +96,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var conversationService = CreateConversationService();
 
+            var msg = new MessageDTO(1, "hello", MessageType.MessageText)
             var chatPageViewModel = new ChatPageViewModel(
                 currentUserId,
                 conversationService,
@@ -89,8 +109,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 senderId = 1
             };
 
+            bool called = false;
+            service.ActionMessageProcessed += (m, u) => { called = true; };
             chatPageViewModel.Chat.RaiseMessageSent(messageDto);
 
+            vm.ChatModelView.RaiseMessageSent(msg);
             conversationRepositoryMock.Verify(repository =>
                 repository.HandleNewMessage(It.Is<Message>(message =>
                     message.SenderId == 1 &&
@@ -125,6 +148,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
+            service.ActionReadReceiptProcessed += null;
             var newMessage = new TextMessage(5, 1, 2, 1, DateTime.Now, "new message");
 
             conversationService.OnMessageReceived(newMessage);
@@ -137,6 +161,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void ReadReceipt_Updates_LastRead()
         {
+            var service = CreateService();
+            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -151,6 +177,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 new ReadReceipt(1, 2, 1, timestamp)
             );
 
+            vm.ChatModelView.RaiseBookingRequestUpdate(5, 1, true, true);
             var updatedConversation =
                 chatPageViewModel.ConversationService.FetchConversations().First();
 
@@ -168,6 +195,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
+            vm.ChatModelView.RaiseCashAgreementAccept(5, 1);
             chatPageViewModel.Chat.RaiseBookingRequestUpdate(1, 1, true, true);
 
             conversationRepositoryMock.Verify(

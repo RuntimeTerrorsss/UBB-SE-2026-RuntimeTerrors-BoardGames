@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
@@ -25,8 +25,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 lastMessageTextInput: "hi",
                 timestampInput: DateTime.Now,
                 unreadCountInput: 0,
-                avatarUrl: "avatar.png"
-            );
+                avatarUrl: "avatar.png");
         }
 
         private MessageDTO CreateMessage(int convId = 1)
@@ -38,15 +37,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 receiverId: 2,
                 sentAt: DateTime.Now,
                 content: "hello",
-                type: MessageType.Text,
+                type: MessageType.MessageText,
                 imageUrl: null,
                 isAccepted: false,
                 isResolved: false,
                 isAcceptedBySeller: false,
                 isAcceptedByBuyer: false,
                 requestId: -1,
-                paymentId: -1
-            );
+                paymentId: -1);
         }
 
         [Fact]

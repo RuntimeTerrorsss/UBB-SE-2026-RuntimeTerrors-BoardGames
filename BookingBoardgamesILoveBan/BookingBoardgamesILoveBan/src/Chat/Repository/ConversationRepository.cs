@@ -48,7 +48,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// </summary>
         /// <param name="convId"></param>
         /// <returns></returns>
-        public Conversation GetConversation(int convId)
+        public Conversation GetConversationById(int convId)
         {
             return LoadConversationFromDB(convId);
         }
@@ -62,12 +62,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <exception cref="InvalidOperationException"></exception>
         public void HandleNewMessage(Message message)
         {
-            Debug.WriteLine(message.Id);
-            var conversation = GetConversation(message.ConversationId);
+            Debug.WriteLine(message.MessageId);
+            var conversation = GetConversationById(message.ConversationId);
             if (conversation != null)
             {
-                conversation.MessageList.Add(message);
-                message.Id = AddMessageToDB(message);
+                conversation.ConversationMessageList.Add(message);
+                message.MessageId = AddMessageToDB(message);
                 NotifySubscribersAboutMessage(message);
             }
             else
@@ -93,7 +93,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="message"></param>
         public void HandleMessageUpdate(Message message)
         {
-            if (message.Type == MessageType.CashAgreement)
+            if (message.TypeOfMessage == MessageType.MessageCashAgreement)
             {
                 UpdateCashPaymentFromMessageUpdate((CashAgreementMessage)message);
             }
@@ -116,14 +116,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
 
             Conversation newConversation = CreateConversationInDB(senderId, receiverId);
-            if (newConversation.MessageList.Count == 0)
+            if (newConversation.ConversationMessageList.Count == 0)
             {
                 // Create welcome system message
                 NotifySubscribersAboutNewConversation(newConversation);
-                HandleNewMessage(new SystemMessage(-1, newConversation.Id, DateTime.Now, "New conversation"));
+                HandleNewMessage(new SystemMessage(-1, newConversation.ConversationId, DateTime.Now, "New conversation"));
                 NotifySubscribersAboutNewConversation(newConversation);
             }
-            return newConversation.Id;
+            return newConversation.ConversationId;
         }
 
         /// <summary>
@@ -135,8 +135,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             try
             {
                 RentalRequestMessage message = (RentalRequestMessage)GetMessageById(messageId);
-                message.IsResolved = true;
-                message.Content += "\n\nThis request has been finalized!";
+                message.IsRequestResolved = true;
+                message.RequestContent += "\n\nThis request has been finalized!";
                 // message.Content = "This request has been finalized!";
                 HandleMessageUpdate(message);
             }
@@ -453,56 +453,56 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 var command = new SqlCommand(query, connection);
 
                 command.Parameters.AddWithValue("@conversationId", message.ConversationId);
-                command.Parameters.AddWithValue("@senderId", message.SenderId);
-                command.Parameters.AddWithValue("@receiverId", message.ReceiverId);
-                command.Parameters.AddWithValue("@sentAt", message.SentAt);
-                command.Parameters.AddWithValue("@messageType", MessageTypeExtensions.ToString(message.Type));
+                command.Parameters.AddWithValue("@senderId", message.MessageSenderId);
+                command.Parameters.AddWithValue("@receiverId", message.MessageReceiverId);
+                command.Parameters.AddWithValue("@sentAt", message.MessageSentTime);
+                command.Parameters.AddWithValue("@messageType", MessageTypeExtensions.MessageTypeToString(message.TypeOfMessage));
                 connection.Open();
                 int newId = (int)command.ExecuteScalar();
 
-                switch (message.Type)
+                switch (message.TypeOfMessage)
                 {
-                    case MessageType.Text:
+                    case MessageType.MessageText:
                         string textInsert = "INSERT INTO TextMessage (mid, content) VALUES (@mid, @content)";
                         var textCommand = new SqlCommand(textInsert, connection);
                         textCommand.Parameters.AddWithValue("@mid", newId);
-                        textCommand.Parameters.AddWithValue("@content", ((TextMessage)message).Content);
+                        textCommand.Parameters.AddWithValue("@content", ((TextMessage)message).TextMessageContent);
                         textCommand.ExecuteNonQuery();
                         break;
-                    case MessageType.Image:
+                    case MessageType.MessageImage:
                         string imageInsert = "INSERT INTO ImageMessage (mid, content) VALUES (@mid, @content)";
                         var imageCommand = new SqlCommand(imageInsert, connection);
                         imageCommand.Parameters.AddWithValue("@mid", newId);
-                        imageCommand.Parameters.AddWithValue("@content", ((ImageMessage)message).ImageUrl);
+                        imageCommand.Parameters.AddWithValue("@content", ((ImageMessage)message).MessageImageUrl);
                         imageCommand.ExecuteNonQuery();
                         break;
-                    case MessageType.CashAgreement:
+                    case MessageType.MessageCashAgreement:
                         string cashInsert = "INSERT INTO CashAgreementMessage (mid, content, sellerId, buyerId, acceptedBySeller, acceptedByBuyer, PaymentId) VALUES (@mid, @content, @sellerId, @buyerId, @acceptedBySeller, @acceptedByBuyer, @paymentId)";
                         var cashCommand = new SqlCommand(cashInsert, connection);
                         cashCommand.Parameters.AddWithValue("@mid", newId);
-                        cashCommand.Parameters.AddWithValue("@content", ((CashAgreementMessage)message).ContentAsString);
-                        cashCommand.Parameters.AddWithValue("@sellerId", ((CashAgreementMessage)message).SenderId); // Assuming sender is the seller
-                        cashCommand.Parameters.AddWithValue("@buyerId", ((CashAgreementMessage)message).ReceiverId); // Assuming receiver is the buyer
-                        cashCommand.Parameters.AddWithValue("@acceptedBySeller", ((CashAgreementMessage)message).IsAcceptedBySeller);
-                        cashCommand.Parameters.AddWithValue("@acceptedByBuyer", ((CashAgreementMessage)message).IsAcceptedByBuyer);
-                        cashCommand.Parameters.AddWithValue("@paymentId", ((CashAgreementMessage)message).PaymentId);
+                        cashCommand.Parameters.AddWithValue("@content", ((CashAgreementMessage)message).MessageContentAsString);
+                        cashCommand.Parameters.AddWithValue("@sellerId", ((CashAgreementMessage)message).MessageSenderId); // Assuming sender is the seller
+                        cashCommand.Parameters.AddWithValue("@buyerId", ((CashAgreementMessage)message).MessageReceiverId); // Assuming receiver is the buyer
+                        cashCommand.Parameters.AddWithValue("@acceptedBySeller", ((CashAgreementMessage)message).IsCashAgreementAcceptedBySeller);
+                        cashCommand.Parameters.AddWithValue("@acceptedByBuyer", ((CashAgreementMessage)message).IsCashAgreementAcceptedByBuyer);
+                        cashCommand.Parameters.AddWithValue("@paymentId", ((CashAgreementMessage)message).CashPaymentId);
                         cashCommand.ExecuteNonQuery();
                         break;
-                    case MessageType.RentalRequest:
+                    case MessageType.MessageRentalRequest:
                         string rentalInsert = "INSERT INTO RentalRequestMessage (mid, content, requestId, isResolved, isAccepted) VALUES (@mid, @content, @requestId, @isResolved, @isAccepted)";
                         var rentalCommand = new SqlCommand(rentalInsert, connection);
                         rentalCommand.Parameters.AddWithValue("@mid", newId);
-                        rentalCommand.Parameters.AddWithValue("@content", ((RentalRequestMessage)message).ContentAsString);
-                        rentalCommand.Parameters.AddWithValue("@requestId", ((RentalRequestMessage)message).RequestId);
-                        rentalCommand.Parameters.AddWithValue("@isResolved", ((RentalRequestMessage)message).IsResolved);
-                        rentalCommand.Parameters.AddWithValue("@isAccepted", ((RentalRequestMessage)message).IsAccepted);
+                        rentalCommand.Parameters.AddWithValue("@content", ((RentalRequestMessage)message).MessageContentAsString);
+                        rentalCommand.Parameters.AddWithValue("@requestId", ((RentalRequestMessage)message).RentalRequestId);
+                        rentalCommand.Parameters.AddWithValue("@isResolved", ((RentalRequestMessage)message).IsRequestResolved);
+                        rentalCommand.Parameters.AddWithValue("@isAccepted", ((RentalRequestMessage)message).IsRequestAccepted);
                         rentalCommand.ExecuteNonQuery();
                         break;
-                    case MessageType.System:
+                    case MessageType.MessageSystem:
                         string systemInsert = "INSERT INTO SystemMessage (mid, content) VALUES (@mid, @content)";
                         var systemCommand = new SqlCommand(systemInsert, connection);
                         systemCommand.Parameters.AddWithValue("@mid", newId);
-                        systemCommand.Parameters.AddWithValue("@content", ((SystemMessage)message).ContentAsString);
+                        systemCommand.Parameters.AddWithValue("@content", ((SystemMessage)message).MessageContentAsString);
                         systemCommand.ExecuteNonQuery();
                         break;
                 }
@@ -526,30 +526,30 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 SET senderId = @senderId, receiverId = @receiverId, sentAt = @sentAt, messageType = @messageType
                 WHERE mid = @mid;";
                 var command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@mid", message.Id);
-                command.Parameters.AddWithValue("@senderId", message.SenderId);
-                command.Parameters.AddWithValue("@receiverId", message.ReceiverId);
-                command.Parameters.AddWithValue("@sentAt", message.SentAt);
-                command.Parameters.AddWithValue("@messageType", MessageTypeExtensions.ToString(message.Type));
+                command.Parameters.AddWithValue("@mid", message.MessageId);
+                command.Parameters.AddWithValue("@senderId", message.MessageSenderId);
+                command.Parameters.AddWithValue("@receiverId", message.MessageReceiverId);
+                command.Parameters.AddWithValue("@sentAt", message.MessageSentTime);
+                command.Parameters.AddWithValue("@messageType", MessageTypeExtensions.MessageTypeToString(message.TypeOfMessage));
                 connection.Open();
                 command.ExecuteNonQuery();
-                if (message.Type == MessageType.CashAgreement)
+                if (message.TypeOfMessage == MessageType.MessageCashAgreement)
                 {
                     string cashUpdate = "UPDATE CashAgreementMessage SET acceptedBySeller = @acceptedBySeller, acceptedByBuyer = @acceptedByBuyer, PaymentId = @paymentId WHERE mid = @mid";
                     var cashCommand = new SqlCommand(cashUpdate, connection);
-                    cashCommand.Parameters.AddWithValue("@mid", message.Id);
-                    cashCommand.Parameters.AddWithValue("@acceptedBySeller", ((CashAgreementMessage)message).IsAcceptedBySeller);
-                    cashCommand.Parameters.AddWithValue("@acceptedByBuyer", ((CashAgreementMessage)message).IsAcceptedByBuyer);
-                    cashCommand.Parameters.AddWithValue("@paymentId", ((CashAgreementMessage)message).PaymentId);
+                    cashCommand.Parameters.AddWithValue("@mid", message.MessageId);
+                    cashCommand.Parameters.AddWithValue("@acceptedBySeller", ((CashAgreementMessage)message).IsCashAgreementAcceptedBySeller);
+                    cashCommand.Parameters.AddWithValue("@acceptedByBuyer", ((CashAgreementMessage)message).IsCashAgreementAcceptedByBuyer);
+                    cashCommand.Parameters.AddWithValue("@paymentId", ((CashAgreementMessage)message).CashPaymentId);
                     cashCommand.ExecuteNonQuery();
                 }
-                else if (message.Type == MessageType.RentalRequest)
+                else if (message.TypeOfMessage == MessageType.MessageRentalRequest)
                 {
                     string rentalUpdate = "UPDATE RentalRequestMessage SET isResolved = @isResolved, isAccepted = @isAccepted WHERE mid = @mid";
                     var rentalCommand = new SqlCommand(rentalUpdate, connection);
-                    rentalCommand.Parameters.AddWithValue("@mid", message.Id);
-                    rentalCommand.Parameters.AddWithValue("@isResolved", ((RentalRequestMessage)message).IsResolved);
-                    rentalCommand.Parameters.AddWithValue("@isAccepted", ((RentalRequestMessage)message).IsAccepted);
+                    rentalCommand.Parameters.AddWithValue("@mid", message.MessageId);
+                    rentalCommand.Parameters.AddWithValue("@isResolved", ((RentalRequestMessage)message).IsRequestResolved);
+                    rentalCommand.Parameters.AddWithValue("@isAccepted", ((RentalRequestMessage)message).IsRequestAccepted);
                     rentalCommand.ExecuteNonQuery();
                 }
                 connection.Close();
@@ -619,7 +619,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 var command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@lastRead", readReceipt.timeStamp);
                 command.Parameters.AddWithValue("@cid", readReceipt.conversationId);
-                command.Parameters.AddWithValue("@uid", readReceipt.readerId);
+                command.Parameters.AddWithValue("@uid", readReceipt.messageReaderId);
                 connection.Open();
                 command.ExecuteNonQuery();
                 connection.Close();
@@ -640,12 +640,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 CashAgreementMessage cashAgreementMessage = new CashAgreementMessage(
                     -1,
                     parentMessage.ConversationId,
-                    parentMessage.ReceiverId, // seller is the one who receives the rental request
-                    parentMessage.SenderId,   // buyer is the one who sent the rental request
+                    parentMessage.MessageReceiverId, // seller is the one who receives the rental request
+                    parentMessage.MessageSenderId,   // buyer is the one who sent the rental request
                     paymentId,
                     DateTime.Now,
                     // we might want different content?
-                    $"Cash agreement for request: {parentMessage.RequestId}");
+                    $"Cash agreement for request: {parentMessage.RentalRequestId}");
                 HandleNewMessage(cashAgreementMessage);
             }
             catch (Exception ex)
@@ -676,12 +676,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="message"></param>
         private void UpdateCashPaymentFromMessageUpdate(CashAgreementMessage message)
         {
-            int paymentId = message.PaymentId;
-            if (!App.CashPaymentService.IsDeliveryConfirmed(paymentId) && message.IsAcceptedByBuyer)
+            int paymentId = message.CashPaymentId;
+            if (!App.CashPaymentService.IsDeliveryConfirmed(paymentId) && message.IsCashAgreementAcceptedByBuyer)
             {
                 App.CashPaymentService.ConfirmDelivery(paymentId);
             }
-            if (!App.CashPaymentService.IsPaymentConfirmed(paymentId) && message.IsAcceptedBySeller)
+            if (!App.CashPaymentService.IsPaymentConfirmed(paymentId) && message.IsCashAgreementAcceptedBySeller)
             {
                 App.CashPaymentService.ConfirmPayment(paymentId);
             }
@@ -730,13 +730,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         public void NotifySubscribersAboutMessage(Message message)
         {
             int[] participants;
-            if (message.Type == MessageType.System)
+            if (message.TypeOfMessage == MessageType.MessageSystem)
             {// because system messages are "sent and received by user 0" we need to hit the db :/
                 participants = GetConversationParticipants(message.ConversationId);
             }
             else
             {
-                participants = new[] { message.SenderId, message.ReceiverId };
+                participants = new[] { message.MessageSenderId, message.MessageReceiverId };
             }
             foreach (var participant in participants)
             {
@@ -753,7 +753,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="message"></param>
         public void NotifySubscribersAboutMessageUpdate(Message message)
         {
-            var participants = new[] { message.SenderId, message.ReceiverId };
+            var participants = new[] { message.MessageSenderId, message.MessageReceiverId };
             foreach (var participant in participants)
             {
                 if (Subscribers.ContainsKey(participant))
@@ -770,7 +770,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="conversation"></param>
         public void NotifySubscribersAboutNewConversation(Conversation conversation)
         {
-            foreach (var participant in conversation.ParticipantIds)
+            foreach (var participant in conversation.ConversationParticipantIds)
             {
                 if (Subscribers.ContainsKey(participant))
                 {
@@ -786,7 +786,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="readReceipt"></param>
         public void NotifySubscribersAboutReadReceipt(ReadReceipt readReceipt)
         {
-            var participants = new[] { readReceipt.readerId, readReceipt.receiverId };
+            var participants = new[] { readReceipt.messageReaderId, readReceipt.messageReceiverId };
             foreach (var participant in participants)
             {
                 if (Subscribers.ContainsKey(participant))

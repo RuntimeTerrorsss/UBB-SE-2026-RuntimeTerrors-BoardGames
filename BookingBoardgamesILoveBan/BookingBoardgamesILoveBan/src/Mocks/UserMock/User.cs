@@ -1,10 +1,33 @@
 ﻿namespace BookingBoardgamesILoveBan.Src.Mocks.UserMock
 {
-	public class User
-	{
-		public int Id { get; set; }
+    public class User
+    {
+        public User(int id, string name, string country, string city, string street, string streetNumber)
+        {
+            Id = id;
+            Username = name;
+            Country = country;
+            Street = street;
+            StreetNumber = streetNumber;
+            City = city;
+        }
 
-		public string Username { get; set; } = string.Empty;
+        public User(int id, string username, string displayName, string country, string city, string street, string streetNumber, string avatarUrl, decimal balance)
+        {
+            Id = id;
+            Username = username;
+            DisplayName = displayName;
+            City = city;
+            Country = country;
+            Street = street;
+            StreetNumber = streetNumber;
+            AvatarUrl = avatarUrl;
+            Balance = balance;
+        }
+
+        public int Id { get; set; }
+
+        public string Username { get; set; } = string.Empty;
 
         public string DisplayName { get; set; } = string.Empty;
 
@@ -19,27 +42,5 @@
         public string AvatarUrl { get; set; } = string.Empty;
 
         public decimal Balance { get; set; } = 0;
-
-        public User(int id, string name, string country, string city, string street, string streetNumber)
-        {
-            this.Id = id;
-            this.Username = name;
-            this.Country = country;
-            this.Street = street;
-            this.StreetNumber = streetNumber;
-            this.City = city;
-        }
-        public User(int id, string username, string displayName, string country, string city, string street, string streetNumber, string avatarUrl, decimal balance)
-        {
-            this.Id = id;
-            this.Username = username;
-            this.DisplayName = displayName;
-            this.City = city;
-            this.Country = country;
-            this.Street = street;
-            this.StreetNumber = streetNumber;
-            this.AvatarUrl = avatarUrl;
-            this.Balance = balance;
-        }
-	}
+    }
 }

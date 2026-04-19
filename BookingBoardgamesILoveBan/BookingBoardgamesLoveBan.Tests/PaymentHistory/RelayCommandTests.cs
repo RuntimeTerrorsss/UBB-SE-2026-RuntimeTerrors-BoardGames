@@ -1,9 +1,9 @@
-﻿using BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 {
@@ -78,14 +78,12 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void RelayCommand_RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
         {
             var command = new RelayCommand<int>(_ => { });
-
             var exception = Record.Exception(() => command.RaiseCanExecuteChanged());
 
             Assert.Null(exception);
         }
 
         // ================================ RelayCommandNoParam ======================================
-
         [Fact]
         public void RelayCommandNoParam_NullExecute_ThrowsArgumentNullException()
         {
@@ -143,7 +141,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void RelayCommandNoParam_RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
         {
             var command = new RelayCommandNoParam(() => { });
-
             var exception = Record.Exception(() => command.RaiseCanExecuteChanged());
 
             Assert.Null(exception);

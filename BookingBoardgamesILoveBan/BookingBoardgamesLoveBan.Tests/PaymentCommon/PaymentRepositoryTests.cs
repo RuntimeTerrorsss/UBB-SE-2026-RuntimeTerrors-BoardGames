@@ -1,10 +1,10 @@
-﻿using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
-using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
 {
@@ -35,9 +35,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             };
         }
 
-
         // ================================ GetAll ======================================
-
         [Fact]
         public void GetAll_ReturnsNonNullList()
         {
@@ -45,9 +43,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             Assert.NotNull(result);
         }
 
-
         // ================================ AddPayment ======================================
-
         [Fact]
         public void AddPayment_ValidPayment_ReturnsPositiveId()
         {
@@ -62,9 +58,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             paymentRepository.DeletePayment(payment);
         }
 
-
         // ================================ GetById ======================================
-
         [Fact]
         public void GetById_NonExistingId_ReturnsNull()
         {
@@ -92,7 +86,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
         }
 
         // ================================ DeletePayment ======================================
-
         [Fact]
         public void DeletePayment_ExistingPayment_ReturnsTrue()
         {
@@ -117,7 +110,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
         }
 
         // ================================ UpdatePayment ======================================
-
         [Fact]
         public void UpdatePayment_ExistingPayment_ReturnsOldPayment()
         {
@@ -137,7 +129,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var oldPayment = paymentRepository.UpdatePayment(updatedPayment);
             System.Diagnostics.Debug.WriteLine(oldPayment);
             Assert.NotNull(oldPayment);
-            Assert.Equal("", oldPayment.FilePath); // not null because of AddPayment function
+            Assert.Equal(string.Empty, oldPayment.FilePath); // not null because of AddPayment function
 
             // clean
             paymentRepository.DeletePayment(payment);
