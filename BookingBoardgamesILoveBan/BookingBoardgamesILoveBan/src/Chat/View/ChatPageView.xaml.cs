@@ -58,5 +58,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             deliveryWindow.Activate();
             // this.Frame?.Navigate(typeof(DeliveryView), args);
         }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            currentUserId = (int)e.Parameter;
+
+            Initialize(currentUserId);
+        }
     }
 }
