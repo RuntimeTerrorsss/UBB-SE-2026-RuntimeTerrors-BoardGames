@@ -36,14 +36,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
 
             ConversationRepository.Subscribe(UserId, this);
         }
-        public ConversationService(IConversationRepository conversationRepo, IUserService userService, int userIdInput)
-        {
-            UserId = userIdInput;
-            ConversationRepository = conversationRepo;
-            this.userService = userService;
-
-            ConversationRepository.Subscribe(UserId, this);
-        }
 
         /// <summary>
         /// Fetches all conversations for the user and translates them to ConversationDTOs.

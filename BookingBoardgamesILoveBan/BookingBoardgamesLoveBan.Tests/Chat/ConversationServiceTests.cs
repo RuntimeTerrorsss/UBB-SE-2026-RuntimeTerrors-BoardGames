@@ -40,8 +40,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             _service = new ConversationService(
                 _repositoryMock.Object,
-                _userServiceMock.Object,
-                1
+                1,
+                _userServiceMock.Object
             );
         }
 
