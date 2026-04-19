@@ -25,7 +25,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
             {
                 ViewModel = new CashPaymentViewModel(
                     App.CashPaymentService,
-                    App.UserService,
+                    App.UserRepository,
                     App.RequestService,
                     App.GameRepository,
                     booking.RequestIdentifier,

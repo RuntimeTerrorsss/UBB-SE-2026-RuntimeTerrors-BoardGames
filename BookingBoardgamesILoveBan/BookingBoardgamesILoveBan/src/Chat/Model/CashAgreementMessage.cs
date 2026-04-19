@@ -9,19 +9,19 @@ namespace BookingBoardgamesILoveBan.Src.Model
 {
     public class CashAgreementMessage : Message
     {
-        public int PaymentId { get; set; }
-        public bool IsResolved { get; set; }
-        public bool IsAcceptedByBuyer { get; set; }
-        public bool IsAcceptedBySeller { get; set; }
+        public int CashPaymentId { get; set; }
+        public bool IsCashAgreementResolved { get; set; }
+        public bool IsCashAgreementAcceptedByBuyer { get; set; }
+        public bool IsCashAgreementAcceptedBySeller { get; set; }
 
         public CashAgreementMessage(int id, int conversationId, int sellerId, int buyerId, int paymentId, DateTime sentAt, string content,
             bool isResolved = false, bool isAcceptedByBuyer = false, bool isAcceptedBySeller = false)
-            : base(id, conversationId, sellerId, buyerId, sentAt, content, MessageType.CashAgreement)
+            : base(id, conversationId, sellerId, buyerId, sentAt, content, MessageType.MessageCashAgreement)
         {
-            IsResolved = isResolved;
-            IsAcceptedByBuyer = isAcceptedByBuyer;
-            IsAcceptedBySeller = isAcceptedBySeller;
-            PaymentId = paymentId;
+            IsCashAgreementResolved = isResolved;
+            IsCashAgreementAcceptedByBuyer = isAcceptedByBuyer;
+            IsCashAgreementAcceptedBySeller = isAcceptedBySeller;
+            CashPaymentId = paymentId;
         }
     }
 }

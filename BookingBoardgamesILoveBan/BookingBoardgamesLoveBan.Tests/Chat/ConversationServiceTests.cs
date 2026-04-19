@@ -39,8 +39,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             service = new ConversationService(
                 repoMock.Object,
-                userServiceMock.Object,
-                1);
+                1,
+                userServiceMock.Object);
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 receiverId: 2,
                 sentAt: DateTime.Now,
                 content: "hello",
-                type: MessageType.Text,
+                type: MessageType.MessageText,
                 imageUrl: string.Empty,
                 isResolved: false,
                 isAccepted: false,
@@ -156,8 +156,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             service.SendReadReceipt(convDto);
 
             Assert.NotNull(captured);
-            Assert.Equal(1, captured!.readerId);
-            Assert.Equal(2, captured.receiverId);
+            Assert.Equal(1, captured!.messageReaderId);
+            Assert.Equal(2, captured.messageReceiverId);
         }
 
         [Fact]
@@ -167,7 +167,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             var dto = service.MessageToMessageDTO(msg);
 
-            Assert.Equal(MessageType.Text, dto.type);
+            Assert.Equal(MessageType.MessageText, dto.type);
             Assert.Equal("hello", dto.content);
         }
 
@@ -190,7 +190,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 receiverId: 2,
                 sentAt: DateTime.Now,
                 content: "hello",
-                type: MessageType.Text,
+                type: MessageType.MessageText,
                 imageUrl: string.Empty,
                 isResolved: false,
                 isAccepted: false,
@@ -207,7 +207,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            service.MessageProcessed += (dto, name) => called = true;
+            service.ActionMessageProcessed += (dto, name) => called = true;
 
             service.OnMessageReceived(msg);
 
@@ -225,7 +225,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            service.ConversationProcessed += (dto, name) => called = true;
+            service.ActionConversationProcessed += (dto, name) => called = true;
 
             service.OnConversationReceived(conv);
 
@@ -239,7 +239,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            service.ReadReceiptProcessed += dto => called = true;
+            service.ActionReadReceiptProcessed += dto => called = true;
 
             service.OnReadReceiptReceived(rr);
 
@@ -253,7 +253,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            service.MessageUpdateProcessed += (dto, name) => called = true;
+            service.ActionMessageUpdateProcessed += (dto, name) => called = true;
 
             service.OnMessageUpdateReceived(msg);
 
@@ -321,7 +321,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             var dto = service.MessageToMessageDTO(msg);
 
-            Assert.Equal(MessageType.Image, dto.type);
+            Assert.Equal(MessageType.MessageImage, dto.type);
             Assert.Equal("img.png", dto.imageUrl);
         }
 
@@ -339,7 +339,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             var dto = service.MessageToMessageDTO(msg);
 
-            Assert.Equal(MessageType.CashAgreement, dto.type);
+            Assert.Equal(MessageType.MessageCashAgreement, dto.type);
             Assert.Equal(55, dto.paymentId);
         }
 
@@ -356,7 +356,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             var dto = service.MessageToMessageDTO(msg);
 
-            Assert.Equal(MessageType.RentalRequest, dto.type);
+            Assert.Equal(MessageType.MessageRentalRequest, dto.type);
             Assert.Equal(99, dto.requestId);
         }
 
@@ -367,7 +367,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             var dto = service.MessageToMessageDTO(msg);
 
-            Assert.Equal(MessageType.System, dto.type);
+            Assert.Equal(MessageType.MessageSystem, dto.type);
             Assert.Equal("system", dto.content);
         }
     }

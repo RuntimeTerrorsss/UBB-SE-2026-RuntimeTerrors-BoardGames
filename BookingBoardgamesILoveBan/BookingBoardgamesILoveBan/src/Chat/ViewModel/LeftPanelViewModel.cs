@@ -145,7 +145,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="senderName"></param>
         public void HandleIncomingMessage(MessageDTO message, string senderName)
         {
-            HandleIncomingMessage(message, senderName, App.UserService);
+            HandleIncomingMessage(message, senderName, App.UserRepository);
         }
 
         public void HandleIncomingMessage(MessageDTO message, string senderName, IUserRepository userService)
@@ -204,7 +204,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
                 conversation.Id,
                 displayName,
                 displayName.Substring(0, 1).ToUpper(),
-                conversation.MessageList.LastOrDefault()?.GetPreview() ?? string.Empty,
+                conversation.MessageList.LastOrDefault()?.GetChatMessagePreview() ?? string.Empty,
                 conversation.MessageList.LastOrDefault()?.sentAt ?? DateTime.MinValue,
                 unreadCountInput: conversation.UnreadCount[userId],
                 service.GetById(otherUser).AvatarUrl);

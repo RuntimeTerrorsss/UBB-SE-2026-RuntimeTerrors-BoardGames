@@ -24,7 +24,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
     /// </summary>
     public sealed partial class ChatPageView : Page
     {
-        private ChatPageViewModel vm;
+        private ChatPageViewModel chatPageViewModel;
         private int currentUserId;
 
         public ChatPageView()
@@ -33,37 +33,30 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         }
         public void Initialize(int currentUserId)
         {
-            vm = new ChatPageViewModel(currentUserId);
-            LeftPanel.ViewModel = vm.LeftPanel;
-            RightPanel.ChatViewModel = vm.Chat;
+            chatPageViewModel = new ChatPageViewModel(currentUserId);
+            LeftPanel.ViewModel = chatPageViewModel.LeftPanelModelView;
+            RightPanel.ChatViewModel = chatPageViewModel.ChatModelView;
             RightPanel.CurrentUserId = currentUserId;
-            RightPanel.ProceedToPaymentRequested += OnProceedToPayment;
+            RightPanel.ProceedToPaymentRequested += ProceedToPaymentClick;
 
-            vm.LeftPanel.PropertyChanged += (s, e) =>
+            chatPageViewModel.LeftPanelModelView.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
                 {
                     return;
                 }
-                RightPanel.IsConversationSelected = vm.LeftPanel.SelectedConversation != null;
+                RightPanel.IsConversationSelected = chatPageViewModel.LeftPanelModelView.SelectedConversation != null;
             };
         }
 
-        private void OnProceedToPayment(object sender, (int userId, int requestId, int messageId) args)
+        private void ProceedToPaymentClick(object sender, (int userId, int requestId, int messageId) args)
         {
             var deliveryWindow = new Window();
             var deliveryFrame = new Frame();
             deliveryWindow.Content = deliveryFrame;
-            deliveryFrame.Navigate(typeof(DeliveryView), (args.userId, args.requestId, args.messageId, vm.ConversationService, deliveryWindow));
+            deliveryFrame.Navigate(typeof(DeliveryView), (args.userId, args.requestId, args.messageId, chatPageViewModel.ConversationService, deliveryWindow));
             deliveryWindow.Activate();
             // this.Frame?.Navigate(typeof(DeliveryView), args);
-        }
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            currentUserId = (int)e.Parameter;
-
-            Initialize(currentUserId);
         }
     }
 }

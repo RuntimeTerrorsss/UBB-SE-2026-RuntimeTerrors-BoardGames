@@ -20,9 +20,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         public void UpdateMessage(MessageDTO message);
         public void SendMessage(MessageDTO message);
 
-        event Action<MessageDTO, string> MessageProcessed;
-        event Action<ConversationDTO, string> ConversationProcessed;
-        event Action<ReadReceiptDTO> ReadReceiptProcessed;
-        event Action<MessageDTO, string> MessageUpdateProcessed;
+        event Action<MessageDTO, string> ActionMessageProcessed;
+        event Action<ConversationDTO, string> ActionConversationProcessed;
+        event Action<ReadReceiptDTO> ActionReadReceiptProcessed;
+        event Action<MessageDTO, string> ActionMessageUpdateProcessed;
     }
 }

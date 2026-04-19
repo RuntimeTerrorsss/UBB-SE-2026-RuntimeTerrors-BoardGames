@@ -37,7 +37,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 receiverId: 2,
                 sentAt: DateTime.Now,
                 content: "hello",
-                type: MessageType.Text,
+                type: MessageType.MessageText,
                 imageUrl: null,
                 isAccepted: false,
                 isResolved: false,

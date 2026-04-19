@@ -35,12 +35,12 @@ public record MessageDTO(
     {
     }
 
-    public string GetPreview() => type switch
+    public string GetChatMessagePreview() => type switch
     {
-        MessageType.Text or MessageType.System => content.Length > 50 ? content[..50] : content,
-        MessageType.Image => "[Image]",
-        MessageType.RentalRequest => "[Rental Request]",
-        MessageType.CashAgreement => "[Cash Agreement]",
+        MessageType.MessageText or MessageType.MessageSystem => content.Length > 50 ? content[..50] : content,
+        MessageType.MessageImage => "[Image]",
+        MessageType.MessageRentalRequest => "[Rental Request]",
+        MessageType.MessageCashAgreement => "[Cash Agreement]",
         _ => "[Attachment]"
     };
 }

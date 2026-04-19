@@ -8,9 +8,9 @@ using BookingBoardgamesILoveBan.Src.Model;
 
 public class SystemMessage : Message
 {
-    public string Content { get; set; }
-    public SystemMessage(int id, int conversationId, DateTime sentAt, string content) : base(id, conversationId, 0, 0, sentAt, content, MessageType.System)
+    public string MessageContent { get; set; }
+    public SystemMessage(int id, int conversationId, DateTime sentAt, string content) : base(id, conversationId, 0, 0, sentAt, content, MessageType.MessageSystem)
     {
-        Content = content;
+        MessageContent = content;
     }
 }

@@ -4,9 +4,9 @@ using BookingBoardgamesILoveBan.Src.Model;
 
 public class ImageMessage : Message
 {
-    public string ImageUrl { get; set; }
-    public ImageMessage(int id, int conversationId, int senderId, int receiverId, DateTime sentAt, string imageUrl) : base(id, conversationId, senderId, receiverId, sentAt, "[Image]", MessageType.Image)
+    public string MessageImageUrl { get; set; }
+    public ImageMessage(int id, int conversationId, int senderId, int receiverId, DateTime sentAt, string imageUrl) : base(id, conversationId, senderId, receiverId, sentAt, "[Image]", MessageType.MessageImage)
     {
-        ImageUrl = imageUrl;
+        MessageImageUrl = imageUrl;
     }
 }

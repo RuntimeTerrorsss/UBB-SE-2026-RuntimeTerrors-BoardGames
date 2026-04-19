@@ -29,34 +29,34 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
     {
         public event EventHandler<(int userId, int requestId, int messageId)>? ProceedToPaymentRequested;
 
-        private ChatViewModel viewModel;
+        private ChatViewModel chatViewModel;
 
         // Holds the file name of a pasted image that is staged but not yet sent
         private string? pendingImageFileName = null;
 
         public ChatViewModel ViewModel
         {
-            get => viewModel;
+            get => chatViewModel;
             set
             {
                 // Unsubscribe from old viewmodel
-                if (viewModel != null)
+                if (chatViewModel != null)
                 {
-                    viewModel.Messages.CollectionChanged -= OnMessagesChanged;
-                    viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+                    chatViewModel.Messages.CollectionChanged -= OnMessagesChanged;
+                    chatViewModel.PropertyChanged -= OnViewModelPropertyChanged;
                 }
 
-                viewModel = value;
+                chatViewModel = value;
 
-                if (viewModel != null)
+                if (chatViewModel != null)
                 {
-                    viewModel.Messages.CollectionChanged += OnMessagesChanged;
-                    viewModel.PropertyChanged += OnViewModelPropertyChanged;
+                    chatViewModel.Messages.CollectionChanged += OnMessagesChanged;
+                    chatViewModel.PropertyChanged += OnViewModelPropertyChanged;
 
-                    BannerDisplayName.Text = viewModel.DisplayName;
+                    BannerDisplayName.Text = chatViewModel.DisplayName;
                     SetupAvatar();
 
-                    RebuildMessages();
+                    RefreshMessages();
                 }
             }
         }
@@ -68,10 +68,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             InitializeComponent();
         }
 
-        private void RebuildMessages()
+        private void RefreshMessages()
         {
             MessagesPanel.Children.Clear();
-            foreach (var vm in viewModel.Messages)
+            foreach (var vm in chatViewModel.Messages)
             {
                 var itemView = new MessageItemView();
                 itemView.SetMessage(vm, CurrentUserId);
@@ -108,7 +108,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             }
             else
             {
-                RebuildMessages(); // for Clear() and other operations
+                RefreshMessages(); // for Clear() and other operations
             }
         }
 
@@ -116,11 +116,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         {
             if (e.PropertyName == nameof(ChatViewModel.DisplayName))
             {
-                BannerDisplayName.Text = viewModel.DisplayName;
+                BannerDisplayName.Text = chatViewModel.DisplayName;
             }
             else if (e.PropertyName == nameof(ChatViewModel.InputText))
             {
-                MessageInput.Text = viewModel.InputText;
+                MessageInput.Text = chatViewModel.InputText;
             }
             else if (e.PropertyName == nameof(ChatViewModel.AvatarUrl))
             {
@@ -143,12 +143,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private void SetupAvatar()
         {
-            AvatarPicture.DisplayName = viewModel.DisplayName;
-            if (!string.IsNullOrEmpty(viewModel.AvatarUrl))
+            AvatarPicture.DisplayName = chatViewModel.DisplayName;
+            if (!string.IsNullOrEmpty(chatViewModel.AvatarUrl))
             {
                 try
                 {
-                    string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", viewModel.AvatarUrl);
+                    string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", chatViewModel.AvatarUrl);
                     AvatarPicture.ProfilePicture = new BitmapImage(new Uri(fullPath));
                 }
                 catch (Exception ex)

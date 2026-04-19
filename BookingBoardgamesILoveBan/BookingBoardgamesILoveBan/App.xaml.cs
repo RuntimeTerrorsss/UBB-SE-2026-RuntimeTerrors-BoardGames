@@ -30,16 +30,16 @@ namespace BookingBoardgamesILoveBan
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
         ///
-        public static Src.Mocks.UserMock.UserRepository UserService { get; private set; } = new UserRepository();
+        public static Src.Mocks.UserMock.UserRepository UserRepository { get; private set; } = new UserRepository();
 
         public static IGameRepository GameRepository { get; private set; } = new GameRepository();
         public static IRequestRepository RequestRepository { get; private set; } = new RequestRepository();
 
         public static IRequestService RequestService { get; private set; } = new RequestService(App.RequestRepository, App.GameRepository);
         public static PaymentRepository PaymentRepository { get; private set; } = new PaymentRepository();
-        public static ReceiptService ReceiptService { get; private set; } = new ReceiptService(App.UserService, App.RequestService, App.GameRepository);
+        public static ReceiptService ReceiptService { get; private set; } = new ReceiptService(App.UserRepository, App.RequestService, App.GameRepository);
         public static CardPaymentService CardPaymentService { get; private set; } = new CardPaymentService(App.PaymentRepository,
-            App.UserService, App.ReceiptService, App.RequestService);
+            App.UserRepository, App.ReceiptService, App.RequestService);
 
         public static MapService MapService { get; private set; } = new MapService();
 

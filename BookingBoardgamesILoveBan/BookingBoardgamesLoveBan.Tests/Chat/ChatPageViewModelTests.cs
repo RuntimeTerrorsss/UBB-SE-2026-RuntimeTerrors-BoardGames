@@ -59,8 +59,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var vm = CreateVM();
 
-            Assert.NotNull(vm.LeftPanel);
-            Assert.NotNull(vm.Chat);
+            Assert.NotNull(vm.LeftPanelModelView);
+            Assert.NotNull(vm.ChatModelView);
         }
 
         [Fact]
@@ -69,16 +69,16 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var service = CreateService();
             var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
 
-            var msg = new MessageDTO(1, "hello", MessageType.Text)
+            var msg = new MessageDTO(1, "hello", MessageType.MessageText)
             {
                 conversationId = 1,
                 receiverId = 2
             };
 
             bool called = false;
-            service.MessageProcessed += (m, u) => { called = true; };
+            service.ActionMessageProcessed += (m, u) => { called = true; };
 
-            vm.Chat.RaiseMessageSent(msg);
+            vm.ChatModelView.RaiseMessageSent(msg);
 
             Assert.True(true); // structural test (no crash)
         }
@@ -91,7 +91,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             var receipt = new ReadReceiptDTO(1, 2, 1, DateTime.Now);
 
-            service.ReadReceiptProcessed += null;
+            service.ActionReadReceiptProcessed += null;
 
             Assert.True(true);
         }
@@ -102,7 +102,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var service = CreateService();
             var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
 
-            vm.Chat.RaiseBookingRequestUpdate(5, 1, true, true);
+            vm.ChatModelView.RaiseBookingRequestUpdate(5, 1, true, true);
 
             Assert.True(true);
         }
@@ -113,7 +113,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var service = CreateService();
             var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
 
-            vm.Chat.RaiseCashAgreementAccept(5, 1);
+            vm.ChatModelView.RaiseCashAgreementAccept(5, 1);
 
             Assert.True(true);
         }
@@ -134,7 +134,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     { 2, DateTime.MinValue }
                 });
 
-            service.ConversationProcessed += null;
+            service.ActionConversationProcessed += null;
 
             Assert.True(true);
         }
@@ -145,14 +145,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var service = CreateService();
             var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
 
-            var msg = new MessageDTO(1, "hello", MessageType.Text)
+            var msg = new MessageDTO(1, "hello", MessageType.MessageText)
             {
                 conversationId = 1,
                 receiverId = 2,
                 isResolved = true
             };
 
-            service.MessageUpdateProcessed += null;
+            service.ActionMessageUpdateProcessed += null;
 
             Assert.True(true);
         }
