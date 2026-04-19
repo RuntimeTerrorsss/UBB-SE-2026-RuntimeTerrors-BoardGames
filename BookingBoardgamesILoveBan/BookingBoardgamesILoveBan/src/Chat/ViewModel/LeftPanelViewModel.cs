@@ -187,7 +187,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="userId"></param>
         public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId)
         {
-            HandleIncomingConversation(conversation, displayName, userId, App.UserService);
+            HandleIncomingConversation(conversation, displayName, userId, App.UserRepository);
         }
 
         public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserRepository service)
