@@ -18,11 +18,11 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 
         public CardPaymentService(
             PaymentRepository paymentRepository,
-            UserRepository userService,
+            IUserRepository userRepository,
             ReceiptService receiptService,
             IRequestService requestService) : base(paymentRepository, receiptService)
         {
-            this.userRepository = userService;
+            this.userRepository = userRepository;
             this.requestService = requestService;
         }
 
