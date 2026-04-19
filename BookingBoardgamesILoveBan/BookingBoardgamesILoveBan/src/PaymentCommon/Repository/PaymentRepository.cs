@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using Microsoft.Data.SqlClient;
@@ -7,23 +7,28 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
 {
 	public class PaymentRepository : IPaymentRepository
 	{
-        private static string connectionString = DatabaseBootstrap.GetAppConnection();
+        private const string SelectAllPaymentsQuery = "SELECT * FROM [Payment]";
+        private const string SelectPaymentByIdentifierQuery = "SELECT * FROM [Payment] WHERE tid = @PaymentId";
+        private const string DeletePaymentByIdentifierQuery = "DELETE FROM [Payment] WHERE tid = @PaymentId";
+        private const string PaymentIdParameterName = "@PaymentId";
+        private const string PaymentIdColumnName = "tid";
+        private static readonly string ConnectionString = DatabaseBootstrap.GetAppConnection();
 
-        public IReadOnlyList<Model.Payment> GetAll()
+        public IReadOnlyList<Payment> GetAll()
         {
-            var transactions = new List<Model.Payment>();
+            var payments = new List<Payment>();
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-                var cmd = new SqlCommand("SELECT * FROM [Payment]", connection);
+                var command = new SqlCommand(SelectAllPaymentsQuery, connection);
 
-                using var reader = cmd.ExecuteReader();
+                using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    transactions.Add(new Payment
+                    payments.Add(new Payment
                     {
-                        Tid = (int)reader["tid"],
+                        TransactionId = (int)reader[PaymentIdColumnName],
                         RequestId = (int)reader["RequestId"],
                         ClientId = (int)reader["ClientId"],
                         OwnerId = (int)reader["OwnerId"],
@@ -33,25 +38,25 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
                 }
             }
 
-            return transactions;
+            return payments;
         }
 
-        public virtual Model.Payment GetById(int tid)
+        public virtual Payment GetById(int paymentId)
         {
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
                 var getCommand = connection.CreateCommand();
-                getCommand.CommandText = "SELECT * FROM [Payment] WHERE tid = @Tid";
-                getCommand.Parameters.AddWithValue("@Tid", tid);
+                getCommand.CommandText = SelectPaymentByIdentifierQuery;
+                getCommand.Parameters.AddWithValue(PaymentIdParameterName, paymentId);
                 using var reader = getCommand.ExecuteReader();
                 if (!reader.Read())
                 {
                     return null;
                 }
-                return new Model.Payment
+                return new Payment
                 {
-                    Tid = (int)reader["tid"],
+                    TransactionId = (int)reader[PaymentIdColumnName],
                     RequestId = (int)reader["RequestId"],
                     ClientId = (int)reader["ClientId"],
                     OwnerId = (int)reader["OwnerId"],
@@ -68,9 +73,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
             }
         }
 
-        public virtual int AddPayment(Model.Payment transaction)
+        public virtual int AddPayment(Payment payment)
         {
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
                 var createCommand = connection.CreateCommand();
@@ -81,60 +86,60 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Repository
                 VALUES
                     (@RequestId, @ClientId, @OwnerId, @Amount,
                      @DateOfTransaction, @DateConfirmedBuyer, @DateConfirmedSeller, @PaymentMethod, @State, @FilePath)";
-                createCommand.Parameters.AddWithValue("@RequestId", transaction.RequestId);
-                createCommand.Parameters.AddWithValue("@ClientId", transaction.ClientId);
-                createCommand.Parameters.AddWithValue("@OwnerId", transaction.OwnerId);
-                createCommand.Parameters.AddWithValue("@Amount", transaction.Amount);
-                createCommand.Parameters.AddWithValue("@PaymentMethod", transaction.PaymentMethod);
-                createCommand.Parameters.AddWithValue("@State", transaction.State);
+                createCommand.Parameters.AddWithValue("@RequestId", payment.RequestId);
+                createCommand.Parameters.AddWithValue("@ClientId", payment.ClientId);
+                createCommand.Parameters.AddWithValue("@OwnerId", payment.OwnerId);
+                createCommand.Parameters.AddWithValue("@Amount", payment.Amount);
+                createCommand.Parameters.AddWithValue("@PaymentMethod", payment.PaymentMethod);
+                createCommand.Parameters.AddWithValue("@State", payment.State);
                 createCommand.Parameters.AddWithValue("@DateOfTransaction",
-                    (object?)transaction.DateOfTransaction ?? DateTime.Now);
+                    (object?)payment.DateOfTransaction ?? DateTime.Now);
 				createCommand.Parameters.AddWithValue("@DateConfirmedBuyer",
-                    (object?)transaction.DateConfirmedBuyer ?? DBNull.Value);
+                    (object?)payment.DateConfirmedBuyer ?? DBNull.Value);
 				createCommand.Parameters.AddWithValue("@DateConfirmedSeller",
-                    (object?)transaction.DateConfirmedSeller ?? DBNull.Value);
+                    (object?)payment.DateConfirmedSeller ?? DBNull.Value);
 				createCommand.Parameters.AddWithValue("@FilePath",
-                    (object?)transaction.FilePath ?? string.Empty);
+                    (object?)payment.FilePath ?? string.Empty);
                 var result = createCommand.ExecuteScalar();
                 return (int)result;
             }
         }
-        public bool DeletePayment(Model.Payment transaction)
+        public bool DeletePayment(Payment payment)
         {
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-                var cmd = new SqlCommand("DELETE FROM [Payment] WHERE tid = @Tid", connection);
-                cmd.Parameters.AddWithValue("@Tid", transaction.Tid);
-                int rowsAffected = cmd.ExecuteNonQuery();
+                var command = new SqlCommand(DeletePaymentByIdentifierQuery, connection);
+                command.Parameters.AddWithValue(PaymentIdParameterName, payment.TransactionId);
+                int rowsAffected = command.ExecuteNonQuery();
                 return rowsAffected > 0;
             }
         }
-        public virtual Model.Payment UpdatePayment(Model.Payment transaction)
+        public virtual Payment UpdatePayment(Payment payment)
         {
-            Model.Payment oldTransaction = GetById(transaction.Tid);
+            Payment previousPayment = GetById(payment.TransactionId);
 
             using (var connection = new SqlConnection(DatabaseBootstrap.GetAppConnection()))
             {
                 connection.Open();
-                var cmd = new SqlCommand(@"
+                var command = new SqlCommand(@"
                         UPDATE [Payment]
                         SET FilePath = @FilePath,  DateOfTransaction = @DateOfTransaction, DateConfirmedBuyer=@DateConfirmedBuyer, DateConfirmedSeller=@DateConfirmedSeller
-                        WHERE tid = @Tid", connection);
+                        WHERE tid = @PaymentId", connection);
 
-                cmd.Parameters.AddWithValue("@FilePath",
-                    (object?)transaction.FilePath ?? string.Empty);
-                cmd.Parameters.AddWithValue("@DateOfTransaction",
-                    (object?)transaction.DateOfTransaction ?? DateTime.Now);
-                cmd.Parameters.AddWithValue("@DateConfirmedBuyer",
-                    (object?)transaction.DateConfirmedBuyer ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@DateConfirmedSeller",
-                    (object?)transaction.DateConfirmedSeller ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Tid", transaction.Tid);
-                cmd.ExecuteNonQuery();
+                command.Parameters.AddWithValue("@FilePath",
+                    (object?)payment.FilePath ?? string.Empty);
+                command.Parameters.AddWithValue("@DateOfTransaction",
+                    (object?)payment.DateOfTransaction ?? DateTime.Now);
+                command.Parameters.AddWithValue("@DateConfirmedBuyer",
+                    (object?)payment.DateConfirmedBuyer ?? DBNull.Value);
+                command.Parameters.AddWithValue("@DateConfirmedSeller",
+                    (object?)payment.DateConfirmedSeller ?? DBNull.Value);
+                command.Parameters.AddWithValue(PaymentIdParameterName, payment.TransactionId);
+                command.ExecuteNonQuery();
             }
 
-            return oldTransaction;
+            return previousPayment;
         }
     }
 }

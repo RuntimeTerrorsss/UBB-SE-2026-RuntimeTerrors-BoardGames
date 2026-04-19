@@ -10,7 +10,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
     public sealed partial class CashPaymentPage : Page
     {
         public CashPaymentViewModel ViewModel { get; set; }
-        private Window currentWindow;
+        private Window currentApplicationWindow;
 
         public CashPaymentPage()
         {
@@ -34,12 +34,12 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
                     booking.ConversationService);
 
                 DataContext = ViewModel;
-                currentWindow = booking.CurrentWindow;
+                currentApplicationWindow = booking.CurrentWindow;
             }
         }
         private void NavigateToChatButton_Click(object sender, RoutedEventArgs e)
         {
-            currentWindow.Close();
+            currentApplicationWindow.Close();
             /*
             if (Frame.CanGoBack)
             {
