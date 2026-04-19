@@ -292,7 +292,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             var messageDTOs = conversation.ConversationMessageList.Select(mess => MessageToMessageDTO(mess)).ToList();
             return new ConversationDTO(
-                convId: conversation.ConversationId,
+                conversationId: conversation.ConversationId,
                 participants: conversation.ConversationParticipantIds,
                 messages: messageDTOs,
                 lastRead: conversation.LastMessageReadTime);

@@ -49,10 +49,10 @@ public class ChatPageViewModel
         foreach (var conversation in conversations)
         {
             LeftPanelModelView.HandleIncomingConversation(
-                convo,
-                conversationService.GetOtherUserNameByConversationDTO(convo),
+                conversation,
+                conversationService.GetOtherUserNameByConversationDTO(conversation),
                 currentUserId,
-                userService);
+                uService);
         }
 
         conversationService.ActionMessageProcessed += OnMessageReceived;
@@ -87,7 +87,7 @@ public class ChatPageViewModel
         int selectedConversationOtherUserUnreadCount = convo.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
         ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, convo.MessageList, selectedConversationOtherUserUnreadCount);
 
-        SendReadReceipt(conversation);
+        SendReadReceipt(convo);
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public class ChatPageViewModel
     {
         var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == message.conversationId);
 
-        convo?.AddMessageToListDTO(message);
+        conversation?.AddMessageToListDTO(message);
 
         LeftPanelModelView.HandleIncomingMessage(message, senderName);
         ChatModelView.HandleIncomingMessage(message);
@@ -194,8 +194,8 @@ public class ChatPageViewModel
     /// <param name="otherUsername"></param>
     private void OnConversationReceived(ConversationDTO conversation, string otherUsername)
     {
-        conversations.Add(convo);
-        LeftPanelModelView.HandleIncomingConversation(convo, otherUsername, currentUserId);
+        conversations.Add(conversation);
+        LeftPanelModelView.HandleIncomingConversation(conversation, otherUsername, currentUserId);
     }
 
     /// <summary>
@@ -229,10 +229,10 @@ public class ChatPageViewModel
         {
             if (conversation.MessageList[i].id == updatedMessage.id)
             {
-                convo.MessageList[i] = updatedMessage;
+                conversation.MessageList[i] = updatedMessage;
                 if (ChatModelView.ConversationId == updatedMessage.conversationId)
                 {
-                    ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, convo.MessageList, 0); // unreadcount is 0 cus like think about it how could they have possibly sent an update if they handnt read the convo!
+                    ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, 0); // unreadcount is 0 cus like think about it how could they have possibly sent an update if they handnt read the convo!
                 }
                 break;
             }

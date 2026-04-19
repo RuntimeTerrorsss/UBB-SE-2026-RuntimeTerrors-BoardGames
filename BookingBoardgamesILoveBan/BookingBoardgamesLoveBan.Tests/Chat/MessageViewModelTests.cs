@@ -91,7 +91,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             viewModel.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(vm.IsResolved))
+                if (e.PropertyName == nameof(viewModel.IsResolved))
                 {
                     raised = true;
                 }
@@ -122,7 +122,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             viewModel.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(vm.BothAccepted))
+                if (e.PropertyName == nameof(viewModel.BothAccepted))
                 {
                     raised = true;
                 }

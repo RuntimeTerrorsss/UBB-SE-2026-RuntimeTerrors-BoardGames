@@ -74,7 +74,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             foreach (var vm in chatViewModel.Messages)
             {
                 var itemView = new MessageItemView();
-                itemView.SetMessage(viewModel, CurrentUserId);
+                itemView.SetMessage(vm, CurrentUserId);
 
                 itemView.AcceptRequested += OnAcceptRequested;
                 itemView.DeclineRequested += OnDeclineRequested;
