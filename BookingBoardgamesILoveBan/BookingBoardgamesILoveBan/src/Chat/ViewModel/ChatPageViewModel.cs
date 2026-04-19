@@ -8,7 +8,7 @@ using BookingBoardgamesILoveBan.Src.Chat.Service;
 using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 
-namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
+namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 
 public class ChatPageViewModel
 {
