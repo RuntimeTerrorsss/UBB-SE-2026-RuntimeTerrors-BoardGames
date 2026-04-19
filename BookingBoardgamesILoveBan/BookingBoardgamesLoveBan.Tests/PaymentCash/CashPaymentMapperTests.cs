@@ -1,5 +1,6 @@
 using BookingBoardgamesILoveBan.Src.PaymentCash.Mapper;
 using BookingBoardgamesILoveBan.Src.PaymentCash.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentCash
@@ -7,34 +8,63 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
     public class CashPaymentMapperTests
     {
         [Fact]
-        public void ToEntity_MapsAllFields_AndUsesCashMethod()
+        public void ToEntity_MapsDataTransferObjectToPaymentRowWithCashMethod()
         {
-            var mapper = new CashPaymentMapper();
-            var dto = new CashPaymentDto(7, 11, 13, 17, 19.5m);
+            var cashPaymentMapper = new CashPaymentMapper();
+            var cashPaymentDataTransferObject = new CashPaymentDto(7, 11, 13, 17, 19.5m);
 
-            var entity = mapper.ToEntity(dto);
+            var paymentEntity = cashPaymentMapper.ToEntity(cashPaymentDataTransferObject);
 
-            Assert.Equal(7, entity.Tid);
-            Assert.Equal(11, entity.RequestId);
-            Assert.Equal(13, entity.ClientId);
-            Assert.Equal(17, entity.OwnerId);
-            Assert.Equal(19.5m, entity.Amount);
-            Assert.Equal("CASH", entity.PaymentMethod);
+            var expected = new
+            {
+                Tid = 7,
+                RequestId = 11,
+                ClientId = 13,
+                OwnerId = 17,
+                Amount = 19.5m,
+                PaymentMethod = "CASH",
+                State = PaymentConstrants.StatePending,
+            };
+            var actual = new
+            {
+                paymentEntity.Tid,
+                paymentEntity.RequestId,
+                paymentEntity.ClientId,
+                paymentEntity.OwnerId,
+                paymentEntity.Amount,
+                paymentEntity.PaymentMethod,
+                paymentEntity.State,
+            };
+
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void ToDto_MapsAllFields()
+        public void ToDataTransferObject_MapsPaymentToDataTransferObject()
         {
-            var mapper = new CashPaymentMapper();
-            var payment = new Payment(3, 5, 7, 9, 12.34m, "CASH");
+            var cashPaymentMapper = new CashPaymentMapper();
+            var paymentEntity = new Payment(3, 5, 7, 9, 12.34m, "CASH");
 
-            var dto = mapper.ToDto(payment);
+            var cashPaymentDataTransferObject = cashPaymentMapper.ToDto(paymentEntity);
 
-            Assert.Equal(3, dto.Id);
-            Assert.Equal(5, dto.Requestd);
-            Assert.Equal(7, dto.ClientId);
-            Assert.Equal(9, dto.OwnerId);
-            Assert.Equal(12.34m, dto.Amount);
+            var expected = new
+            {
+                Id = 3,
+                Requestd = 5,
+                ClientId = 7,
+                OwnerId = 9,
+                Amount = 12.34m,
+            };
+            var actual = new
+            {
+                cashPaymentDataTransferObject.Id,
+                cashPaymentDataTransferObject.Requestd,
+                cashPaymentDataTransferObject.ClientId,
+                cashPaymentDataTransferObject.OwnerId,
+                cashPaymentDataTransferObject.Amount,
+            };
+
+            Assert.Equal(expected, actual);
         }
     }
 }

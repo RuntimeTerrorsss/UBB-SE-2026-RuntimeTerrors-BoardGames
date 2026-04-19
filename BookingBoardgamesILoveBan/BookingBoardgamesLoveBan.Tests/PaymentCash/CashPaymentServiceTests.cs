@@ -5,154 +5,334 @@ using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
+using Moq;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentCash
 {
     public class CashPaymentServiceTests
     {
         [Fact]
-        public void AddCashPayment_MapsEntity_SetsCompletedState_AndReturnsRepositoryId()
+        public void AddCashPayment_ReturnsIdentifierFromPaymentRepository()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            mapper.Setup(cashPaymentMapper => cashPaymentMapper.ToEntity(It.IsAny<CashPaymentDto>()))
+                .Returns((CashPaymentDto _) => new Payment(1, 2, 3, 4, 10m, "CASH"));
+            repository.Setup(paymentRepository => paymentRepository.AddPayment(It.IsAny<Payment>())).Returns(42);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
             var dto = new CashPaymentDto(1, 2, 3, 4, 15m);
 
             var paymentId = service.AddCashPayment(dto);
 
-            Assert.Equal(99, paymentId);
-            Assert.Same(dto, mapper.LastToEntityInput);
-            Assert.NotNull(repository.LastAddedPayment);
-            Assert.Equal(PaymentConstrants.StateCompleted, repository.LastAddedPayment!.State);
+            Assert.Equal(42, paymentId);
         }
 
         [Fact]
-        public void GetCashPayment_UsesRepositoryAndMapper()
+        public void AddCashPayment_PassesSuppliedDtoToMapper()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(10, 11, 12, 13, 14m, "CASH");
-            repository.ById[10] = payment;
-            var mappedDto = new CashPaymentDto(20, 21, 22, 23, 24m);
-            mapper.ToDtoResult = mappedDto;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var dto = new CashPaymentDto(1, 2, 3, 4, 15m);
+            mapper.Setup(cashPaymentMapper => cashPaymentMapper.ToEntity(dto))
+                .Returns(() => new Payment(1, 2, 3, 4, 15m, "CASH"));
+            repository.Setup(paymentRepository => paymentRepository.AddPayment(It.IsAny<Payment>())).Returns(1);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.AddCashPayment(dto);
+
+            mapper.Verify(cashPaymentMapper => cashPaymentMapper.ToEntity(dto), Times.Once);
+        }
+
+        [Fact]
+        public void AddCashPayment_PersistsMappedPaymentWithCompletedState()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var mapped = new Payment(9, 8, 7, 6, 20m, "CASH");
+            mapper.Setup(cashPaymentMapper => cashPaymentMapper.ToEntity(It.IsAny<CashPaymentDto>())).Returns(mapped);
+            Payment? added = null;
+            repository.Setup(paymentRepository => paymentRepository.AddPayment(It.IsAny<Payment>()))
+                .Callback<Payment>(paymentEntity => added = paymentEntity)
+                .Returns(1);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+            var dto = new CashPaymentDto(1, 2, 3, 4, 15m);
+
+            service.AddCashPayment(dto);
+
+            Assert.Same(mapped, added);
+            var expected = new
+            {
+                Tid = 9,
+                RequestId = 8,
+                ClientId = 7,
+                OwnerId = 6,
+                Amount = 20m,
+                PaymentMethod = "CASH",
+                State = PaymentConstrants.StateCompleted,
+            };
+            var actual = new
+            {
+                added!.Tid,
+                added.RequestId,
+                added.ClientId,
+                added.OwnerId,
+                added.Amount,
+                added.PaymentMethod,
+                added.State,
+            };
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void GetCashPayment_ReturnsDtoProducedByMapperForStoredPayment()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var stored = new Payment(10, 11, 12, 13, 14m, "CASH");
+            var expectedDto = new CashPaymentDto(20, 21, 22, 23, 24m);
+            repository.Setup(paymentRepository => paymentRepository.GetById(10)).Returns(stored);
+            mapper.Setup(cashPaymentMapper => cashPaymentMapper.ToDto(stored)).Returns(expectedDto);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             var result = service.GetCashPayment(10);
 
-            Assert.Same(mappedDto, result);
-            Assert.Equal(10, repository.LastGetByIdArgument);
-            Assert.Same(payment, mapper.LastToDtoInput);
+            Assert.Same(expectedDto, result);
         }
 
         [Fact]
-        public void ConfirmDelivery_WhenNotFullyConfirmed_DoesNotGenerateReceipt_AndUpdatesPayment()
+        public void GetCashPayment_LoadsPaymentByIdentifierFromRepository()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(1, 5, 2, 3, 10m, "CASH");
-            payment.DateConfirmedSeller = null;
-            payment.DateConfirmedBuyer = null;
-            repository.ById[1] = payment;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var stored = new Payment(10, 11, 12, 13, 14m, "CASH");
+            repository.Setup(paymentRepository => paymentRepository.GetById(55)).Returns(stored);
+            mapper.Setup(cashPaymentMapper => cashPaymentMapper.ToDto(stored)).Returns(new CashPaymentDto(1, 1, 1, 1, 1m));
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.GetCashPayment(55);
+
+            repository.Verify(paymentRepository => paymentRepository.GetById(55), Times.Once);
+        }
+
+        [Fact]
+        public void ConfirmDelivery_RecordsBuyerConfirmationOnPayment()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(1, 5, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedSeller = null,
+                DateConfirmedBuyer = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             service.ConfirmDelivery(1);
 
-            Assert.NotNull(payment.DateConfirmedBuyer);
-            Assert.Null(payment.DateConfirmedSeller);
-            Assert.Equal(0, receiptService.GenerateCalls);
-            Assert.Same(payment, repository.LastUpdatedPayment);
+            var expected = new
+            {
+                BuyerConfirmed = true,
+                SellerConfirmed = false,
+            };
+            var actual = new
+            {
+                BuyerConfirmed = payment.DateConfirmedBuyer != null,
+                SellerConfirmed = payment.DateConfirmedSeller != null,
+            };
+
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void ConfirmDelivery_WhenFullyConfirmed_GeneratesReceipt_AndUpdatesPayment()
+        public void ConfirmDelivery_WhenOnlyBuyerHasConfirmed_DoesNotGenerateReceipt()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(2, 42, 2, 3, 10m, "CASH");
-            payment.DateConfirmedSeller = DateTime.Now.AddMinutes(-1);
-            payment.DateConfirmedBuyer = null;
-            repository.ById[2] = payment;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(1, 5, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedSeller = null,
+                DateConfirmedBuyer = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.ConfirmDelivery(1);
+
+            receiptService.Verify(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void ConfirmDelivery_WhenBothPartiesAlreadyConfirmed_GeneratesReceiptForRentalRequest()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(2, 42, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedSeller = DateTime.Now.AddMinutes(-1),
+                DateConfirmedBuyer = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(2)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             service.ConfirmDelivery(2);
 
-            Assert.Equal(1, receiptService.GenerateCalls);
-            Assert.Equal(42, receiptService.LastGenerateRequestId);
-            Assert.Same(payment, repository.LastUpdatedPayment);
+            receiptService.Verify(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(42), Times.Once);
         }
 
         [Fact]
-        public void ConfirmPayment_WhenNotFullyConfirmed_DoesNotGenerateReceipt_AndUpdatesPayment()
+        public void ConfirmDelivery_PersistsUpdatedPayment()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(3, 8, 2, 3, 10m, "CASH");
-            payment.DateConfirmedBuyer = null;
-            payment.DateConfirmedSeller = null;
-            repository.ById[3] = payment;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(1, 5, 2, 3, 10m, "CASH");
+            repository.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.ConfirmDelivery(1);
+
+            repository.Verify(paymentRepository => paymentRepository.UpdatePayment(payment), Times.Once);
+        }
+
+        [Fact]
+        public void ConfirmPayment_RecordsSellerConfirmationOnPayment()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(3, 8, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedBuyer = null,
+                DateConfirmedSeller = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             service.ConfirmPayment(3);
 
-            Assert.NotNull(payment.DateConfirmedSeller);
-            Assert.Null(payment.DateConfirmedBuyer);
-            Assert.Equal(0, receiptService.GenerateCalls);
-            Assert.Same(payment, repository.LastUpdatedPayment);
+            var expected = new
+            {
+                BuyerConfirmed = false,
+                SellerConfirmed = true,
+            };
+            var actual = new
+            {
+                BuyerConfirmed = payment.DateConfirmedBuyer != null,
+                SellerConfirmed = payment.DateConfirmedSeller != null,
+            };
+
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void ConfirmPayment_WhenFullyConfirmed_GeneratesReceipt_AndUpdatesPayment()
+        public void ConfirmPayment_WhenOnlySellerHasConfirmed_DoesNotGenerateReceipt()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(4, 71, 2, 3, 10m, "CASH");
-            payment.DateConfirmedBuyer = DateTime.Now.AddMinutes(-1);
-            payment.DateConfirmedSeller = null;
-            repository.ById[4] = payment;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(3, 8, 2, 3, 10m, "CASH");
+            repository.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.ConfirmPayment(3);
+
+            receiptService.Verify(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void ConfirmPayment_WhenBothPartiesAlreadyConfirmed_GeneratesReceiptForRentalRequest()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(4, 71, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedBuyer = DateTime.Now.AddMinutes(-1),
+                DateConfirmedSeller = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(4)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             service.ConfirmPayment(4);
 
-            Assert.Equal(1, receiptService.GenerateCalls);
-            Assert.Equal(71, receiptService.LastGenerateRequestId);
-            Assert.Same(payment, repository.LastUpdatedPayment);
+            receiptService.Verify(receiptServiceMock => receiptServiceMock.GenerateReceiptRelativePath(71), Times.Once);
         }
 
         [Fact]
-        public void IsAllConfirmed_WhenBothDatesSet_ReturnsTrue_AndSetsConfirmedState()
+        public void ConfirmPayment_PersistsUpdatedPayment()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(5, 9, 2, 3, 10m, "CASH");
-            payment.DateConfirmedBuyer = DateTime.Now;
-            payment.DateConfirmedSeller = DateTime.Now;
-            repository.ById[5] = payment;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(3, 8, 2, 3, 10m, "CASH");
+            repository.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.ConfirmPayment(3);
+
+            repository.Verify(paymentRepository => paymentRepository.UpdatePayment(payment), Times.Once);
+        }
+
+        [Fact]
+        public void IsAllConfirmed_WhenBothConfirmationDatesAreSet_ReturnsTrue()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(5, 9, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedBuyer = DateTime.Now,
+                DateConfirmedSeller = DateTime.Now,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(5)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             var result = service.IsAllConfirmed(5);
 
             Assert.True(result);
+        }
+
+        [Fact]
+        public void IsAllConfirmed_WhenBothConfirmationDatesAreSet_SetsStateToConfirmed()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(5, 9, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedBuyer = DateTime.Now,
+                DateConfirmedSeller = DateTime.Now,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(5)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
+            service.IsAllConfirmed(5);
+
             Assert.Equal(PaymentConstrants.StateConfirmed, payment.State);
         }
 
         [Fact]
-        public void IsAllConfirmed_WhenOneDateMissing_ReturnsFalse()
+        public void IsAllConfirmed_WhenSellerConfirmationIsMissing_ReturnsFalse()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-            var payment = new Payment(6, 9, 2, 3, 10m, "CASH");
-            payment.DateConfirmedBuyer = DateTime.Now;
-            payment.DateConfirmedSeller = null;
-            repository.ById[6] = payment;
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(6, 9, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedBuyer = DateTime.Now,
+                DateConfirmedSeller = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(6)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             var result = service.IsAllConfirmed(6);
 
@@ -160,125 +340,67 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
         }
 
         [Fact]
-        public void IsDeliveryConfirmed_ReturnsTrueWhenBuyerDateExists_ElseFalse()
+        public void IsDeliveryConfirmed_WhenBuyerConfirmationExists_ReturnsTrue()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-
-            var confirmed = new Payment(7, 9, 2, 3, 10m, "CASH")
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(7, 9, 2, 3, 10m, "CASH")
             {
-                DateConfirmedBuyer = DateTime.Now
+                DateConfirmedBuyer = DateTime.Now,
             };
-            var notConfirmed = new Payment(8, 9, 2, 3, 10m, "CASH")
-            {
-                DateConfirmedBuyer = null
-            };
-            repository.ById[7] = confirmed;
-            repository.ById[8] = notConfirmed;
+            repository.Setup(paymentRepository => paymentRepository.GetById(7)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             Assert.True(service.IsDeliveryConfirmed(7));
+        }
+
+        [Fact]
+        public void IsDeliveryConfirmed_WhenBuyerConfirmationIsMissing_ReturnsFalse()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(8, 9, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedBuyer = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(8)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
             Assert.False(service.IsDeliveryConfirmed(8));
         }
 
         [Fact]
-        public void IsPaymentConfirmed_ReturnsTrueWhenSellerDateExists_ElseFalse()
+        public void IsPaymentConfirmed_WhenSellerConfirmationExists_ReturnsTrue()
         {
-            var repository = new FakePaymentRepository();
-            var mapper = new FakeCashPaymentMapper();
-            var receiptService = new FakeReceiptService();
-            var service = new CashPaymentService(repository, mapper, receiptService);
-
-            var confirmed = new Payment(9, 9, 2, 3, 10m, "CASH")
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(9, 9, 2, 3, 10m, "CASH")
             {
-                DateConfirmedSeller = DateTime.Now
+                DateConfirmedSeller = DateTime.Now,
             };
-            var notConfirmed = new Payment(10, 9, 2, 3, 10m, "CASH")
-            {
-                DateConfirmedSeller = null
-            };
-            repository.ById[9] = confirmed;
-            repository.ById[10] = notConfirmed;
+            repository.Setup(paymentRepository => paymentRepository.GetById(9)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
 
             Assert.True(service.IsPaymentConfirmed(9));
+        }
+
+        [Fact]
+        public void IsPaymentConfirmed_WhenSellerConfirmationIsMissing_ReturnsFalse()
+        {
+            var repository = new Mock<IPaymentRepository>();
+            var mapper = new Mock<ICashPaymentMapper>();
+            var receiptService = new Mock<IReceiptService>();
+            var payment = new Payment(10, 9, 2, 3, 10m, "CASH")
+            {
+                DateConfirmedSeller = null,
+            };
+            repository.Setup(paymentRepository => paymentRepository.GetById(10)).Returns(payment);
+            var service = new CashPaymentService(repository.Object, mapper.Object, receiptService.Object);
+
             Assert.False(service.IsPaymentConfirmed(10));
-        }
-
-        private sealed class FakePaymentRepository : IPaymentRepository
-        {
-            public Dictionary<int, Payment> ById { get; } = new ();
-            public Payment? LastAddedPayment { get; private set; }
-            public Payment? LastUpdatedPayment { get; private set; }
-            public int LastGetByIdArgument { get; private set; }
-
-            public IReadOnlyList<Payment> GetAll()
-            {
-                return ById.Values.ToList();
-            }
-
-            public Payment GetById(int tid)
-            {
-                LastGetByIdArgument = tid;
-                return ById[tid];
-            }
-
-            public int AddPayment(Payment transaction)
-            {
-                LastAddedPayment = transaction;
-                ById[transaction.Tid] = transaction;
-                return 99;
-            }
-
-            public bool DeletePayment(Payment transaction)
-            {
-                return ById.Remove(transaction.Tid);
-            }
-
-            public Payment UpdatePayment(Payment transaction)
-            {
-                LastUpdatedPayment = transaction;
-                ById[transaction.Tid] = transaction;
-                return transaction;
-            }
-        }
-
-        private sealed class FakeCashPaymentMapper : ICashPaymentMapper
-        {
-            public CashPaymentDto? LastToEntityInput { get; private set; }
-            public Payment? LastToDtoInput { get; private set; }
-            public CashPaymentDto? ToDtoResult { get; set; }
-
-            public Payment ToEntity(CashPaymentDto paymentDto)
-            {
-                LastToEntityInput = paymentDto;
-                return new Payment(
-                    paymentDto.Id, paymentDto.Requestd, paymentDto.ClientId, paymentDto.OwnerId, paymentDto.Amount, "CASH");
-            }
-
-            public CashPaymentDto ToDto(Payment payment)
-            {
-                LastToDtoInput = payment;
-                return ToDtoResult ?? new CashPaymentDto(payment.Tid, payment.RequestId, payment.ClientId, payment.OwnerId, payment.Amount);
-            }
-        }
-
-        private class FakeReceiptService : IReceiptService
-        {
-            public int GenerateCalls { get; private set; }
-            public int LastGenerateRequestId { get; private set; }
-
-            public string GenerateReceiptRelativePath(int rentalId)
-            {
-                GenerateCalls++;
-                LastGenerateRequestId = rentalId;
-                return $"receipt-{rentalId}.pdf";
-            }
-
-            public string GetReceiptDocument(Payment payment)
-            {
-                return payment.FilePath ?? string.Empty;
-            }
         }
     }
 }

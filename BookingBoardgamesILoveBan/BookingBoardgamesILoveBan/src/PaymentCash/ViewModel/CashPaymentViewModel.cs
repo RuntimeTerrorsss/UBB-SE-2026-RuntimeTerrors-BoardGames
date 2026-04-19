@@ -1,4 +1,3 @@
-﻿using System.ComponentModel;
 using BookingBoardgamesILoveBan.Src.Chat.Service;
 using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
@@ -10,9 +9,12 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 {
 	public class CashPaymentViewModel
 	{
-		private ICashPaymentService service;
-		private readonly IUserRepository userService;
-		private readonly IRequestService requestService;
+        private const int NewPaymentPlaceholderId = -1;
+        private const string DateRangeSeparator = " to ";
+
+		private readonly ICashPaymentService cashPaymentService;
+		private readonly IUserRepository userRepository;
+		private readonly IRequestService rentalRequestService;
 		private readonly IGameRepository gameRepository;
 		private readonly ConversationService conversationService;
 
@@ -22,40 +24,41 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 		public string RequestDates { get; set; }
 		public string Amount { get; set; }
 
-		private int rentalRequestMessageId;
+		private readonly int rentalRequestMessageIdentifier;
 
 		public CashPaymentViewModel(
-			ICashPaymentService service,
-			IUserRepository userService,
-			IRequestService requestService,
+            ICashPaymentService cashPaymentService,
+			IUserRepository userRepository,
+			IRequestService rentalRequestService,
 			IGameRepository gameRepository,
-			int requestId,
+			int rentalRequestId,
 			string deliveryAddress,
-			int messageId,
+			int rentalRequestMessageIdentifier,
 			ConversationService conversationService)
 		{
-			this.service = service;
-			this.userService = userService;
-			this.requestService = requestService;
+			this.cashPaymentService = cashPaymentService;
+			this.userRepository = userRepository;
+			this.rentalRequestService = rentalRequestService;
 			this.gameRepository = gameRepository;
 			this.conversationService = conversationService;
-			this.rentalRequestMessageId = messageId;
+			this.rentalRequestMessageIdentifier = rentalRequestMessageIdentifier;
 
-			Request request = this.requestService.GetRequestById(requestId);
-			Game game = this.gameRepository.GetById(request.GameId);
-			User client = this.userService.GetById(request.ClientId);
-			User owner = this.userService.GetById(request.OwnerId);
+			Request rentalRequest = this.rentalRequestService.GetRequestById(rentalRequestId);
+			Game game = this.gameRepository.GetById(rentalRequest.GameId);
+			User clientUser = this.userRepository.GetById(rentalRequest.ClientId);
+			User ownerUser = this.userRepository.GetById(rentalRequest.OwnerId);
 
-			this.OwnerName = owner.Username;
+			this.OwnerName = ownerUser.Username;
 			this.GameName = game.Name;
 			this.DeliveryAddress = deliveryAddress;
-			this.RequestDates = request.StartDate.ToShortDateString() + " to " + request.EndDate.ToShortDateString();
+			this.RequestDates = rentalRequest.StartDate.ToShortDateString() + DateRangeSeparator + rentalRequest.EndDate.ToShortDateString();
 
-			decimal amount = this.requestService.GetRequestPrice(requestId);
-			this.Amount = amount.ToString();
+			decimal rentalPrice = this.rentalRequestService.GetRequestPrice(rentalRequestId);
+			this.Amount = rentalPrice.ToString();
 
-			int paymentId = this.service.AddCashPayment(new CashPaymentDto(-1, requestId, client.Id, owner.Id, amount));
-			this.conversationService.OnCashPaymentSelected(rentalRequestMessageId, paymentId);
+			int createdPaymentIdentifier = this.cashPaymentService.AddCashPayment(
+                new CashPaymentDto(NewPaymentPlaceholderId, rentalRequestId, clientUser.Id, ownerUser.Id, rentalPrice));
+			this.conversationService.OnCashPaymentSelected(this.rentalRequestMessageIdentifier, createdPaymentIdentifier);
 		}
 	}
 }
