@@ -117,7 +117,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void SendReadReceipt_CallsRepository()
         {
-            var convDto = new ConversationDTO(
+            var conversationDto = new ConversationDTO(
                 1,
                 new int[] { 1, 2 },
                 new List<MessageDTO>(),
@@ -129,7 +129,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             repositoryMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
 
-            service.SendReadReceipt(convDto);
+            service.SendReadReceipt(conversationDto);
 
             repositoryMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
         }
@@ -137,7 +137,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void SendReadReceipt_SelectsOtherParticipantCorrectly()
         {
-            var convDto = new ConversationDTO(
+            var conversationDto = new ConversationDTO(
                 1,
                 new int[] { 1, 2 },
                 new List<MessageDTO>(),
@@ -153,7 +153,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 .Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()))
                 .Callback<ReadReceipt>(r => captured = r);
 
-            service.SendReadReceipt(convDto);
+            service.SendReadReceipt(conversationDto);
 
             Assert.Equal(1, captured!.messageReaderId);
             Assert.Equal(2, captured.messageReceiverId);
@@ -234,13 +234,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnReadReceiptReceived_TriggersEvent()
         {
-            var rr = new ReadReceipt(1, 1, 2, DateTime.Now);
+            var readReceipt = new ReadReceipt(1, 1, 2, DateTime.Now);
 
             bool called = false;
 
             service.ActionReadReceiptProcessed += dto => called = true;
 
-            service.OnReadReceiptReceived(rr);
+            service.OnReadReceiptReceived(readReceipt);
 
             Assert.True(called);
         }

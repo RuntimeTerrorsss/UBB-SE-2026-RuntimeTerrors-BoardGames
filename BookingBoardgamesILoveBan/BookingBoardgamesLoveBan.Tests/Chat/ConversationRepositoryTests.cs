@@ -73,7 +73,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CashAgreement_FullFlow_CreatesSystemMessage()
+        public void CashAgreement_CreatesSystemMessage()
         {
             var repository = new ConversationRepository();
 
@@ -169,7 +169,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Observer_Receives_MessageNotification()
+        public void Observer_ReceivesMessageNotification()
         {
             var repository = new ConversationRepository();
 
@@ -259,7 +259,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Subscribe_And_Notify_Works()
+        public void SubscribeAndNotify_Works()
         {
             var repository = new ConversationRepository();
 
@@ -310,7 +310,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void GetMessageById_Invalid_ReturnsNullSafe()
+        public void GetMessageById_Invalid_NotReturnsNull()
         {
             var repository = new ConversationRepository();
 
@@ -357,7 +357,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CashPayment_Update_NoConditionsMet_DoesNothing()
+        public void CashPaymentUpdate_NoConditionsMet_DoesNothing()
         {
             var repository = new ConversationRepository();
 
