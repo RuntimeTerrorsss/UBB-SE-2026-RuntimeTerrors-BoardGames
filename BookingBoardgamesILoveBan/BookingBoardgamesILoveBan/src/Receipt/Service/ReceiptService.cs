@@ -180,16 +180,18 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private string BuildRequestInfo(PaymentCommon.Model.Payment payment, Request request)
         {
-            var game = gameService.GetById(request.GameId);
+            var game = gameRepository.GetById(request.GameId);
             var client = userService.GetById(payment.ClientId);
             var owner = userService.GetById(payment.OwnerId);
 
-			string requestInfo = $"Rental Information\n" +
-				$"- Rental ID: {payment.RequestId}\n" +
-				$"- Boardgame: {this.gameService.GetById(request.GameId).Name}\n" +
-				$"- Rental Period: {request.StartDate:dd/MM/yyyy} - {request.EndDate:dd/MM/yyyy}\n" +
-				$"- Client: {this.userService.GetById(payment.ClientId).Username}\n" +
-				$"- Owner: {this.userService.GetById(payment.OwnerId).Username}";
+            string requestInfo = $"Rental Information\n" +
+                $"- Rental ID: {payment.RequestId}\n" +
+                $"- Boardgame: {this.gameRepository.GetById(request.GameId).Name}\n" +
+                $"- Rental Period: {request.StartDate:dd/MM/yyyy} - {request.EndDate:dd/MM/yyyy}\n" +
+                $"- Client: {this.userService.GetById(payment.ClientId).Username}\n" +
+                $"- Owner: {this.userService.GetById(payment.OwnerId).Username}";
+            return requestInfo;
+        }
 
         private string BuildPaymentDetails(PaymentCommon.Model.Payment payment)
         {
@@ -229,7 +231,7 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
         /// <returns>pdf content text</returns>
         private string[] GetReceiptContent(PaymentCommon.Model.Payment payment)
         {
-            var request = requestService.GetById(payment.RequestId);
+            var request = requestService.GetRequestById(payment.RequestId);
 
             return new[]
             {

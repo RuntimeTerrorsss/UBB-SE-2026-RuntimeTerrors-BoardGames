@@ -30,7 +30,9 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             {
                 return 0;
             }
-            public void UpdateBalance(int userId, decimal newBalance) { }
+            public void UpdateBalance(int userId, decimal newBalance)
+            {
+            }
         }
 
         private class FakeGameService : IGameRepository
@@ -47,8 +49,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
 
         private class FakeRequestService : IRequestService
         {
-            public Request GetRequestById(int id) => new Request
-            (
+            public Request GetRequestById(int id) => new Request(
                 id,
                 1, 1, 2,
                 DateTime.Now,

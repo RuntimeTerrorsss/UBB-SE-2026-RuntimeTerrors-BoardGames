@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
@@ -25,8 +25,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 lastMessageTextInput: "hi",
                 timestampInput: DateTime.Now,
                 unreadCountInput: 0,
-                avatarUrl: "avatar.png"
-            );
+                avatarUrl: "avatar.png");
         }
 
         private MessageDTO CreateMessage(int convId = 1)
@@ -45,8 +44,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 isAcceptedBySeller: false,
                 isAcceptedByBuyer: false,
                 requestId: -1,
-                paymentId: -1
-            );
+                paymentId: -1);
         }
 
         [Fact]
@@ -94,7 +92,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var vm = CreateVM();
             vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
-            vm.InputText = "";
+            vm.InputText = string.Empty;
 
             vm.SendMessage();
 
@@ -148,7 +146,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             vm.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
 
             bool invoked = false;
-            vm.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
+            vm.BookingRequestUpdate += (sender, msgId, accepted, resolved) => invoked = true;
 
             vm.ResolveBookingRequest(1, true);
 
@@ -170,7 +168,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             vm.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
 
             bool invoked = false;
-            vm.CashAgreementAccept += (_, __) => invoked = true;
+            vm.CashAgreementAccept += (sender, msgId) => invoked = true;
 
             vm.UpdateCashAgreement(1);
 
@@ -205,7 +203,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var vm = CreateVM();
 
             bool invoked = false;
-            vm.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
+            vm.BookingRequestUpdate += (sender, msgId, accepted, resolved) => invoked = true;
 
             vm.RaiseBookingRequestUpdate(1, 1, true, false);
 
@@ -218,7 +216,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var vm = CreateVM();
 
             bool invoked = false;
-            vm.CashAgreementAccept += (_, __) => invoked = true;
+            vm.CashAgreementAccept += (sender, msgId) => invoked = true;
 
             vm.RaiseCashAgreementAccept(1, 1);
 

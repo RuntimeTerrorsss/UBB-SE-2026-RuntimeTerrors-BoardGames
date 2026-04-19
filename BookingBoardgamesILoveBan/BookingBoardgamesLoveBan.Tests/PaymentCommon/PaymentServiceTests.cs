@@ -1,25 +1,24 @@
-﻿using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
 {
     public class PaymentServiceTests // unit tests
     {
-
         // ================================ fakes ======================================
         private class FakePaymentRepository : IPaymentRepository
         {
-            private readonly List<Payment> payments = new();
+            private readonly List<Payment> payments = new ();
             private int nextId = 1;
 
             public IReadOnlyList<Payment> GetAll()
@@ -68,8 +67,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             public Payment UpdatePayment(Payment updated)
             {
                 var old = GetById(updated.Tid);
-                if (old == null) 
+                if (old == null)
+                {
                     return null;
+                }
+
                 var copy = new Payment
                 {
                     Tid = old.Tid,
@@ -110,16 +112,13 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             }
         }
 
-
         // ================================ setup ======================================
-
-
         private readonly PaymentService paymentService;
         private readonly IPaymentRepository paymentRepository;
         private readonly IReceiptService receiptService;
 
         public PaymentServiceTests()
-        {   
+        {
             paymentRepository = new FakePaymentRepository();
             receiptService = new FakeReceiptService();
             paymentService = new FakePaymentService(paymentRepository, receiptService);
@@ -141,9 +140,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             return payment;
         }
 
-
         // ================================ GenerateReceipt ======================================
-
         [Fact]
         public void GenerateReceipt_SetsFilePathOnPayment()
         {
@@ -169,7 +166,6 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
         }
 
         // ================================ GetReceipt ======================================
-
         [Fact]
         public void GetReceipt_PaymentAlreadyHasFilePath_ReturnsPath()
         {

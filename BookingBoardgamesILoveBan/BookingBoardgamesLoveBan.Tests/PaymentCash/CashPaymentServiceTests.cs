@@ -207,7 +207,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
 
         private sealed class FakePaymentRepository : IPaymentRepository
         {
-            public Dictionary<int, Payment> ById { get; } = new();
+            public Dictionary<int, Payment> ById { get; } = new ();
             public Payment? LastAddedPayment { get; private set; }
             public Payment? LastUpdatedPayment { get; private set; }
             public int LastGetByIdArgument { get; private set; }

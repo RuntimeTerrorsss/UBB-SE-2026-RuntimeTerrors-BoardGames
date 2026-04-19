@@ -1,11 +1,11 @@
-﻿using BookingBoardgamesILoveBan.Src.Chat.DTO;
-using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
-using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
-using BookingBoardgamesILoveBan.Src.Enum;
-using Moq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
+using Moq;
 using Xunit;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
@@ -40,8 +40,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.MinValue },
                     { 2, DateTime.MinValue }
-                }
-            );
+                });
         }
         private MessageDTO CreateMessage(int convId = 1)
         {
@@ -59,8 +58,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 isAcceptedBySeller: false,
                 isAcceptedByBuyer: false,
                 requestId: -1,
-                paymentId: -1
-            );
+                paymentId: -1);
         }
 
         [Fact]

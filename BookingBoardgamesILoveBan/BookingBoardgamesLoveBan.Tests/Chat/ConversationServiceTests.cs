@@ -1,4 +1,7 @@
-﻿using BookingBoardgamesILoveBan.Src.Chat.DTO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
 using BookingBoardgamesILoveBan.Src.Chat.Service;
@@ -6,25 +9,22 @@ using BookingBoardgamesILoveBan.Src.Enum;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.Model;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ConversationServiceTests
     {
-        private readonly Mock<IConversationRepository> _repoMock;
-        private readonly Mock<IUserRepository> _userServiceMock;
-        private readonly ConversationService _service;
+        private readonly Mock<IConversationRepository> repoMock;
+        private readonly Mock<IUserRepository> userServiceMock;
+        private readonly ConversationService service;
 
         public ConversationServiceTests()
         {
-            _repoMock = new Mock<IConversationRepository>();
-            _userServiceMock = new Mock<IUserRepository>();
+            repoMock = new Mock<IConversationRepository>();
+            userServiceMock = new Mock<IUserRepository>();
 
-            _userServiceMock
+            userServiceMock
                 .Setup(u => u.GetById(It.IsAny<int>()))
                 .Returns((int id) => new User(
                     id,
@@ -34,24 +34,22 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     "Sibiu",
                     "street",
                     "1",
-                    "",
-                    0
-                ));
+                    string.Empty,
+                    0));
 
-            _service = new ConversationService(
-                _repoMock.Object,
-                _userServiceMock.Object,
-                1
-            );
+            service = new ConversationService(
+                repoMock.Object,
+                userServiceMock.Object,
+                1);
         }
 
         [Fact]
         public void FetchConversations_ReturnsEmptyList_WhenRepoEmpty()
         {
-            _repoMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
+            repoMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
                      .Returns(new List<Conversation>());
 
-            var result = _service.FetchConversations();
+            var result = service.FetchConversations();
 
             Assert.Empty(result);
         }
@@ -67,13 +65,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.Now },
                     { 2, DateTime.Now }
-                }
-            );
+                });
 
-            _repoMock.Setup(r => r.GetConversationsForUser(1))
+            repoMock.Setup(r => r.GetConversationsForUser(1))
                      .Returns(new List<Conversation> { conv });
 
-            var result = _service.FetchConversations();
+            var result = service.FetchConversations();
 
             Assert.Single(result);
             Assert.Equal(1, result.First().Id);
@@ -90,20 +87,19 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 sentAt: DateTime.Now,
                 content: "hello",
                 type: MessageType.Text,
-                imageUrl: "",
+                imageUrl: string.Empty,
                 isResolved: false,
                 isAccepted: false,
                 isAcceptedByBuyer: false,
                 isAcceptedBySeller: false,
                 paymentId: -1,
-                requestId: -1
-            );
+                requestId: -1);
 
-            _repoMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
+            repoMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
 
-            _service.SendMessage(dto);
+            service.SendMessage(dto);
 
-            _repoMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
+            repoMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
@@ -111,11 +107,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var dto = CreateTextDTO();
 
-            _repoMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
+            repoMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
 
-            _service.UpdateMessage(dto);
+            service.UpdateMessage(dto);
 
-            _repoMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
+            repoMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
@@ -129,14 +125,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.Now },
                     { 2, DateTime.Now }
-                }
-            );
+                });
 
-            _repoMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
+            repoMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
 
-            _service.SendReadReceipt(convDto);
+            service.SendReadReceipt(convDto);
 
-            _repoMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
+            repoMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
         }
 
         [Fact]
@@ -150,16 +145,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.Now },
                     { 2, DateTime.Now }
-                }
-            );
+                });
 
             ReadReceipt? captured = null;
 
-            _repoMock
+            repoMock
                 .Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()))
                 .Callback<ReadReceipt>(r => captured = r);
 
-            _service.SendReadReceipt(convDto);
+            service.SendReadReceipt(convDto);
 
             Assert.NotNull(captured);
             Assert.Equal(1, captured!.readerId);
@@ -171,7 +165,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var msg = new TextMessage(1, 1, 1, 2, DateTime.Now, "hello");
 
-            var dto = _service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(msg);
 
             Assert.Equal(MessageType.Text, dto.type);
             Assert.Equal("hello", dto.content);
@@ -182,7 +176,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var dto = CreateTextDTO();
 
-            var msg = _service.MessageDTOToMessage(dto);
+            var msg = service.MessageDTOToMessage(dto);
 
             Assert.IsType<TextMessage>(msg);
         }
@@ -197,14 +191,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 sentAt: DateTime.Now,
                 content: "hello",
                 type: MessageType.Text,
-                imageUrl: "",
+                imageUrl: string.Empty,
                 isResolved: false,
                 isAccepted: false,
                 isAcceptedByBuyer: false,
                 isAcceptedBySeller: false,
                 paymentId: -1,
-                requestId: -1
-            );
+                requestId: -1);
         }
 
         [Fact]
@@ -214,9 +207,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            _service.MessageProcessed += (dto, name) => called = true;
+            service.MessageProcessed += (dto, name) => called = true;
 
-            _service.OnMessageReceived(msg);
+            service.OnMessageReceived(msg);
 
             Assert.True(called);
         }
@@ -228,14 +221,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 1,
                 new int[] { 1, 2 },
                 new List<Message>(),
-                new Dictionary<int, DateTime> { { 1, DateTime.Now }, { 2, DateTime.Now } }
-            );
+                new Dictionary<int, DateTime> { { 1, DateTime.Now }, { 2, DateTime.Now } });
 
             bool called = false;
 
-            _service.ConversationProcessed += (dto, name) => called = true;
+            service.ConversationProcessed += (dto, name) => called = true;
 
-            _service.OnConversationReceived(conv);
+            service.OnConversationReceived(conv);
 
             Assert.True(called);
         }
@@ -247,9 +239,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            _service.ReadReceiptProcessed += dto => called = true;
+            service.ReadReceiptProcessed += dto => called = true;
 
-            _service.OnReadReceiptReceived(rr);
+            service.OnReadReceiptReceived(rr);
 
             Assert.True(called);
         }
@@ -261,42 +253,41 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             bool called = false;
 
-            _service.MessageUpdateProcessed += (dto, name) => called = true;
+            service.MessageUpdateProcessed += (dto, name) => called = true;
 
-            _service.OnMessageUpdateReceived(msg);
+            service.OnMessageUpdateReceived(msg);
 
             Assert.True(called);
         }
         [Fact]
         public void OnCardPaymentSelected_CallsFinalizeOnly()
         {
-            _repoMock
+            repoMock
                 .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
 
-            _service.OnCardPaymentSelected(10);
+            service.OnCardPaymentSelected(10);
 
-            _repoMock.Verify(r =>
+            repoMock.Verify(r =>
                 r.HandleRentalRequestFinalization(10),
                 Times.Once);
         }
 
-
         [Fact]
         public void OnCashPaymentSelected_CallsFinalizeAndCashAgreement()
         {
-            _repoMock
+            repoMock
                 .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
 
-            _repoMock
+            repoMock
                 .Setup(r => r.CreateCashAgreementMessage(It.IsAny<int>(), It.IsAny<int>()));
 
-            _service.OnCashPaymentSelected(10, 99);
+            service.OnCashPaymentSelected(10, 99);
 
-            _repoMock.Verify(r =>
+            repoMock.Verify(r =>
                 r.HandleRentalRequestFinalization(10),
                 Times.Once);
 
-            _repoMock.Verify(r =>
+            repoMock.Verify(r =>
                 r.CreateCashAgreementMessage(10, 99),
                 Times.Once);
         }
@@ -304,7 +295,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void GetOtherUserName_ReturnsUnknownUser_WhenNull()
         {
-            _userServiceMock
+            userServiceMock
                 .Setup(u => u.GetById(It.IsAny<int>()))
                 .Returns((User)null);
 
@@ -316,10 +307,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.Now },
                     { 2, DateTime.Now }
-                }
-            );
+                });
 
-            var result = _service.GetOtherUserNameByConversationDTO(dto);
+            var result = service.GetOtherUserNameByConversationDTO(dto);
 
             Assert.Equal("Unknown User", result);
         }
@@ -329,7 +319,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var msg = new ImageMessage(1, 1, 1, 2, DateTime.Now, "img.png");
 
-            var dto = _service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(msg);
 
             Assert.Equal(MessageType.Image, dto.type);
             Assert.Equal("img.png", dto.imageUrl);
@@ -345,10 +335,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 "cash",
                 false,
                 true,
-                false
-            );
+                false);
 
-            var dto = _service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(msg);
 
             Assert.Equal(MessageType.CashAgreement, dto.type);
             Assert.Equal(55, dto.paymentId);
@@ -363,10 +352,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 "rent",
                 99,
                 false,
-                true
-            );
+                true);
 
-            var dto = _service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(msg);
 
             Assert.Equal(MessageType.RentalRequest, dto.type);
             Assert.Equal(99, dto.requestId);
@@ -377,11 +365,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var msg = new SystemMessage(1, 1, DateTime.Now, "system");
 
-            var dto = _service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(msg);
 
             Assert.Equal(MessageType.System, dto.type);
             Assert.Equal("system", dto.content);
         }
-
     }
 }

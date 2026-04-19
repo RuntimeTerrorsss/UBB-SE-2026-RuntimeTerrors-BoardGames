@@ -1,15 +1,15 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.ViewModel;
+﻿using System;
+using System.Collections.Generic;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
 using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Enum;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.Model;
 using Moq;
-using System;
-using System.Collections.Generic;
 using Xunit;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
@@ -34,26 +34,24 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.MinValue },
                     { 2, DateTime.MinValue }
-                }
-            )
+                })
                 });
 
             userService = new Mock<IUserRepository>();
 
             userService
                 .Setup(u => u.GetById(It.IsAny<int>()))
-                .Returns(new User(1,"name","country","city","street","streetNumber"));
+                .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
 
             return new ConversationService(
                 repo.Object,
                 currentUserId,
-                userService.Object
-            );
+                userService.Object);
         }
 
         private ChatPageViewModel CreateVM()
         {
-            return new ChatPageViewModel(currentUserId, CreateService(),userService.Object);
+            return new ChatPageViewModel(currentUserId, CreateService(), userService.Object);
         }
 
         [Fact]
@@ -102,7 +100,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         public void OnBookingRequest_Should_Update_Message()
         {
             var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service,userService.Object);
+            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
 
             vm.Chat.RaiseBookingRequestUpdate(5, 1, true, true);
 
@@ -134,8 +132,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 {
                     { 1, DateTime.MinValue },
                     { 2, DateTime.MinValue }
-                }
-            );
+                });
 
             service.ConversationProcessed += null;
 

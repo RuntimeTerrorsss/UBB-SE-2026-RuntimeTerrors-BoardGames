@@ -24,8 +24,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 isAcceptedByBuyer: false,
                 isAcceptedBySeller: false,
                 requestId: -1,
-                paymentId: -1
-            );
+                paymentId: -1);
         }
 
         [Fact]
@@ -92,7 +91,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             vm.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(vm.IsResolved))
+                {
                     raised = true;
+                }
             };
 
             vm.IsResolved = true;
@@ -121,7 +122,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             vm.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(vm.BothAccepted))
+                {
                     raised = true;
+                }
             };
 
             vm.AcceptedBy = new[] { 1, 2 };
