@@ -23,33 +23,33 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.View
 
         private void OnReceiptButtonClicked(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is PaymentDto dto)
+            if (sender is Button clickedButton && clickedButton.DataContext is PaymentDto selectedPayment)
             {
-                if (ViewModel.OpenReceiptCommand != null && ViewModel.OpenReceiptCommand.CanExecute(dto))
+                if (ViewModel.OpenReceiptCommand != null && ViewModel.OpenReceiptCommand.CanExecute(selectedPayment))
                 {
-                    ViewModel.OpenReceiptCommand.Execute(dto);
+                    ViewModel.OpenReceiptCommand.Execute(selectedPayment);
                 }
             }
             // fallback for null
-            else if (sender is Button btnFallback && btnFallback.Tag is PaymentDto dtoTag)
+            else if (sender is Button fallbackButton && fallbackButton.Tag is PaymentDto fallbackPayment)
             {
-                if (ViewModel.OpenReceiptCommand != null && ViewModel.OpenReceiptCommand.CanExecute(dtoTag))
+                if (ViewModel.OpenReceiptCommand != null && ViewModel.OpenReceiptCommand.CanExecute(fallbackPayment))
                 {
-                    ViewModel.OpenReceiptCommand.Execute(dtoTag);
+                    ViewModel.OpenReceiptCommand.Execute(fallbackPayment);
                 }
             }
         }
 
         private void OnBackToDashboardClicked(object sender, RoutedEventArgs e)
         {
-            var parent = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(this);
-            while (parent != null && !(parent is Frame))
+            var currentParentElement = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(this);
+            while (currentParentElement != null && !(currentParentElement is Frame))
             {
-                parent = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(parent);
+                currentParentElement = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(currentParentElement);
             }
-            if (parent is Frame frame)
+            if (currentParentElement is Frame navigationFrame)
             {
-                frame.Navigate(typeof(BookingBoardgamesILoveBan.Src.View.DashboardView));
+                navigationFrame.Navigate(typeof(BookingBoardgamesILoveBan.Src.View.DashboardView));
             }
         }
     }
