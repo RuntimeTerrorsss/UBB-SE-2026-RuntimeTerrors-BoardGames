@@ -8,7 +8,7 @@ using BookingBoardgamesILoveBan.Src.Chat.Service;
 using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 
-namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
+namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 
 public class ChatPageViewModel
 {
@@ -22,6 +22,7 @@ public class ChatPageViewModel
         get => conversationService;
     }
     private List<ConversationDTO> conversations = new ();
+
     public ChatPageViewModel(int currentUser)
     : this(currentUser, new ConversationService(App.ConversationRepository, currentUser))
     {
@@ -31,7 +32,7 @@ public class ChatPageViewModel
     {
     }
 
-    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository userService)
+    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository userRepository)
     {
         LeftPanelModelView = new LeftPanelViewModel();
         ChatModelView = new ChatViewModel(currentUser);
@@ -52,7 +53,7 @@ public class ChatPageViewModel
                 conversation,
                 conversationService.GetOtherUserNameByConversationDTO(conversation),
                 currentUserId,
-                userService);
+                userRepository);
         }
 
         conversationService.ActionMessageProcessed += OnMessageReceived;

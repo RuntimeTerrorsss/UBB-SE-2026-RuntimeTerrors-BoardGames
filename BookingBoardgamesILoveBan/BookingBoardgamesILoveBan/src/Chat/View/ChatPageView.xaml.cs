@@ -15,7 +15,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Security.Authentication.OnlineId;
-using BookingBoardgamesILoveBan.src.Chat.ViewModel;
+using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
