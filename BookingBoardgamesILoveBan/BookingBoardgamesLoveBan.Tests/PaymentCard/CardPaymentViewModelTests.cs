@@ -68,7 +68,7 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.ViewModel
             cardPaymentViewModel.CardNumber = cardNumber;
             cardPaymentViewModel.CardholderName = cardholderName;
             cardPaymentViewModel.ExpiryDate = expiryDate;
-            cardPaymentViewModel.Cvv = securityCode;
+            cardPaymentViewModel.CardVerificationValue = securityCode;
 
             Assert.True(cardPaymentViewModel.IsPaymentButtonEnabled);
         }
@@ -89,7 +89,7 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.ViewModel
             cardPaymentViewModel.CardNumber = cardNumber;
             cardPaymentViewModel.CardholderName = cardholderName;
             cardPaymentViewModel.ExpiryDate = expiryDate;
-            cardPaymentViewModel.Cvv = securityCode;
+            cardPaymentViewModel.CardVerificationValue = securityCode;
 
             Assert.False(cardPaymentViewModel.IsPaymentButtonEnabled);
         }

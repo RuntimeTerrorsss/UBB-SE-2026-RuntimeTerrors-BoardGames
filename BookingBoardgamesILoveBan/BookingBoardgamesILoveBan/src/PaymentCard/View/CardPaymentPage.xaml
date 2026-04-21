@@ -100,9 +100,9 @@
                                      PlaceholderText="MM/YY" MaxLength="5"
                                      Text="{x:Bind PaymentViewModel.ExpiryDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                            <PasswordBox Grid.Column="1" Header="CVV" 
+                            <PasswordBox Grid.Column="1" Header="CardVerificationValue" 
                                          PlaceholderText="123" MaxLength="4"
-                                         Password="{x:Bind PaymentViewModel.Cvv, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                         Password="{x:Bind PaymentViewModel.CardVerificationValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </Grid>
                     </StackPanel>
 

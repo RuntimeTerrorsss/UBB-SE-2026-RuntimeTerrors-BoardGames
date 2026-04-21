@@ -164,18 +164,18 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
             }
         }
 
-        private string cvv = string.Empty;
-        public string Cvv
+        private string cardVerificationValue = string.Empty;
+        public string CardVerificationValue
         {
-            get => cvv;
+            get => cardVerificationValue;
             set
             {
-                if (cvv == value)
+                if (cardVerificationValue == value)
                 {
                     return;
                 }
 
-                cvv = value;
+                cardVerificationValue = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsPaymentButtonEnabled));
                 FinishPaymentCommand.NotifyCanExecuteChanged();
@@ -189,7 +189,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
             !string.IsNullOrWhiteSpace(CardNumber) &&
             !string.IsNullOrWhiteSpace(CardholderName) &&
             !string.IsNullOrWhiteSpace(ExpiryDate) &&
-            !string.IsNullOrWhiteSpace(Cvv);
+            !string.IsNullOrWhiteSpace(CardVerificationValue);
 
         public bool IsWarningMessageVisible => BalanceAmount < Price;
 
