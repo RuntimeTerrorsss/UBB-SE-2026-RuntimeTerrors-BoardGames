@@ -39,9 +39,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             RightPanel.CurrentUserId = currentUserId;
             RightPanel.ProceedToPaymentRequested += ProceedToPaymentClick;
 
-            chatPageViewModel.LeftPanelModelView.PropertyChanged += (s, e) =>
+            chatPageViewModel.LeftPanelModelView.PropertyChanged += (sentObject, eventArguments) =>
             {
-                if (e.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
+                if (eventArguments.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
                 {
                     return;
                 }
@@ -49,20 +49,20 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             };
         }
 
-        private void ProceedToPaymentClick(object sender, (int userId, int requestId, int messageId) args)
+        private void ProceedToPaymentClick(object sender, (int userId, int requestId, int messageId) arguments)
         {
             var deliveryWindow = new Window();
             var deliveryFrame = new Frame();
             deliveryWindow.Content = deliveryFrame;
-            deliveryFrame.Navigate(typeof(DeliveryView), (args.userId, args.requestId, args.messageId, chatPageViewModel.ConversationService, deliveryWindow));
+            deliveryFrame.Navigate(typeof(DeliveryView), (arguments.userId, arguments.requestId, arguments.messageId, chatPageViewModel.ConversationService, deliveryWindow));
             deliveryWindow.Activate();
             // this.Frame?.Navigate(typeof(DeliveryView), args);
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs eventArguments)
         {
-            base.OnNavigatedTo(e);
-            currentUserId = (int)e.Parameter;
+            base.OnNavigatedTo(eventArguments);
+            currentUserId = (int)eventArguments.Parameter;
 
             Initialize(currentUserId);
         }

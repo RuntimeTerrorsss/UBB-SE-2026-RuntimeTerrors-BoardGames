@@ -48,7 +48,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void LoadConversation_SetHeaderAndMessages()
+        public void ChatPageViewModelLoadConversation_withMessages_setsMessageListCount()
         {
             var viewModel = CreateViewModel();
             var conversation = CreateConversation();
@@ -64,13 +64,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SendMessage_AddMessageAndClearInput()
+        public void ChatPageViewModelSendMessage_withValidInput_raisesMessageSentEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             bool invoked = false;
-            viewModel.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += argument1 => invoked = true;
 
             viewModel.InputText = "hello world";
             viewModel.SendMessage();
@@ -79,10 +79,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SendMessage_InputEmpty_DoNothing()
+        public void ChatPageViewModelSendMessage_emptyInput_doesNotAddMessage()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             viewModel.InputText = "";
 
@@ -92,10 +92,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenSameConversation_AddMessage()
+        public void ChatPageViewModelHandleIncomingMessage_sameConversation_addsMessageToCollection()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             var message = CreateMessage(1);
 
@@ -105,10 +105,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenDifferentConversation_Ignore()
+        public void ChatPageViewModelHandleIncomingMessage_differentConversation_doesNotAddMessageToCollection()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             var message = CreateMessage(99);
 
@@ -118,10 +118,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_DuplicateMessage_DoNotInsertDuplicate()
+        public void ChatPageViewModelHandleIncomingMessage_duplicateMessage_doesNotAddDuplicateToCollection()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             var message = CreateMessage(1);
 
@@ -132,34 +132,34 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ResolveBookingRequest_InvokeEvent()
+        public void ChatPageViewModel_resolveBookingRequest_raisesBookingRequestUpdateEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, theirUnreadCount: 0);
 
             bool invoked = false;
-            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
-
-            viewModel.ResolveBookingRequest(1, true);
+            viewModel.BookingRequestUpdate += (argument1, argument2, argument3, argument4) => invoked = true;
+            int messageId = 1;
+            viewModel.ResolveBookingRequest(messageId, true);
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void ResolveBookingRequest_WhenMessageMissing_NotThrow()
+        public void ChatPageViewModelResolveBookingRequest_missingMessageId_doesNotThrowException()
         {
             var viewModel = CreateViewModel();
             viewModel.ResolveBookingRequest(999, true);
         }
 
         [Fact]
-        public void UpdateCashAgreement_InvokeEvent()
+        public void ChatPageViewModelUpdateCashAgreement_raisesCashAgreementAcceptEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, theirUnreadCount: 0);
 
             bool invoked = false;
-            viewModel.CashAgreementAccept += (_, __) => invoked = true;
+            viewModel.CashAgreementAccept += (argument1, argument2) => invoked = true;
 
             viewModel.UpdateCashAgreement(1);
 
@@ -167,7 +167,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void UpdateCashAgreement_WhenMissing_NotThrow()
+        public void ChatPageViewModelUpdateCashAgreement_missingMessageId_doesNotThrowException()
         {
             var viewModel = CreateViewModel();
 
@@ -175,13 +175,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SendImage_InvokeEvent()
+        public void ChatPageViewModel_sendImage_raisesMessageSentEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             bool invoked = false;
-            viewModel.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += argument1 => invoked = true;
 
             viewModel.SendImage("file.png");
 
@@ -189,38 +189,38 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void RaiseBookingRequestUpdate_InvokeEvent()
+        public void ChatPageViewModel_raiseBookingRequestUpdate_raisesBookingRequestUpdateEvent()
         {
             var viewModel = CreateViewModel();
 
             bool invoked = false;
-            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
-
-            viewModel.RaiseBookingRequestUpdate(1, 1, true, false);
+            viewModel.BookingRequestUpdate += (argument1, argument2, argument3, argument4) => invoked = true;
+            int messageId = 1, conversationId = 1;
+            viewModel.RaiseBookingRequestUpdate(messageId, conversationId, true, false);
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void RaiseCashAgreementAccept_InvokeEvent()
+        public void ChatPageViewModel_raiseCashAgreementAccept_raisesCashAgreementAcceptEvent()
         {
             var viewModel = CreateViewModel();
 
             bool invoked = false;
-            viewModel.CashAgreementAccept += (_, __) => invoked = true;
-
-            viewModel.RaiseCashAgreementAccept(1, 1);
+            viewModel.CashAgreementAccept += (argument1, argument2) => invoked = true;
+            int messageId = 1, conversationId = 1;
+            viewModel.RaiseCashAgreementAccept(messageId, conversationId);
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void RaiseMessageSent_InvokeEvent()
+        public void ChatPageViewModel_raiseMessageSent_raisesMessageSentEvent()
         {
             var viewModel = CreateViewModel();
 
             bool invoked = false;
-            viewModel.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += argument1 => invoked = true;
 
             viewModel.RaiseMessageSent(CreateMessage());
 
@@ -228,7 +228,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void LoadConversation_SetReadStatusCorrectly()
+        public void ChatPageViewModel_loadConversation_setsMessageReadStatusBasedOnUnreadCount()
         {
             var viewModel = CreateViewModel();
             var conversation = CreateConversation();
@@ -246,7 +246,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CanSend_InputIsWhiteSpace_IsFalse()
+        public void ChatPageViewModel_canSendWhitespaceInput_returnsFalse()
         {
             var viewModel = CreateViewModel();
 
@@ -256,7 +256,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ProceedToPayment_NotThrow()
+        public void ChatPageViewModel_proceedToPaymentValidMessageId_doesNotThrowException()
         {
             var viewModel = CreateViewModel();
 
@@ -264,10 +264,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_DuplicateMessage_NotInsertDuplicate()
+        public void ChatPageViewModel_handleIncomingMessageDuplicateMessages_areNotAddedTwice()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), theirUnreadCount: 0);
 
             var message1 = CreateMessage();
             var message2 = CreateMessage();

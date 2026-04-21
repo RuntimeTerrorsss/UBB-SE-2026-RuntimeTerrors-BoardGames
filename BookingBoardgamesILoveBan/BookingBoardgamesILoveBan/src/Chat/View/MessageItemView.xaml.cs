@@ -94,10 +94,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                 var path = part;
                 if (path.EndsWith(".pdf"))
                 {
-                    var hl = new Hyperlink();
-                    hl.Inlines.Add(new Run { Text = "File" });
-                    hl.Click += (s, e) => System.Diagnostics.Process.Start("explorer.exe", path);
-                    textBlock.Inlines.Add(hl);
+                    var hyperlink = new Hyperlink();
+                    hyperlink.Inlines.Add(new Run { Text = "File" });
+                    hyperlink.Click += (sender, eventHandle) => System.Diagnostics.Process.Start("explorer.exe", path);
+                    textBlock.Inlines.Add(hyperlink);
                 }
                 else
                 {
@@ -129,9 +129,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             {
                 if (part.StartsWith("https://") && Uri.TryCreate(part, UriKind.Absolute, out var uri))
                 {
-                    var hl = new Hyperlink { NavigateUri = uri };
-                    hl.Inlines.Add(new Run { Text = part });
-                    textBlock.Inlines.Add(hl);
+                    var hyperlink = new Hyperlink { NavigateUri = uri };
+                    hyperlink.Inlines.Add(new Run { Text = part });
+                    textBlock.Inlines.Add(hyperlink);
                 }
                 else
                 {
@@ -331,8 +331,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                     Content = "Decline",
                     MinWidth = 90
                 };
-                acceptButton.Click += (s, e) => AcceptRequested?.Invoke(this, message.Id);
-                declineButton.Click += (s, e) => DeclineRequested?.Invoke(this, message.Id);
+                acceptButton.Click += (sender, eventHandle) => AcceptRequested?.Invoke(this, message.Id);
+                declineButton.Click += (sender, eventHandle) => DeclineRequested?.Invoke(this, message.Id);
                 buttonPanel.Children.Add(acceptButton);
                 buttonPanel.Children.Add(declineButton);
                 stackPanel.Children.Add(buttonPanel);
@@ -354,7 +354,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                         MinWidth = 90
                     };
 
-                    cancelButton.Click += (s, e) => CancelRequested?.Invoke(this, message.Id);
+                    cancelButton.Click += (sender, eventHandle) => CancelRequested?.Invoke(this, message.Id);
 
                     buttonPanel.Children.Add(cancelButton);
                     stackPanel.Children.Add(buttonPanel);
@@ -373,7 +373,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                         Content = "Proceed to payment",
                         MinWidth = 90
                     };
-                    cancelButton.Click += (s, e) => ProceedToPaymentRequested?.Invoke(this, (currentUserId, message.RequestId, message.Id));
+                    cancelButton.Click += (sender, eventHandle) => ProceedToPaymentRequested?.Invoke(this, (currentUserId, message.RequestId, message.Id));
 
                     buttonPanel.Children.Add(cancelButton);
                     stackPanel.Children.Add(buttonPanel);
@@ -432,7 +432,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Style = (Style)Application.Current.Resources["AccentButtonStyle"]
                 };
-                agreeButton.Click += (s, e) => AgreementAccepted(this, message.Id);
+                agreeButton.Click += (sender, eventHandle) => AgreementAccepted(this, message.Id);
                 stackPanel.Children.Add(agreeButton);
             }
 

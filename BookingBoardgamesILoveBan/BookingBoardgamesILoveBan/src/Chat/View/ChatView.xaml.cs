@@ -71,16 +71,16 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         private void RefreshMessages()
         {
             MessagesPanel.Children.Clear();
-            foreach (var vm in chatViewModel.Messages)
+            foreach (var viewModel in chatViewModel.Messages)
             {
                 var itemView = new MessageItemView();
-                itemView.SetMessage(vm, CurrentUserId);
+                itemView.SetMessage(viewModel, CurrentUserId);
 
                 itemView.AcceptRequested += OnAcceptRequested;
                 itemView.DeclineRequested += OnDeclineRequested;
                 itemView.CancelRequested += OnCancelRequested;
                 itemView.AgreementAccepted += OnAcceptCashAgreement;
-                itemView.ProceedToPaymentRequested += (s, e) => ProceedToPaymentRequested.Invoke(s, e);
+                itemView.ProceedToPaymentRequested += (sender, eventHandle) => ProceedToPaymentRequested.Invoke(sender, eventHandle);
 
                 MessagesPanel.Children.Add(itemView);
             }
@@ -101,7 +101,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                     itemView.DeclineRequested += OnDeclineRequested;
                     itemView.CancelRequested += OnCancelRequested;
                     itemView.AgreementAccepted += OnAcceptCashAgreement;
-                    itemView.ProceedToPaymentRequested += (s, e) => ProceedToPaymentRequested?.Invoke(s, e);
+                    itemView.ProceedToPaymentRequested += (senderObject, eventHandle) => ProceedToPaymentRequested?.Invoke(senderObject, eventHandle);
 
                     MessagesPanel.Children.Add(itemView);
                 }
@@ -183,8 +183,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             {
                 eventArguments.Handled = true; // prevent pasting raw text
 
-                var streamRef = await clipboard.GetBitmapAsync();
-                var stream = await streamRef.OpenReadAsync();
+                var streamReference = await clipboard.GetBitmapAsync();
+                var stream = await streamReference.OpenReadAsync();
 
                 var bitmapImage = new BitmapImage();
                 await bitmapImage.SetSourceAsync(stream);

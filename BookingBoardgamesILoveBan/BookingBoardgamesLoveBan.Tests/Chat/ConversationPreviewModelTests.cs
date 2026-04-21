@@ -19,7 +19,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         } 
 
         [Fact]
-        public void TimestampString_ReturnCorrectFormat()
+        public void MessageViewModel_timestampString_formatsTimeAsHoursAndMinutes()
         {
             var model = CreateModel();
 
@@ -27,14 +27,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void LastMessageText_RaisePropertyChanged()
+        public void MessageViewModel_lastMessageTextChanges_raisesPropertyChangedEvent()
         {
             var model = CreateModel();
 
             bool raised = false;
-            model.PropertyChanged += (_, e) =>
+            model.PropertyChanged += (senderObject, eventArguments) =>
             {
-                if (e.PropertyName == nameof(model.LastMessageText))
+                if (eventArguments.PropertyName == nameof(model.LastMessageText))
                 {
                     raised = true;
                 }
@@ -46,21 +46,21 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Timestamp_ChangeProperty_RaisedFlagTrue()
+        public void MessageViewModel_timestampSetter_raisesPropertyChangedForTimestampAndTimestampString()
         {
             var model = CreateModel();
 
             bool timestampRaised = false;
             bool stringRaised = false;
 
-            model.PropertyChanged += (_, e) =>
+            model.PropertyChanged += (senderObject, eventArguments) =>
             {
-                if (e.PropertyName == nameof(model.Timestamp))
+                if (eventArguments.PropertyName == nameof(model.Timestamp))
                 {
                     timestampRaised = true;
                 }
 
-                if (e.PropertyName == nameof(model.TimestampString))
+                if (eventArguments.PropertyName == nameof(model.TimestampString))
                 {
                     stringRaised = true;
                 }
@@ -73,14 +73,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void UnreadCount_ChangeProperty_RaisedFlagTrue()
+        public void MessageViewModel_unreadCountSetter_raisesPropertyChanged()
         {
             var model = CreateModel();
 
             bool raised = false;
-            model.PropertyChanged += (_, e) =>
+            model.PropertyChanged += (senderObject, eventArguments) =>
             {
-                if (e.PropertyName == nameof(model.UnreadCount))
+                if (eventArguments.PropertyName == nameof(model.UnreadCount))
                 {
                     raised = true;
                 }
@@ -92,7 +92,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Property_SettingSameValue_NotCrash()
+        public void MessageViewModel_settingSamePropertyValue_doesNotThrowExceptionOrChangeState()
         {
             var model = CreateModel();
 
@@ -102,7 +102,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void TimestampString_TimestampChanges_Updates()
+        public void MessageViewModel_timestampChange_updatesTimestampString()
         {
             var model = CreateModel();
 

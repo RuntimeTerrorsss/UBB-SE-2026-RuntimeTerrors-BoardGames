@@ -14,7 +14,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     public class ConversationRepositoryIntegrationTests
     {
         private readonly string connectionString;
-
+        private int senderId = 1, receiverId = 2;
         public ConversationRepositoryIntegrationTests()
         {
             DatabaseBootstrap.Initialize();
@@ -22,13 +22,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleNewMessage_ImageMessage_Persists()
+        public void ConversationRepositoryHandleNewMessage_imageMessage_addsMessageToConversationMessageList()
         {
             var repository = new ConversationRepository();
 
-            int conversationId = repository.CreateConversation(1, 2);
-
-            var message = new ImageMessage(-1, conversationId, 1, 2, DateTime.Now, "img.png");
+            int conversationId = repository.CreateConversation(senderId, receiverId);
+            int messageId = -1;
+            var message = new ImageMessage(messageId, conversationId, senderId, receiverId, DateTime.Now, "img.png");
 
             repository.HandleNewMessage(message);
 
@@ -41,15 +41,16 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleMessageUpdate_RentalRequest_UpdatesDB()
+        public void ConversationRepositoryHandleMessageUpdate_rentalRequest_updatesIsRequestAccepted()
         {
             var repository = new ConversationRepository();
 
-            int conversationId = repository.CreateConversation(1, 2);
-
+            int conversationId = repository.CreateConversation(senderId, receiverId);
+            int messageId = -1;
+            int requestId = 1;
             var message = new RentalRequestMessage(
-                -1, conversationId, 1, 2, DateTime.Now,
-                "rent", 1, false, false);
+                messageId, conversationId, senderId, receiverId, DateTime.Now,
+                "rent", requestId, false, false);
 
             repository.HandleNewMessage(message);
 
@@ -73,14 +74,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CashAgreement_CreatesSystemMessage()
+        public void ConversationRepositoryHandleMessageUpdate_cashAgreementWhenBothAccepted_createsSystemMessage()
         {
             var repository = new ConversationRepository();
 
-            int conversationId = repository.CreateConversation(1, 2);
-
+            int conversationId = repository.CreateConversation(senderId, receiverId);
+            int messageId = -1;
+            int requestId = 1;
             var message = new CashAgreementMessage(
-                -1, conversationId, 1, 2, 1,
+                messageId, conversationId, senderId, receiverId,requestId,
                 DateTime.Now, "cash",
                 false, false, false);
 
@@ -100,7 +102,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void GetConversationsForUser_ReturnsData()
+        public void ConversationRepository_getConversationsForUser_returnsOnlyConversationsContainingUser()
         {
             var repository = new ConversationRepository();
 
@@ -137,7 +139,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
                 var list = repository.GetConversationsForUser(user1);
 
-                Assert.Contains(list, c => c.ConversationId == conversationersationId);
+                Assert.Contains(list, conversation => conversation.ConversationId == conversationersationId);
             }
             finally
             {
@@ -161,7 +163,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                                 Parameters = { new SqlParameter("@id", user2) }
                             }.ExecuteNonQuery();
                     }
-                    catch (Exception ex)
+                    catch (Exception exception)
                     {
                     }
                 }
@@ -169,17 +171,17 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Observer_ReceivesMessageNotification()
+        public void ConversationRepository_subscribedObserver_receivesNotificationWhenNewMessageIsHandled()
         {
             var repository = new ConversationRepository();
 
             var mock = new Mock<IConversationService>();
             repository.Subscribe(1, mock.Object);
 
-            int conversationId = repository.CreateConversation(1, 2);
+            int conversationId = repository.CreateConversation(senderId, receiverId);
 
             repository.HandleNewMessage(
-                new TextMessage(-1, conversationId, 1, 2, DateTime.Now, "hi"));
+                new TextMessage(-1, conversationId, senderId, receiverId, DateTime.Now, "hi"));
 
             mock.Verify(message => message.OnMessageReceived(It.IsAny<Message>()),
                 Times.AtLeastOnce);
@@ -218,7 +220,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleNewMessage_ValidConversation_AddsMessage()
+        public void ConversationRepositoryHandleNewMessage_addsMessageToConversationMessageList()
         {
             var repository = new ConversationRepository();
 
@@ -237,13 +239,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleReadReceipt_UpdatesDatabase()
+        public void ConversationRepository_handleReadReceipt_updatesLastMessageReadTime()
         {
             var repository = new ConversationRepository();
 
-            int conversationId = repository.CreateConversation(1, 2);
+            int conversationId = repository.CreateConversation(senderId, receiverId);
 
-            repository.HandleReadReceipt(new ReadReceipt(conversationId, 1, 2, DateTime.UtcNow));
+            repository.HandleReadReceipt(new ReadReceipt(conversationId, senderId, receiverId, DateTime.UtcNow));
 
             var conversation = repository.GetConversationById(conversationId);
 
@@ -251,15 +253,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleRentalRequestFinalization_InvalidMessage_DoesNotCrash()
+        public void ConversationRepositoryHandleRentalRequestFinalization_invalidMessageId_doesNotThrowException()
         {
             var repository = new ConversationRepository();
-
-            repository.HandleRentalRequestFinalization(-999);
+            int invalidId = -999;
+            repository.HandleRentalRequestFinalization(invalidId);
         }
 
         [Fact]
-        public void SubscribeAndNotify_Works()
+        public void ConversationRepository_subscribedObserver_isNotifiedWhenNewMessageIsHandled()
         {
             var repository = new ConversationRepository();
 
@@ -267,39 +269,39 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             repository.Subscribe(1, mock.Object);
 
-            int conversationId = repository.CreateConversation(1, 2);
-
-            var message = new TextMessage(-1, conversationId, 1, 2, DateTime.Now, "hi");
+            int conversationId = repository.CreateConversation(senderId, receiverId);
+            int messageId = -1;
+            var message = new TextMessage(messageId, conversationId, senderId, receiverId, DateTime.Now, "hi");
 
             repository.HandleNewMessage(message);
 
-            mock.Verify(x => x.OnMessageReceived(It.IsAny<Message>()), Times.Once);
+            mock.Verify(service => service.OnMessageReceived(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
-        public void Unsubscribe_RemovesSubscriber()
+        public void ConversationRepository_unsubscribe_preventsObserverFromReceivingMessageNotifications()
         {
             var repository = new ConversationRepository();
 
             var mock = new Mock<IConversationService>();
+            int userId = 1;
+            repository.Subscribe(userId, mock.Object);
+            repository.Unsubscribe(userId);
 
-            repository.Subscribe(1, mock.Object);
-            repository.Unsubscribe(1);
-
-            int conversationId = repository.CreateConversation(1, 2);
-
+            int conversationId = repository.CreateConversation(senderId, receiverId);
+            int messageId = -1;
             repository.HandleNewMessage(
-                new TextMessage(-1, conversationId, 1, 2, DateTime.Now, "x"));
+                new TextMessage(messageId, conversationId, senderId, receiverId, DateTime.Now, "x"));
 
-            mock.Verify(x => x.OnMessageReceived(It.IsAny<Message>()), Times.Never);
+            mock.Verify(service => service.OnMessageReceived(It.IsAny<Message>()), Times.Never);
         }
 
         [Fact]
-        public void SystemMessage_IsProcessed()
+        public void ConversationRepository_createSystemMessageForCashAgreementFinalization_addsSystemMessageToConversation()
         {
             var repository = new ConversationRepository();
 
-            int conversationId = repository.CreateConversation(1, 2);
+            int conversationId = repository.CreateConversation(senderId, receiverId);
 
             repository.CreateSystemMessageForCashAgreementFinalization(conversationId, "file.pdf");
 
@@ -310,7 +312,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void GetMessageById_Invalid_NotReturnsNull()
+        public void ConversationRepositoryGetConversationById_invalidId_returnsNonNullResult()
         {
             var repository = new ConversationRepository();
 
@@ -320,18 +322,18 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CreateConversation_ReusesExistingConversation()
+        public void ConversationRepository_createConversation_returnsExistingConversationForSameParticipants()
         {
             var repository = new ConversationRepository();
 
-            int id1 = repository.CreateConversation(1, 2);
-            int id2 = repository.CreateConversation(1, 2);
+            int id1 = repository.CreateConversation(senderId, receiverId);
+            int id2 = repository.CreateConversation(senderId, receiverId);
 
             Assert.Equal(id1, id2);
         }
 
         [Fact]
-        public void SystemMessage_UsesParticipantLookupBranch()
+        public void ConversationRepository_createSystemMessageForCashAgreementFinalization_notifiesAllSubscribedParticipants()
         {
             var repository = new ConversationRepository();
 
@@ -340,31 +342,33 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             repository.Subscribe(1, mock.Object);
             repository.Subscribe(2, mock.Object);
 
-            int conversationId = repository.CreateConversation(1, 2);
+            int conversationId = repository.CreateConversation(senderId, receiverId);
 
             repository.CreateSystemMessageForCashAgreementFinalization(conversationId, "file.pdf");
 
-            mock.Verify(x => x.OnMessageReceived(It.IsAny<Message>()), Times.AtLeastOnce);
+            mock.Verify(service => service.OnMessageReceived(It.IsAny<Message>()), Times.AtLeastOnce);
 
             CleanupConversation(conversationId);
         }
 
         [Fact]
-        public void Unsubscribe_NonExistingUser_DoesNotThrow()
+        public void ConversationRepositoryUnsubscribe_nonSubscribedUser_isSafe()
         {
             var repository = new ConversationRepository();
-            repository.Unsubscribe(99999);
+            int invalidId = 99999;
+            repository.Unsubscribe(invalidId);
         }
 
         [Fact]
-        public void CashPaymentUpdate_NoConditionsMet_DoesNothing()
+        public void ConversationRepositoryHandleMessageUpdate_cashAgreementWithNoAcceptance_doesNotCreateSystemMessage()
         {
             var repository = new ConversationRepository();
 
-            int conversationId = repository.CreateConversation(1, 2);
-
+            int conversationId = repository.CreateConversation(senderId, receiverId);
+            int messageId = -1;
+            int requestId = 1;
             var message = new CashAgreementMessage(
-                -1, conversationId, 1, 2, 1,
+                messageId, conversationId, senderId, receiverId, requestId,
                 DateTime.Now,
                 "cash",
                 false,

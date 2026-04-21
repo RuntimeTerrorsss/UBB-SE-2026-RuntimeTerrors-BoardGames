@@ -83,11 +83,11 @@ public class ChatViewModel : INotifyPropertyChanged
         AvatarUrl = conversation.AvatarUrl;
 
         Messages.Clear();
-        for (int i = 0; i < messages.Count; i++)
+        for (int index = 0; index < messages.Count; index++)
         {
-            var message = messages[i];
+            var message = messages[index];
             var newMessageViewModel = new MessageViewModel(message, CurrentUserId);
-            if (i < messages.Count - theirUnreadCount)
+            if (index < messages.Count - theirUnreadCount)
             {
                 newMessageViewModel.IsRead = true;
             }
@@ -106,9 +106,9 @@ public class ChatViewModel : INotifyPropertyChanged
         {
             return;
         }
-        bool exists = Messages.Any(m =>
-        m.Content == message.content &&
-        Math.Abs((m.SentAt - message.sentAt).TotalSeconds) < 1);
+        bool exists = Messages.Any(messageViewModel =>
+        messageViewModel.Content == message.content &&
+        Math.Abs((messageViewModel.SentAt - message.sentAt).TotalSeconds) < 1);
 
         if (exists)
         {
@@ -173,7 +173,7 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="accepted"></param>
     public void ResolveBookingRequest(int messageId, bool accepted)
     {
-        var message = Messages.FirstOrDefault(m => m.Id == messageId);
+        var message = Messages.FirstOrDefault(messageViewModel => messageViewModel.Id == messageId);
         if (message == null)
         {
             return;
@@ -187,7 +187,7 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="messageId"></param>
     public void UpdateCashAgreement(int messageId)
     {
-        var message = Messages.FirstOrDefault(m => m.Id == messageId);
+        var message = Messages.FirstOrDefault(messageViewModel => messageViewModel.Id == messageId);
         if (message == null)
         {
             return;
@@ -202,7 +202,7 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="messageId"></param>
     public void ProceedToPayment(int messageId)
     {
-        var message = Messages.FirstOrDefault(m => m.Id == messageId);
+        var message = Messages.FirstOrDefault(messageViewModel => messageViewModel.Id == messageId);
     }
 
     /// <summary>

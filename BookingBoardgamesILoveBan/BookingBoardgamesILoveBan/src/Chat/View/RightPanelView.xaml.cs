@@ -26,7 +26,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         {
             InitializeComponent();
 
-            ActiveChat.ProceedToPaymentRequested += (s, e) => ProceedToPaymentRequested?.Invoke(s, e);
+            ActiveChat.ProceedToPaymentRequested += (sender, eventHandle) => ProceedToPaymentRequested?.Invoke(sender, eventHandle);
         }
         public ChatViewModel ChatViewModel
         {

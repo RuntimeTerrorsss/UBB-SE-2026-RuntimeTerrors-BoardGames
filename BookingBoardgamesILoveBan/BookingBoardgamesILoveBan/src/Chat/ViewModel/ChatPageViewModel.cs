@@ -31,7 +31,7 @@ public class ChatPageViewModel
     {
     }
 
-    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository uService)
+    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository userService)
     {
         LeftPanelModelView = new LeftPanelViewModel();
         ChatModelView = new ChatViewModel(currentUser);
@@ -52,7 +52,7 @@ public class ChatPageViewModel
                 conversation,
                 conversationService.GetOtherUserNameByConversationDTO(conversation),
                 currentUserId,
-                uService);
+                userService);
         }
 
         conversationService.ActionMessageProcessed += OnMessageReceived;
@@ -79,15 +79,15 @@ public class ChatPageViewModel
             return;
         }
 
-        var convo = conversations.FirstOrDefault(c => c.Id == LeftPanelModelView.SelectedConversation.ConversationId);
-        if (convo == null)
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == LeftPanelModelView.SelectedConversation.ConversationId);
+        if (conversation == null)
         {
             return;
         }
-        int selectedConversationOtherUserUnreadCount = convo.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
-        ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, convo.MessageList, selectedConversationOtherUserUnreadCount);
+        int selectedConversationOtherUserUnreadCount = conversation.UnreadCount.FirstOrDefault(firstConversation => firstConversation.Key != currentUserId).Value;
+        ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, selectedConversationOtherUserUnreadCount);
 
-        SendReadReceipt(convo);
+        SendReadReceipt(conversation);
     }
 
     /// <summary>
@@ -204,12 +204,12 @@ public class ChatPageViewModel
     /// <param name="readReceipt"></param>
     private void OnReadReceiptReceived(ReadReceiptDTO readReceipt)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == readReceipt.conversationId);
-        convo.LastRead[readReceipt.readerId] = readReceipt.receiptTimeStamp;
-        convo.UpdateUnreadCounts();
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == readReceipt.conversationId);
+        conversation.LastRead[readReceipt.readerId] = readReceipt.receiptTimeStamp;
+        conversation.UpdateUnreadCounts();
         if (ChatModelView.ConversationId == readReceipt.conversationId && readReceipt.readerId != currentUserId)
         {
-            ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, convo.MessageList, convo.UnreadCount[readReceipt.readerId]);
+            ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, conversation.UnreadCount[readReceipt.readerId]);
         }
     }
 

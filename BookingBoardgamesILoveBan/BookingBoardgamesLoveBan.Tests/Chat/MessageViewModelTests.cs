@@ -29,7 +29,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMine_SenderIsCurrentUser_IsTrue()
+        public void MessageViewModelIsMine_senderMatchesCurrentUser_returnsTrue()
         {
             var message = CreateMessage() with { senderId = 1 };
 
@@ -39,7 +39,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMine_SenderIsNotCurrentUser_IsFalse()
+        public void MessageViewModelIsMine_senderDoesNotMatchCurrentUser_returnsFalse()
         {
             var message = CreateMessage() with { senderId = 99 };
 
@@ -49,7 +49,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsRead_Default_False()
+        public void MessageViewModelIsRead_newInstance_returnsFalse()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -57,15 +57,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SettingIsResolved_RaisePropertyChanged()
+        public void MessageViewModelIsResolved_setter_raisesPropertyChangedAndUpdatesValue()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
             bool raised = false;
 
-            viewModel.PropertyChanged += (_, e) =>
+            viewModel.PropertyChanged += (senderObject, eventArguments) =>
             {
-                if (e.PropertyName == nameof(viewModel.IsResolved))
+                if (eventArguments.PropertyName == nameof(viewModel.IsResolved))
                 {
                     raised = true;
                 }
@@ -78,7 +78,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SettingAcceptedByUpdate_BothAccepted()
+        public void MessageViewModelSettingAcceptedBy_bothUsersAccepted_updatesBothAcceptedToTrue()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -88,15 +88,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ChangingAcceptedBy_RaiseBothAcceptedPropertyChanged()
+        public void MessageViewModelAcceptedBy_change_raisesPropertyChangedForBothAccepted()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
             bool raised = false;
 
-            viewModel.PropertyChanged += (_, e) =>
+            viewModel.PropertyChanged += (senderObject, eventArguments) =>
             {
-                if (e.PropertyName == nameof(viewModel.BothAccepted))
+                if (eventArguments.PropertyName == nameof(viewModel.BothAccepted))
                 {
                     raised = true;
                 }
@@ -108,7 +108,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsRead_CanBeUpdated()
+        public void MessageViewModelIsRead_setter_updatesValue()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -118,7 +118,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsAccepted_BeSetFromDTOAndUpdatable()
+        public void MessageViewModel_settingIsAccepted_isUpdated()
         {
             var message = CreateMessage() with { isAccepted = true };
 
@@ -132,7 +132,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void BothAccepted_NotTwo_False()
+        public void MessageViewModel_LessThanTwoUsersAccepte_bothAcceptedFalse()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -151,7 +151,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMineToCornerRadius_ReturnDifferentValues()
+        public void MessageViewModel_isMineToAlignment_returnsRightForMineAndLeftForOthers()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 
@@ -162,7 +162,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsMineToBorderThickness_ReturnCorrect()
+        public void MessageViewModel_isMineToTheirsOnlyBorderThickness_returnsCorrectThicknessForMineAndOthers()
         {
             var viewModel = new MessageViewModel(CreateMessage(), 1);
 

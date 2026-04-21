@@ -63,7 +63,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         private int? selectedConversationId;
         public ConversationPreviewModel SelectedConversation
         {
-            get => Conversations.FirstOrDefault(c => c.ConversationId == selectedConversationId);
+            get => Conversations.FirstOrDefault(firstConversation => firstConversation.ConversationId == selectedConversationId);
             set
             {
                 if (selectedConversationId != value?.ConversationId)
@@ -91,32 +91,32 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         private void ApplyFilter()
         {
             var filtered = allConversations
-                .Where(c => string.IsNullOrEmpty(SearchText) ||
-                            c.DisplayName.Contains(SearchText, StringComparison.Ordinal))
+                .Where(conversation => string.IsNullOrEmpty(SearchText) ||
+                            conversation.DisplayName.Contains(SearchText, StringComparison.Ordinal))
                 .ToList();
 
             // Remove items that no longer match
-            for (int i = Conversations.Count - 1; i >= 0; i--)
+            for (int index = Conversations.Count - 1; index >= 0; index--)
             {
-                if (!filtered.Contains(Conversations[i]))
+                if (!filtered.Contains(Conversations[index]))
                 {
-                    Conversations.RemoveAt(i);
+                    Conversations.RemoveAt(index);
                 }
             }
 
             // Add missing items and fix ordering
-            for (int i = 0; i < filtered.Count; i++)
+            for (int index = 0; index < filtered.Count; index++)
             {
-                var item = filtered[i];
+                var item = filtered[index];
                 int currentIndex = Conversations.IndexOf(item);
 
                 if (currentIndex == -1)
                 {
-                    Conversations.Insert(i, item);       // not present, insert at correct position
+                    Conversations.Insert(index, item);       // not present, insert at correct position
                 }
-                else if (currentIndex != i)
+                else if (currentIndex != index)
                 {
-                    Conversations.Move(currentIndex, i); // present but wrong position, move it
+                    Conversations.Move(currentIndex, index); // present but wrong position, move it
                 }
                                                          // else: already in the right place, do nothing
             }
@@ -130,7 +130,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
         /// <param name="conversationId"></param>
         private void MarkAsRead(int conversationId)
         {
-            var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversationId);
+            var existing = allConversations.FirstOrDefault(firstConversation => firstConversation.ConversationId == conversationId);
             if (existing == null || existing.UnreadCount == 0)
             {
                 return;
@@ -150,7 +150,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
 
         public void HandleIncomingMessage(MessageDTO message, string senderName, IUserRepository userService)
         {
-            var existing = allConversations.FirstOrDefault(c => c.ConversationId == message.conversationId);
+            var existing = allConversations.FirstOrDefault(firstConversation => firstConversation.ConversationId == message.conversationId);
 
             if (existing != null)
             {
@@ -192,7 +192,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
 
         public void HandleIncomingConversation(ConversationDTO conversation, string displayName, int userId, IUserRepository service)
         {
-            var existing = allConversations.FirstOrDefault(c => c.ConversationId == conversation.Id);
+            var existing = allConversations.FirstOrDefault(firstConversation => firstConversation.ConversationId == conversation.Id);
             if (existing != null)
             {
                 return;
@@ -200,7 +200,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
 
             var otherUser = conversation.Participants[0] == userId ? conversation.Participants[1] : conversation.Participants[0];
 
-            var newConvo = new ConversationPreviewModel(
+            var newConversation = new ConversationPreviewModel(
                 conversation.Id,
                 displayName,
                 displayName.Substring(0, 1).ToUpper(),
@@ -208,7 +208,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel
                 conversation.MessageList.LastOrDefault()?.sentAt ?? DateTime.MinValue,
                 unreadCountInput: conversation.UnreadCount[userId],
                 service.GetById(otherUser).AvatarUrl);
-            allConversations.Insert(0, newConvo);
+            allConversations.Insert(0, newConversation);
             SortConversationsByTimestamp();
             ApplyFilter();
         }

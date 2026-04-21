@@ -39,11 +39,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <summary>
         /// Gets a single conversation by id, including messages and last read info.
         /// </summary>
-        /// <param name="convId"></param>
+        /// <param name="conversationId"></param>
         /// <returns></returns>
-        public Conversation GetConversationById(int convId)
+        public Conversation GetConversationById(int conversationId)
         {
-            return LoadConversationFromDB(convId);
+            return LoadConversationFromDB(conversationId);
         }
 
         // CRUD HANDLERS
@@ -128,7 +128,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 // message.Content = "This request has been finalized!";
                 HandleMessageUpdate(message);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 Debug.WriteLine($"You tried to accept a message that wasnt a rental request... how?");
             }
@@ -327,14 +327,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <returns></returns>
         private Conversation LoadConversationFromDB(int conversationId)
         {
-            Conversation ret = null;
+            Conversation returnedConversation = null;
             using (var connection = new SqlConnection(appConnectionString))
             {
                 connection.Open();
-                ret = LoadSingleConversationFromDB(conversationId, connection);
+                returnedConversation = LoadSingleConversationFromDB(conversationId, connection);
                 connection.Close();
             }
-            return ret;
+            return returnedConversation;
         }
 
         /// <summary>
@@ -636,7 +636,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                     $"Cash agreement for request: {parentMessage.RentalRequestId}");
                 HandleNewMessage(cashAgreementMessage);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 Debug.WriteLine($"You tried to create a cash agreement message for a message that wasnt a rental request... how?");
             }

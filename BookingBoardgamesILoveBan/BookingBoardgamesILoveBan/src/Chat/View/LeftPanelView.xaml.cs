@@ -31,7 +31,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set
             {
                 viewModel = value;
-                viewModel.PropertyChanged += (s, e) => RefreshVisibility();
+                viewModel.PropertyChanged += (sender, eventHandle) => RefreshVisibility();
                 RefreshVisibility(); // catch initial state
                 // Bindings.Update();
             }

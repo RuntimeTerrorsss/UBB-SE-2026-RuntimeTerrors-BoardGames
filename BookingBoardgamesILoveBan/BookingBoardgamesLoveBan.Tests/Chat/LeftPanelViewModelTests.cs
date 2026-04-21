@@ -25,7 +25,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var service = new Moq.Mock<IUserRepository>();
 
-            service.Setup(s => s.GetById(It.IsAny<int>()))
+            service.Setup(receivedService => receivedService.GetById(It.IsAny<int>()))
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
 
             return service.Object;
@@ -62,7 +62,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_AddNewConversation_IsAdded()
+        public void ChatPageViewModel_handleIncomingMessageNewConversation_isAddedToConversations()
         {
             var viewModel = CreateViewModel();
 
@@ -72,7 +72,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_UpdateExistingConversation()
+        public void ChatPageViewModel_handleIncomingMessageExistingConversation_updatesLastMessageText()
         {
             var viewModel = CreateViewModel();
 
@@ -86,7 +86,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenNotSelected_IncrementUnread()
+        public void ChatPageViewModel_handleIncomingMessageUnselectedConversation_incrementsUnreadCount()
         {
             var viewModel = CreateViewModel();
 
@@ -97,7 +97,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SelectingConversation_SetUnreadToZero()
+        public void ChatPageViewModel_selectingConversation_marksMessagesAsReadResetsUnreadCount()
         {
             var viewModel = CreateViewModel();
 
@@ -111,7 +111,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SearchText_FilterConversations()
+        public void ChatPageViewModel_searchText_filtersConversationsByParticipantName()
         {
             var viewModel = CreateViewModel();
 
@@ -124,7 +124,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingConversation_AddConversation()
+        public void ChatPageViewModel_handleIncomingConversation_addsConversationToList()
         {
             var viewModel = CreateViewModel();
             var service = CreateUserService();
@@ -137,7 +137,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingConversation_DuplicateConversation_NotAddDuplicate()
+        public void ChatPageViewModel_handleIncomingConversationDuplicateConversation_doesNotAddDuplicateToList()
         {
             var viewModel = CreateViewModel();
             var service = CreateUserService();
@@ -151,7 +151,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SortConversationsByTimestamp_KeepConversations()
+        public void ChatPageViewModel_sortConversationsByTimestamp_doesNotRemoveAnyConversations()
         {
             var viewModel = CreateViewModel();
             var service = CreateUserService();
@@ -168,7 +168,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void UIStates_Update()
+        public void ChatPageViewModel_handleIncomingMessage_hidesEmptyStateWhenMessagesExist()
         {
             var viewModel = CreateViewModel();
 
@@ -178,7 +178,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ApplyFilter_Reorder_ReorderCorrectly()
+        public void ChatPageViewModel_searchTextCleared_ordersConversationsByDisplayName()
         {
             var viewModel = CreateViewModel();
 
@@ -191,7 +191,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ApplyFilter_Reorder_MoveItemsWhenOrderChanges()
+        public void ChatPageViewModel_sortConversationsByTimestamp_ordersByOldestFirst()
         {
             var viewModel = CreateViewModel();
 
@@ -207,7 +207,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenSelected_NotIncreaseUnread()
+        public void ChatPageViewModel_handleIncomingMessageSelectedConversation_doesNotIncrementUnreadCount()
         {
             var viewModel = CreateViewModel();
             var message = CreateMessage();
@@ -221,7 +221,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingConversation_WithMessages_SetPreviewAndTimestamp()
+        public void ChatPageViewModel_handleIncomingConversationWithMessages_setsLastMessageTextAndTimestamp()
         {
             var viewModel = CreateViewModel();
             var service = CreateUserService();
@@ -248,7 +248,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SortConversationsByTimestamp_OrderDescending_Sorted()
+        public void ChatPageViewModel_sortConversationsByTimestamp_ordersConversationsByDescendingTimestamp()
         {
             var viewModel = CreateViewModel();
             var service = CreateUserService();
@@ -267,15 +267,15 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void RaisePropertyChanged_InvokeEvent()
+        public void ChatPageViewModel_raisePropertyChanged_raisesPropertyChangedForGivenPropertyName()
         {
             var viewModel = CreateViewModel();
 
             bool triggered = false;
 
-            viewModel.PropertyChanged += (s, e) =>
+            viewModel.PropertyChanged += (sentObject, eventArguments) =>
             {
-                if (e.PropertyName == "TestProp")
+                if (eventArguments.PropertyName == "TestProp")
                     triggered = true;
             };
 
@@ -285,7 +285,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Search_NoMatches_ShowNoMatchesState()
+        public void ChatPageViewModel_searchTextNoMatchingConversations_showsNoMatchesState()
         {
             var viewModel = CreateViewModel();
 
@@ -297,7 +297,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SelectingConversation_ZeroUnread_NotChange()
+        public void ChatPageViewModel_selectingConversationWithZeroUnreadCount_keepsUnreadCountUnchanged()
         {
             var viewModel = CreateViewModel();
 
@@ -312,7 +312,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Search_RemoveNonMatchingItems_ItemsRemoved()
+        public void ChatPageViewModel_searchText_filtersOutNonMatchingConversations()
         {
             var viewModel = CreateViewModel();
 
@@ -321,7 +321,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             viewModel.SearchText = "John";
 
-            Assert.DoesNotContain(viewModel.Conversations, c => c.DisplayName == "Mike");
+            Assert.DoesNotContain(viewModel.Conversations, conversation => conversation.DisplayName == "Mike");
         }
     }
 }

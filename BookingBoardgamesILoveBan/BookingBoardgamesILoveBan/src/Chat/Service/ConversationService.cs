@@ -209,7 +209,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public Message MessageDTOToMessage(MessageDTO messageDto)
         {
-            Message toReturn = messageDto.type switch
+            Message messageToReturn = messageDto.type switch
             {
                 MessageType.MessageText => new TextMessage(
                     id: messageDto.id,
@@ -252,7 +252,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
                     sentAt: messageDto.sentAt,
                     content: messageDto.content),
             };
-            return toReturn;
+            return messageToReturn;
         }
 
         /// <summary>
