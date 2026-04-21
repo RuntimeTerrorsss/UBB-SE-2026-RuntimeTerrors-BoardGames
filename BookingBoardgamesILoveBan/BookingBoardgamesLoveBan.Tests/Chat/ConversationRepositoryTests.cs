@@ -1,381 +1,505 @@
-﻿//using BookingBoardgamesILoveBan.Src.Chat.Model;
-//using BookingBoardgamesILoveBan.Src.Chat.Repository;
-//using BookingBoardgamesILoveBan.Src.Chat.Service;
-//using BookingBoardgamesILoveBan.Src.Enum;
-//using BookingBoardgamesILoveBan.Src.Model;
-//using Microsoft.Data.SqlClient;
-//using Moq;
-//using System;
-//using System.Linq;
-//using Xunit;
-
-//namespace BookingBoardgamesILoveBan.Tests.Chat
-//{
-//    public class ConversationRepositoryIntegrationTests
-//    {
-//        private readonly string connectionString;
-
-//        public ConversationRepositoryIntegrationTests()
-//        {
-//            DatabaseBootstrap.Initialize();
-//            connectionString = DatabaseBootstrap.GetAppConnection();
-//        }
-
-//        [Fact]
-//        public void HandleNewMessage_ImageMessage_Persists()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            var message = new ImageMessage(-1, conversationId, 1, 2, DateTime.Now, "img.png");
-
-//            repository.HandleNewMessage(message);
-
-//            var conversation = repository.GetConversationById(conversationId);
-
-//            Assert.Contains(conversation.ConversationMessageList,
-//                message => message is ImageMessage);
-
-//            CleanupConversation(conversationId);
-//        }
-
-//        [Fact]
-//        public void HandleMessageUpdate_RentalRequest_UpdatesDB()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            var message = new RentalRequestMessage(
-//                -1, conversationId, 1, 2, DateTime.Now,
-//                "rent", 1, false, false);
-
-//            repository.HandleNewMessage(message);
-
-//            var stored = repository.GetConversationById(conversationId)
-//                .ConversationMessageList
-//                .OfType<RentalRequestMessage>()
-//                .First();
-
-//            stored.IsRequestAccepted = true;
-
-//            repository.HandleMessageUpdate(stored);
-
-//            var updated = repository.GetConversationById(conversationId)
-//                .ConversationMessageList
-//                .OfType<RentalRequestMessage>()
-//                .First();
-
-//            Assert.True(updated.IsRequestAccepted);
-
-//            CleanupConversation(conversationId);
-//        }
-
-//        [Fact]
-//        public void CashAgreement_CreatesSystemMessage()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            var message = new CashAgreementMessage(
-//                -1, conversationId, 1, 2, 1,
-//                DateTime.Now, "cash",
-//                false, false, false);
-
-//            repository.HandleNewMessage(message);
-
-//            message.IsCashAgreementAcceptedByBuyer = true;
-//            message.IsCashAgreementAcceptedBySeller = true;
-
-//            repository.HandleMessageUpdate(message);
-
-//            var conversation = repository.GetConversationById(conversationId);
-
-//            Assert.Contains(conversation.ConversationMessageList,
-//                message => message is SystemMessage);
-
-//            CleanupConversation(conversationId);
-//        }
-
-//        [Fact]
-//        public void GetConversationsForUser_ReturnsData()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int user1 = -1;
-//            int user2 = -1;
-//            int conversationersationId = -1;
-
-//            try
-//            {
-//                using (var connection = new SqlConnection(connectionString))
-//                {
-//                    connection.Open();
-
-//                    var cmd = new SqlCommand(@"
-//                        INSERT INTO [User] (DisplayName, UserName, Balance, Country, City, Street, StreetNumber)
-//                        VALUES ('Test50', 'test50', 0, 'RO', 'City', 'Street', '1');
-
-//                        SELECT SCOPE_IDENTITY();
-//                    ", connection);
-
-//                    user1 = Convert.ToInt32(cmd.ExecuteScalar());
-
-//                    cmd = new SqlCommand(@"
-//                        INSERT INTO [User] (DisplayName, UserName, Balance, Country, City, Street, StreetNumber)
-//                        VALUES ('Test60', 'test60', 0, 'RO', 'City', 'Street', '2');
-
-//                        SELECT SCOPE_IDENTITY();
-//                    ", connection);
-
-//                    user2 = Convert.ToInt32(cmd.ExecuteScalar());
-//                }
-
-//                conversationersationId = repository.CreateConversation(user1, user2);
-
-//                var list = repository.GetConversationsForUser(user1);
-
-//                Assert.Contains(list, c => c.ConversationId == conversationersationId);
-//            }
-//            finally
-//            {
-//                CleanupConversation(conversationersationId);
-
-//                using (var connection = new SqlConnection(connectionString))
-//                {
-//                    connection.Open();
-
-//                    try
-//                    {
-//                        if (user1 > 0)
-//                            new SqlCommand("DELETE FROM [User] WHERE uid = @id", connection)
-//                            {
-//                                Parameters = { new SqlParameter("@id", user1) }
-//                            }.ExecuteNonQuery();
-
-//                        if (user2 > 0)
-//                            new SqlCommand("DELETE FROM [User] WHERE uid = @id", connection)
-//                            {
-//                                Parameters = { new SqlParameter("@id", user2) }
-//                            }.ExecuteNonQuery();
-//                    }
-//                    catch (Exception ex)
-//                    {
-//                    }
-//                }
-//            }
-//        }
-
-//        [Fact]
-//        public void Observer_ReceivesMessageNotification()
-//        {
-//            var repository = new ConversationRepository();
-
-//            var mock = new Mock<IConversationService>();
-//            repository.Subscribe(1, mock.Object);
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            repository.HandleNewMessage(
-//                new TextMessage(-1, conversationId, 1, 2, DateTime.Now, "hi"));
-
-//            mock.Verify(message => message.OnMessageReceived(It.IsAny<Message>()),
-//                Times.AtLeastOnce);
-
-//            CleanupConversation(conversationId);
-//        }
-
-//        private void CleanupConversation(int conversationersationId)
-//        {
-//            if (conversationersationId <= 0) return;
-
-//            try
-//            {
-//                using (var connection = new SqlConnection(connectionString))
-//                {
-//                    connection.Open();
-
-//                    var cmd = new SqlCommand(@"
-//                    DELETE FROM TextMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
-//                    DELETE FROM ImageMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
-//                    DELETE FROM CashAgreementMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
-//                    DELETE FROM RentalRequestMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
-//                    DELETE FROM SystemMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
-//                    DELETE FROM Message WHERE ConversationId = @conversationId;
-//                    DELETE FROM ConversationUser WHERE conversationId = @conversationId;
-//                    DELETE FROM Conversation WHERE conversationId = @conversationId;
-//                ", connection);
-
-//                    cmd.Parameters.AddWithValue("@conversationId", conversationersationId);
-//                    cmd.ExecuteNonQuery();
-//                }
-//            }
-//            catch (Exception ex)
-//            {
-//            }
-//        }
-
-//        [Fact]
-//        public void HandleNewMessage_ValidConversation_AddsMessage()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int user1 = 1, user2 = 2;
-
-//            int conversationId = repository.CreateConversation(user1, user2);
-
-//            var message = new TextMessage(-1, conversationId, user1, user2, DateTime.Now, "hello");
-
-//            repository.HandleNewMessage(message);
-
-//            var conversation = repository.GetConversationById(conversationId);
-
-//            Assert.Contains(conversation.ConversationMessageList,
-//                message => message.MessageContentAsString == "hello");
-//        }
-
-//        [Fact]
-//        public void HandleReadReceipt_UpdatesDatabase()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            repository.HandleReadReceipt(new ReadReceipt(conversationId, 1, 2, DateTime.UtcNow));
-
-//            var conversation = repository.GetConversationById(conversationId);
-
-//            Assert.True(conversation.LastMessageReadTime.Count > 0);
-//        }
-
-//        [Fact]
-//        public void HandleRentalRequestFinalization_InvalidMessage_DoesNotCrash()
-//        {
-//            var repository = new ConversationRepository();
-
-//            repository.HandleRentalRequestFinalization(-999);
-//        }
-
-//        [Fact]
-//        public void SubscribeAndNotify_Works()
-//        {
-//            var repository = new ConversationRepository();
-
-//            var mock = new Mock<IConversationService>();
-
-//            repository.Subscribe(1, mock.Object);
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            var message = new TextMessage(-1, conversationId, 1, 2, DateTime.Now, "hi");
-
-//            repository.HandleNewMessage(message);
-
-//            mock.Verify(x => x.OnMessageReceived(It.IsAny<Message>()), Times.Once);
-//        }
-
-//        [Fact]
-//        public void Unsubscribe_RemovesSubscriber()
-//        {
-//            var repository = new ConversationRepository();
-
-//            var mock = new Mock<IConversationService>();
-
-//            repository.Subscribe(1, mock.Object);
-//            repository.Unsubscribe(1);
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            repository.HandleNewMessage(
-//                new TextMessage(-1, conversationId, 1, 2, DateTime.Now, "x"));
-
-//            mock.Verify(x => x.OnMessageReceived(It.IsAny<Message>()), Times.Never);
-//        }
-
-//        [Fact]
-//        public void SystemMessage_IsProcessed()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            repository.CreateSystemMessageForCashAgreementFinalization(conversationId, "file.pdf");
-
-//            var conversation = repository.GetConversationById(conversationId);
-
-//            Assert.Contains(conversation.ConversationMessageList,
-//                message => message.TypeOfMessage == MessageType.MessageSystem);
-//        }
-
-//        [Fact]
-//        public void GetMessageById_Invalid_NotReturnsNull()
-//        {
-//            var repository = new ConversationRepository();
-
-//            var result = repository.GetConversationById(-999);
-
-//            Assert.NotNull(result);
-//        }
-
-//        [Fact]
-//        public void CreateConversation_ReusesExistingConversation()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int id1 = repository.CreateConversation(1, 2);
-//            int id2 = repository.CreateConversation(1, 2);
-
-//            Assert.Equal(id1, id2);
-//        }
-
-//        [Fact]
-//        public void SystemMessage_UsesParticipantLookupBranch()
-//        {
-//            var repository = new ConversationRepository();
-
-//            var mock = new Mock<IConversationService>();
-
-//            repository.Subscribe(1, mock.Object);
-//            repository.Subscribe(2, mock.Object);
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            repository.CreateSystemMessageForCashAgreementFinalization(conversationId, "file.pdf");
-
-//            mock.Verify(x => x.OnMessageReceived(It.IsAny<Message>()), Times.AtLeastOnce);
-
-//            CleanupConversation(conversationId);
-//        }
-
-//        [Fact]
-//        public void Unsubscribe_NonExistingUser_DoesNotThrow()
-//        {
-//            var repository = new ConversationRepository();
-//            repository.Unsubscribe(99999);
-//        }
-
-//        [Fact]
-//        public void CashPaymentUpdate_NoConditionsMet_DoesNothing()
-//        {
-//            var repository = new ConversationRepository();
-
-//            int conversationId = repository.CreateConversation(1, 2);
-
-//            var message = new CashAgreementMessage(
-//                -1, conversationId, 1, 2, 1,
-//                DateTime.Now,
-//                "cash",
-//                false,
-//                false,
-//                false
-//            );
-
-//            repository.HandleNewMessage(message);
-//            repository.HandleMessageUpdate(message);
-//            CleanupConversation(conversationId);
-//        }
-
-//    }
-//}
+﻿using BookingBoardgamesILoveBan.Src.Chat.Model;
+using BookingBoardgamesILoveBan.Src.Chat.Repository;
+using BookingBoardgamesILoveBan.Src.Chat.Service;
+using BookingBoardgamesILoveBan.Src.Enum;
+using BookingBoardgamesILoveBan.Src.Model;
+using Microsoft.Data.SqlClient;
+using Moq;
+using System;
+using System.Linq;
+using Xunit;
+
+namespace BookingBoardgamesILoveBan.Tests.Chat
+{
+    public class ConversationRepositoryIntegrationTests
+    {
+        private readonly string connectionString;
+
+        public ConversationRepositoryIntegrationTests()
+        {
+            DatabaseBootstrap.Initialize();
+            connectionString = DatabaseBootstrap.GetAppConnection();
+        }
+
+        private int CreateTemporaryTestUser(string userSuffix)
+        {
+            using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+            {
+                sqlConnection.Open();
+                string insertQuery = @"
+                    INSERT INTO [User] (DisplayName, UserName, Balance, Country, City, Street, StreetNumber)
+                    VALUES (@DisplayName, @UserName, 0, 'RO', 'City', 'Street', '1');
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+                using (SqlCommand sqlCommand = new SqlCommand(insertQuery, sqlConnection))
+                {
+                    sqlCommand.Parameters.AddWithValue("@DisplayName", "TestUser_" + userSuffix);
+                    sqlCommand.Parameters.AddWithValue("@UserName", "usr_" + Guid.NewGuid().ToString().Substring(0, 8));
+                    return (int)sqlCommand.ExecuteScalar();
+                }
+            }
+        }
+
+        private void CleanupTemporaryTestUser(int userIdentifier)
+        {
+            if (userIdentifier <= 0) return;
+            try
+            {
+                using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+                {
+                    sqlConnection.Open();
+                    using (SqlCommand sqlCommand = new SqlCommand("DELETE FROM [User] WHERE uid = @UserId", sqlConnection))
+                    {
+                        sqlCommand.Parameters.AddWithValue("@UserId", userIdentifier);
+                        sqlCommand.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void CleanupConversation(int conversationIdentifier)
+        {
+            if (conversationIdentifier <= 0) return;
+            try
+            {
+                using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+                {
+                    sqlConnection.Open();
+                    SqlCommand sqlCommand = new SqlCommand(@"
+                        DELETE FROM TextMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
+                        DELETE FROM ImageMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
+                        DELETE FROM CashAgreementMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
+                        DELETE FROM RentalRequestMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
+                        DELETE FROM SystemMessage WHERE mid IN (SELECT mid FROM Message WHERE ConversationId = @conversationId);
+                        DELETE FROM Message WHERE ConversationId = @conversationId;
+                        DELETE FROM ConversationUser WHERE cid = @conversationId;
+                        DELETE FROM Conversation WHERE cid = @conversationId;
+                    ", sqlConnection);
+
+                    sqlCommand.Parameters.AddWithValue("@conversationId", conversationIdentifier);
+                    sqlCommand.ExecuteNonQuery();
+                }
+            }
+            catch { }
+        }
+
+        [Fact]
+        public void HandleNewMessage_ValidImageMessage_PersistsToDatabase()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+            string testImageFileName = "img.png";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                ImageMessage imageMessage = new ImageMessage(defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier, DateTime.Now, testImageFileName);
+
+                conversationRepository.HandleNewMessage(imageMessage);
+                Conversation retrievedConversation = conversationRepository.GetConversationById(conversationIdentifier);
+
+                Assert.Contains(retrievedConversation.ConversationMessageList, messageItem => messageItem is ImageMessage);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void HandleMessageUpdate_ValidRentalRequest_UpdatesDatabaseStatus()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+            int rentalRequestIdentifier = 1;
+            string rentalMessageContent = "rent";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                RentalRequestMessage rentalRequestMessage = new RentalRequestMessage(
+                    defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier,
+                    DateTime.Now, rentalMessageContent, rentalRequestIdentifier, false, false);
+
+                conversationRepository.HandleNewMessage(rentalRequestMessage);
+
+                RentalRequestMessage storedMessage = conversationRepository.GetConversationById(conversationIdentifier)
+                    .ConversationMessageList.OfType<RentalRequestMessage>().First();
+
+                storedMessage.IsRequestAccepted = true;
+                conversationRepository.HandleMessageUpdate(storedMessage);
+
+                RentalRequestMessage updatedMessage = conversationRepository.GetConversationById(conversationIdentifier)
+                    .ConversationMessageList.OfType<RentalRequestMessage>().First();
+
+                Assert.True(updatedMessage.IsRequestAccepted);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void HandleMessageUpdate_BothPartiesAcceptCash_CreatesSystemMessage()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+            int cashPaymentIdentifier = 1;
+            string cashMessageContent = "cash";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                CashAgreementMessage cashMessage = new CashAgreementMessage(
+                    defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier,
+                    cashPaymentIdentifier, DateTime.Now, cashMessageContent, false, false, false);
+
+                conversationRepository.HandleNewMessage(cashMessage);
+
+                cashMessage.IsCashAgreementAcceptedByBuyer = true;
+                cashMessage.IsCashAgreementAcceptedBySeller = true;
+                conversationRepository.HandleMessageUpdate(cashMessage);
+
+                Conversation retrievedConversation = conversationRepository.GetConversationById(conversationIdentifier);
+
+                Assert.Contains(retrievedConversation.ConversationMessageList, messageItem => messageItem is SystemMessage && messageItem.MessageContentAsString != "New conversation");
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void GetConversationsForUser_ExistingConversations_ReturnsPopulatedList()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                var conversationList = conversationRepository.GetConversationsForUser(firstUserIdentifier);
+
+                Assert.Contains(conversationList, conversationItem => conversationItem.ConversationId == conversationIdentifier);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void Subscribe_ValidObserver_ReceivesMessageNotification()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+            string textContent = "hi";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+                Mock<IConversationService> conversationServiceMock = new Mock<IConversationService>();
+
+                conversationRepository.Subscribe(firstUserIdentifier, conversationServiceMock.Object);
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+
+                TextMessage textMessage = new TextMessage(defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier, DateTime.Now, textContent);
+                conversationRepository.HandleNewMessage(textMessage);
+
+                conversationServiceMock.Verify(serviceMock => serviceMock.OnMessageReceived(It.IsAny<Message>()), Times.AtLeastOnce);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void HandleNewMessage_ValidTextMessage_AddsMessageToConversation()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+            string textContent = "hello";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                TextMessage textMessage = new TextMessage(defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier, DateTime.Now, textContent);
+
+                conversationRepository.HandleNewMessage(textMessage);
+                Conversation retrievedConversation = conversationRepository.GetConversationById(conversationIdentifier);
+
+                Assert.Contains(retrievedConversation.ConversationMessageList, messageItem => messageItem.MessageContentAsString == textContent);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void HandleReadReceipt_ValidReceipt_UpdatesLastReadTime()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                ReadReceipt readReceipt = new ReadReceipt(conversationIdentifier, firstUserIdentifier, secondUserIdentifier, DateTime.UtcNow);
+
+                conversationRepository.HandleReadReceipt(readReceipt);
+                Conversation retrievedConversation = conversationRepository.GetConversationById(conversationIdentifier);
+
+                Assert.True(retrievedConversation.LastMessageReadTime.ContainsKey(firstUserIdentifier));
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void HandleRentalRequestFinalization_InvalidIdentifier_ExecutesWithoutError()
+        {
+            ConversationRepository conversationRepository = new ConversationRepository();
+            int invalidMessageIdentifier = -999;
+
+            Exception executionException = Record.Exception(() => conversationRepository.HandleRentalRequestFinalization(invalidMessageIdentifier));
+
+            Assert.Null(executionException);
+        }
+
+        [Fact]
+        public void Unsubscribe_ValidUser_RemovesServiceNotification()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+                Mock<IConversationService> conversationServiceMock = new Mock<IConversationService>();
+
+                conversationRepository.Subscribe(firstUserIdentifier, conversationServiceMock.Object);
+                conversationRepository.Unsubscribe(firstUserIdentifier);
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                TextMessage textMessage = new TextMessage(defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier, DateTime.Now, "x");
+
+                conversationRepository.HandleNewMessage(textMessage);
+
+                conversationServiceMock.Verify(serviceMock => serviceMock.OnMessageReceived(It.IsAny<Message>()), Times.Never);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void CreateSystemMessageForCashAgreementFinalization_ValidInput_AddsSystemMessage()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            string documentPath = "file.pdf";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                conversationRepository.CreateSystemMessageForCashAgreementFinalization(conversationIdentifier, documentPath);
+
+                Conversation retrievedConversation = conversationRepository.GetConversationById(conversationIdentifier);
+
+                Assert.Contains(retrievedConversation.ConversationMessageList, messageItem => messageItem.TypeOfMessage == MessageType.MessageSystem && messageItem.MessageContentAsString != "New conversation");
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void GetConversationById_InvalidIdentifier_ReturnsNonNullObject()
+        {
+            ConversationRepository conversationRepository = new ConversationRepository();
+            int invalidConversationIdentifier = -999;
+
+            var retrievedConversation = conversationRepository.GetConversationById(invalidConversationIdentifier);
+
+            Assert.NotNull(retrievedConversation);
+        }
+
+        [Fact]
+        public void CreateConversation_UsersAlreadyHaveConversation_ReturnsExistingIdentifier()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int firstConversationIdentifier = -1;
+            int secondConversationIdentifier = -1;
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                firstConversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                secondConversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+
+                Assert.Equal(firstConversationIdentifier, secondConversationIdentifier);
+            }
+            finally
+            {
+                CleanupConversation(firstConversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void CreateSystemMessageForCashAgreementFinalization_SubscribedUsers_NotifiesBothParticipants()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            string documentPath = "file.pdf";
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+                Mock<IConversationService> conversationServiceMock = new Mock<IConversationService>();
+
+                conversationRepository.Subscribe(firstUserIdentifier, conversationServiceMock.Object);
+                conversationRepository.Subscribe(secondUserIdentifier, conversationServiceMock.Object);
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                conversationRepository.CreateSystemMessageForCashAgreementFinalization(conversationIdentifier, documentPath);
+
+                conversationServiceMock.Verify(serviceMock => serviceMock.OnMessageReceived(It.IsAny<Message>()), Times.AtLeastOnce);
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+
+        [Fact]
+        public void Unsubscribe_InvalidUserIdentifier_ExecutesWithoutError()
+        {
+            ConversationRepository conversationRepository = new ConversationRepository();
+            int invalidUserIdentifier = 99999;
+
+            Exception executionException = Record.Exception(() => conversationRepository.Unsubscribe(invalidUserIdentifier));
+
+            Assert.Null(executionException);
+        }
+
+        [Fact]
+        public void HandleMessageUpdate_CashAgreementNotFullyAccepted_DoesNotCreateSystemMessage()
+        {
+            int firstUserIdentifier = -1;
+            int secondUserIdentifier = -1;
+            int conversationIdentifier = -1;
+            int defaultMessageIdentifier = -1;
+            int cashPaymentIdentifier = 1;
+
+            try
+            {
+                firstUserIdentifier = CreateTemporaryTestUser("A");
+                secondUserIdentifier = CreateTemporaryTestUser("B");
+                ConversationRepository conversationRepository = new ConversationRepository();
+
+                conversationIdentifier = conversationRepository.CreateConversation(firstUserIdentifier, secondUserIdentifier);
+                CashAgreementMessage cashMessage = new CashAgreementMessage(
+                    defaultMessageIdentifier, conversationIdentifier, firstUserIdentifier, secondUserIdentifier,
+                    cashPaymentIdentifier, DateTime.Now, "cash", false, false, false);
+
+                conversationRepository.HandleNewMessage(cashMessage);
+                conversationRepository.HandleMessageUpdate(cashMessage);
+
+                Conversation retrievedConversation = conversationRepository.GetConversationById(conversationIdentifier);
+
+                Assert.DoesNotContain(retrievedConversation.ConversationMessageList, messageItem => messageItem is SystemMessage && messageItem.MessageContentAsString != "New conversation");
+            }
+            finally
+            {
+                CleanupConversation(conversationIdentifier);
+                CleanupTemporaryTestUser(firstUserIdentifier);
+                CleanupTemporaryTestUser(secondUserIdentifier);
+            }
+        }
+    }
+}

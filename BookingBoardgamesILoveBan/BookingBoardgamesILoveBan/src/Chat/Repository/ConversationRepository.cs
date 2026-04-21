@@ -86,9 +86,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         /// <param name="message"></param>
         public void HandleMessageUpdate(Message message)
         {
-            if (message.TypeOfMessage == MessageType.MessageCashAgreement)
+            if (message is CashAgreementMessage cashAgreementMessage)
             {
-                UpdateCashPaymentFromMessageUpdate((CashAgreementMessage)message);
+                if (cashAgreementMessage.IsCashAgreementAcceptedByBuyer &&
+                    cashAgreementMessage.IsCashAgreementAcceptedBySeller)
+                {
+                    UpdateCashPaymentFromMessageUpdate(cashAgreementMessage);
+                }
             }
             UpdateMessageToDB(message);
             NotifySubscribersAboutMessageUpdate(message);
