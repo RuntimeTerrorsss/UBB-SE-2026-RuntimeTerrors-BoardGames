@@ -28,11 +28,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set => SetValue(DisplayNameProperty, value);
         }
 
-        private static void OnDisplayNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnDisplayNameChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)d;
-            view.DisplayNameText.Text = (string)e.NewValue;
-            view.AvatarPicture.DisplayName = (string)e.NewValue;
+            var view = (ConversationItemView)dependencyObject;
+            view.DisplayNameText.Text = (string)eventArguments.NewValue;
+            view.AvatarPicture.DisplayName = (string)eventArguments.NewValue;
         }
 
         public static readonly DependencyProperty AvatarUrlProperty =
@@ -48,10 +48,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set => SetValue(AvatarUrlProperty, value);
         }
 
-        private static void OnAvatarUrlChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnAvatarUrlChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)d;
-            var url = (string)e.NewValue;
+            var view = (ConversationItemView)dependencyObject;
+            var url = (string)eventArguments.NewValue;
             if (!string.IsNullOrEmpty(url))
             {
                 try
@@ -59,9 +59,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                     string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", url);
                     view.AvatarPicture.ProfilePicture = new BitmapImage(new Uri(fullPath));
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    Debug.WriteLine($"Error loading avatar: {ex.Message}");
+                    Debug.WriteLine($"Error loading avatar: {exception.Message}");
                 }
             }
             else
@@ -96,10 +96,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set => SetValue(MessagePreviewProperty, value);
         }
 
-        private static void OnMessagePreviewChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnMessagePreviewChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)d;
-            view.PreviewText.Text = (string)e.NewValue;
+            var view = (ConversationItemView)dependencyObject;
+            view.PreviewText.Text = (string)eventArguments.NewValue;
         }
 
         public static readonly DependencyProperty TimestampProperty =
@@ -115,10 +115,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set => SetValue(TimestampProperty, value);
         }
 
-        private static void OnTimestampChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnTimestampChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)d;
-            view.TimestampText.Text = (string)e.NewValue;
+            var view = (ConversationItemView)dependencyObject;
+            view.TimestampText.Text = (string)eventArguments.NewValue;
         }
 
         public static readonly DependencyProperty UnreadCountProperty =
@@ -134,10 +134,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set => SetValue(UnreadCountProperty, value);
         }
 
-        private static void OnUnreadCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnUnreadCountChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)d;
-            view.UnreadCountText.Text = e.NewValue.ToString();
+            var view = (ConversationItemView)dependencyObject;
+            view.UnreadCountText.Text = eventArguments.NewValue.ToString();
         }
 
         public static readonly DependencyProperty HasUnreadProperty =
@@ -153,10 +153,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set => SetValue(HasUnreadProperty, value);
         }
 
-        private static void OnHasUnreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnHasUnreadChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)d;
-            view.UnreadBadge.Visibility = (bool)e.NewValue
+            var view = (ConversationItemView)dependencyObject;
+            view.UnreadBadge.Visibility = (bool)eventArguments.NewValue
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }

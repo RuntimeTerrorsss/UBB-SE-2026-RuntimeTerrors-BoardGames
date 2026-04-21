@@ -14,10 +14,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     {
         private Mock<IUserRepository> userService = new Mock<IUserRepository>();
 
-        private LeftPanelViewModel CreateVM()
+        private LeftPanelViewModel CreateViewModel()
         {
             userService
-                .Setup(u => u.GetById(It.IsAny<int>()))
+                .Setup(user => user.GetById(It.IsAny<int>()))
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
             return new LeftPanelViewModel();
         }
@@ -33,7 +33,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         private ConversationDTO CreateConversation(int id = 1)
         {
             return new ConversationDTO(
-                convId: id,
+                conversationId: id,
                 participants: new[] { 1, 2 },
                 messages: new List<MessageDTO>(),
                 lastRead: new Dictionary<int, DateTime>
@@ -62,141 +62,266 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Initial_State_Should_Be_Empty()
+        public void HandleIncomingMessage_AddNewConversation_IsAdded()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            Assert.Empty(vm.Conversations);
-            Assert.True(vm.IsEmptyStateVisible);
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+
+            Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void HandleIncomingMessage_Should_Add_NewConversation()
+        public void HandleIncomingMessage_UpdateExistingConversation()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            vm.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            var message = CreateMessage();
 
-            Assert.Single(vm.Conversations);
+            viewModel.HandleIncomingMessage(message, "John", userService.Object);
+            viewModel.HandleIncomingMessage(message with { content = "updated" }, "John", userService.Object);
+
+            Assert.Single(viewModel.Conversations);
+            Assert.Equal("updated", viewModel.Conversations.First().LastMessageText);
         }
 
         [Fact]
-        public void HandleIncomingMessage_Should_UpdateExistingConversation()
+        public void HandleIncomingMessage_WhenNotSelected_IncrementUnread()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            var msg = CreateMessage();
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
 
-            vm.HandleIncomingMessage(msg, "John", userService.Object);
-            vm.HandleIncomingMessage(msg with { content = "updated" }, "John", userService.Object);
-
-            Assert.Single(vm.Conversations);
-            Assert.Equal("updated", vm.Conversations.First().LastMessageText);
+            var conversation = viewModel.Conversations.First();
+            Assert.Equal(1, conversation.UnreadCount);
         }
 
         [Fact]
-        public void HandleIncomingMessage_Should_IncrementUnread_WhenNotSelected()
+        public void SelectingConversation_SetUnreadToZero()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            vm.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
 
-            var convo = vm.Conversations.First();
-            Assert.Equal(1, convo.UnreadCount);
+            var conversation = viewModel.Conversations.First();
+
+            viewModel.SelectedConversation = conversation;
+
+            Assert.Equal(0, conversation.UnreadCount);
         }
 
         [Fact]
-        public void SelectingConversation_Should_SetUnreadToZero()
+        public void SearchText_FilterConversations()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
-            vm.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage() with { conversationId = 2 }, "Mike", userService.Object);
 
-            var convo = vm.Conversations.First();
+            viewModel.SearchText = "John";
 
-            vm.SelectedConversation = convo;
-
-            Assert.Equal(0, convo.UnreadCount);
+            Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void SearchText_Should_FilterConversations()
+        public void HandleIncomingConversation_AddConversation()
         {
-            var vm = CreateVM();
-
-            vm.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
-            vm.HandleIncomingMessage(CreateMessage() with { conversationId = 2 }, "Mike", userService.Object);
-
-            vm.SearchText = "John";
-
-            Assert.Single(vm.Conversations);
-        }
-
-        [Fact]
-        public void HandleIncomingConversation_Should_AddConversation()
-        {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
             var service = CreateUserService();
 
-            var convo = CreateConversation();
+            var conversation = CreateConversation();
 
-            vm.HandleIncomingConversation(convo, "John", 1, service);
+            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
 
-            Assert.Single(vm.Conversations);
+            Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void HandleIncomingConversation_Should_NotDuplicate()
+        public void HandleIncomingConversation_DuplicateConversation_NotAddDuplicate()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
             var service = CreateUserService();
 
-            var convo = CreateConversation();
+            var conversation = CreateConversation();
 
-            vm.HandleIncomingConversation(convo, "John", 1, service);
-            vm.HandleIncomingConversation(convo, "John", 1, service);
+            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
+            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
 
-            Assert.Single(vm.Conversations);
+            Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void HandleIncomingConversation_Should_UseOtherUserCorrectly()
+        public void SortConversationsByTimestamp_KeepConversations()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
             var service = CreateUserService();
 
-            var convo = CreateConversation();
+            var conversation1 = CreateConversation(1);
+            var conversation2 = CreateConversation(2);
 
-            vm.HandleIncomingConversation(convo, "John", 1, service);
+            viewModel.HandleIncomingConversation(conversation1, "A", 1, service);
+            viewModel.HandleIncomingConversation(conversation2, "B", 1, service);
 
-            Assert.Equal("John", vm.Conversations.First().DisplayName);
+            viewModel.SortConversationsByTimestamp();
+
+            Assert.Equal(2, viewModel.Conversations.Count);
         }
 
         [Fact]
-        public void Sort_Should_KeepConversations()
+        public void UIStates_Update()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+
+            Assert.False(viewModel.IsEmptyStateVisible);
+        }
+
+        [Fact]
+        public void ApplyFilter_Reorder_ReorderCorrectly()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(1), "B", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(2), "A", userService.Object);
+
+            viewModel.SearchText = "";
+
+            Assert.Equal("A", viewModel.Conversations[0].DisplayName);
+        }
+
+        [Fact]
+        public void ApplyFilter_Reorder_MoveItemsWhenOrderChanges()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(1), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(2), "Mike", userService.Object);
+
+            viewModel.Conversations[0].Timestamp = DateTime.MinValue;
+            viewModel.Conversations[1].Timestamp = DateTime.Now;
+
+            viewModel.SortConversationsByTimestamp();
+
+            Assert.Equal("John", viewModel.Conversations.First().DisplayName);
+        }
+
+        [Fact]
+        public void HandleIncomingMessage_WhenSelected_NotIncreaseUnread()
+        {
+            var viewModel = CreateViewModel();
+            var message = CreateMessage();
+
+            viewModel.HandleIncomingMessage(message, "John", userService.Object);
+            var conversation = viewModel.Conversations.First();
+            viewModel.SelectedConversation = conversation;
+            viewModel.HandleIncomingMessage(message with { content = "new" }, "John", userService.Object);
+
+            Assert.Equal(0, conversation.UnreadCount);
+        }
+
+        [Fact]
+        public void HandleIncomingConversation_WithMessages_SetPreviewAndTimestamp()
+        {
+            var viewModel = CreateViewModel();
             var service = CreateUserService();
 
-            var convo1 = CreateConversation(1);
-            var convo2 = CreateConversation(2);
+            var message = CreateMessage();
 
-            vm.HandleIncomingConversation(convo1, "A", 1, service);
-            vm.HandleIncomingConversation(convo2, "B", 1, service);
+            var conversation = new ConversationDTO(
+                conversationId: 1,
+                participants: new[] { 1, 2 },
+                messages: new List<MessageDTO> { message },
+                lastRead: new Dictionary<int, DateTime>
+                {
+                    { 1, DateTime.MinValue },
+                    { 2, DateTime.MinValue }
+                }
+            );
 
-            vm.SortConversationsByTimestamp();
+            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
 
-            Assert.Equal(2, vm.Conversations.Count);
+            var result = viewModel.Conversations.First();
+
+            Assert.Equal("hello", result.LastMessageText);
+            Assert.Equal(message.sentAt, result.Timestamp);
         }
 
         [Fact]
-        public void UI_States_Should_Update()
+        public void SortConversationsByTimestamp_OrderDescending_Sorted()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
+            var service = CreateUserService();
 
-            vm.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            var message1 = CreateMessage();
+            var message2 = CreateMessage(2) with { sentAt = DateTime.Now.AddMinutes(1) };
 
-            Assert.False(vm.IsEmptyStateVisible);
+            viewModel.HandleIncomingMessage(message1, "A", userService.Object);
+            viewModel.HandleIncomingMessage(message2, "B", userService.Object);
+
+            viewModel.SortConversationsByTimestamp();
+
+            var list = viewModel.Conversations.ToList();
+
+            Assert.True(list[0].Timestamp >= list[1].Timestamp);
+        }
+
+        [Fact]
+        public void RaisePropertyChanged_InvokeEvent()
+        {
+            var viewModel = CreateViewModel();
+
+            bool triggered = false;
+
+            viewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == "TestProp")
+                    triggered = true;
+            };
+
+            viewModel.RaisePropertyChanged("TestProp");
+
+            Assert.True(triggered);
+        }
+
+        [Fact]
+        public void Search_NoMatches_ShowNoMatchesState()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+
+            viewModel.SearchText = "ZZZ";
+
+            Assert.True(viewModel.IsNoMatchesVisible);
+        }
+
+        [Fact]
+        public void SelectingConversation_ZeroUnread_NotChange()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+
+            var conversation = viewModel.Conversations.First();
+            conversation.UnreadCount = 0;
+
+            viewModel.SelectedConversation = conversation;
+
+            Assert.Equal(0, conversation.UnreadCount);
+        }
+
+        [Fact]
+        public void Search_RemoveNonMatchingItems_ItemsRemoved()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.HandleIncomingMessage(CreateMessage(1), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(2), "Mike", userService.Object);
+
+            viewModel.SearchText = "John";
+
+            Assert.DoesNotContain(viewModel.Conversations, c => c.DisplayName == "Mike");
         }
     }
 }

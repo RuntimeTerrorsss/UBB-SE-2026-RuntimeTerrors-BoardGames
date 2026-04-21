@@ -15,13 +15,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ConversationServiceTests
     {
-        private readonly Mock<IConversationRepository> repoMock;
+        private readonly Mock<IConversationRepository> repositoryMock;
         private readonly Mock<IUserRepository> userServiceMock;
         private readonly ConversationService service;
 
         public ConversationServiceTests()
         {
-            repoMock = new Mock<IConversationRepository>();
+            repositoryMock = new Mock<IConversationRepository>();
             userServiceMock = new Mock<IUserRepository>();
 
             userServiceMock
@@ -38,7 +38,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     0));
 
             service = new ConversationService(
-                repoMock.Object,
+                repositoryMock.Object,
                 1,
                 userServiceMock.Object);
         }
@@ -46,7 +46,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void FetchConversations_ReturnsEmptyList_WhenRepoEmpty()
         {
-            repoMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
+            repositoryMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
                      .Returns(new List<Conversation>());
 
             var result = service.FetchConversations();
@@ -57,7 +57,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void FetchConversations_ReturnsMappedConversations()
         {
-            var conv = new Conversation(
+            var conversation= new Conversation(
                 1,
                 new int[] { 1, 2 },
                 new List<Message>(),
@@ -67,8 +67,8 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     { 2, DateTime.Now }
                 });
 
-            repoMock.Setup(r => r.GetConversationsForUser(1))
-                     .Returns(new List<Conversation> { conv });
+            repositoryMock.Setup(r => r.GetConversationsForUser(1))
+                     .Returns(new List<Conversation> { conversation });
 
             var result = service.FetchConversations();
 
@@ -95,11 +95,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 paymentId: -1,
                 requestId: -1);
 
-            repoMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
+            repositoryMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
 
             service.SendMessage(dto);
 
-            repoMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
+            repositoryMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
@@ -107,17 +107,17 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var dto = CreateTextDTO();
 
-            repoMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
+            repositoryMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
 
             service.UpdateMessage(dto);
 
-            repoMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
+            repositoryMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
         public void SendReadReceipt_CallsRepository()
         {
-            var convDto = new ConversationDTO(
+            var conversationDto = new ConversationDTO(
                 1,
                 new int[] { 1, 2 },
                 new List<MessageDTO>(),
@@ -127,17 +127,17 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                     { 2, DateTime.Now }
                 });
 
-            repoMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
+            repositoryMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
 
-            service.SendReadReceipt(convDto);
+            service.SendReadReceipt(conversationDto);
 
-            repoMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
+            repositoryMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
         }
 
         [Fact]
         public void SendReadReceipt_SelectsOtherParticipantCorrectly()
         {
-            var convDto = new ConversationDTO(
+            var conversationDto = new ConversationDTO(
                 1,
                 new int[] { 1, 2 },
                 new List<MessageDTO>(),
@@ -149,13 +149,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             ReadReceipt? captured = null;
 
-            repoMock
+            repositoryMock
                 .Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()))
                 .Callback<ReadReceipt>(r => captured = r);
 
-            service.SendReadReceipt(convDto);
+            service.SendReadReceipt(conversationDto);
 
-            Assert.NotNull(captured);
             Assert.Equal(1, captured!.messageReaderId);
             Assert.Equal(2, captured.messageReceiverId);
         }
@@ -163,9 +162,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void MessageToDTO_TextMessage_Works()
         {
-            var msg = new TextMessage(1, 1, 1, 2, DateTime.Now, "hello");
+            var message = new TextMessage(1, 1, 1, 2, DateTime.Now, "hello");
 
-            var dto = service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(message);
 
             Assert.Equal(MessageType.MessageText, dto.type);
             Assert.Equal("hello", dto.content);
@@ -176,9 +175,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         {
             var dto = CreateTextDTO();
 
-            var msg = service.MessageDTOToMessage(dto);
+            var message = service.MessageDTOToMessage(dto);
 
-            Assert.IsType<TextMessage>(msg);
+            Assert.IsType<TextMessage>(message);
         }
 
         private MessageDTO CreateTextDTO()
@@ -203,13 +202,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnMessageReceived_TriggersEvent()
         {
-            var msg = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
+            var message = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
 
             bool called = false;
 
             service.ActionMessageProcessed += (dto, name) => called = true;
 
-            service.OnMessageReceived(msg);
+            service.OnMessageReceived(message);
 
             Assert.True(called);
         }
@@ -217,7 +216,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnConversationReceived_TriggersEvent()
         {
-            var conv = new Conversation(
+            var conversation= new Conversation(
                 1,
                 new int[] { 1, 2 },
                 new List<Message>(),
@@ -227,7 +226,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
             service.ActionConversationProcessed += (dto, name) => called = true;
 
-            service.OnConversationReceived(conv);
+            service.OnConversationReceived(conversation);
 
             Assert.True(called);
         }
@@ -235,13 +234,13 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnReadReceiptReceived_TriggersEvent()
         {
-            var rr = new ReadReceipt(1, 1, 2, DateTime.Now);
+            var readReceipt = new ReadReceipt(1, 1, 2, DateTime.Now);
 
             bool called = false;
 
             service.ActionReadReceiptProcessed += dto => called = true;
 
-            service.OnReadReceiptReceived(rr);
+            service.OnReadReceiptReceived(readReceipt);
 
             Assert.True(called);
         }
@@ -249,25 +248,25 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnMessageUpdateReceived_TriggersEvent()
         {
-            var msg = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
+            var message = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
 
             bool called = false;
 
             service.ActionMessageUpdateProcessed += (dto, name) => called = true;
 
-            service.OnMessageUpdateReceived(msg);
+            service.OnMessageUpdateReceived(message);
 
             Assert.True(called);
         }
         [Fact]
         public void OnCardPaymentSelected_CallsFinalizeOnly()
         {
-            repoMock
+            repositoryMock
                 .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
 
             service.OnCardPaymentSelected(10);
 
-            repoMock.Verify(r =>
+            repositoryMock.Verify(r =>
                 r.HandleRentalRequestFinalization(10),
                 Times.Once);
         }
@@ -275,19 +274,19 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void OnCashPaymentSelected_CallsFinalizeAndCashAgreement()
         {
-            repoMock
+            repositoryMock
                 .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
 
-            repoMock
+            repositoryMock
                 .Setup(r => r.CreateCashAgreementMessage(It.IsAny<int>(), It.IsAny<int>()));
 
             service.OnCashPaymentSelected(10, 99);
 
-            repoMock.Verify(r =>
+            repositoryMock.Verify(r =>
                 r.HandleRentalRequestFinalization(10),
                 Times.Once);
 
-            repoMock.Verify(r =>
+            repositoryMock.Verify(r =>
                 r.CreateCashAgreementMessage(10, 99),
                 Times.Once);
         }
@@ -317,9 +316,9 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void MessageToDTO_ImageMessage_Works()
         {
-            var msg = new ImageMessage(1, 1, 1, 2, DateTime.Now, "img.png");
+            var message = new ImageMessage(1, 1, 1, 2, DateTime.Now, "img.png");
 
-            var dto = service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(message);
 
             Assert.Equal(MessageType.MessageImage, dto.type);
             Assert.Equal("img.png", dto.imageUrl);
@@ -328,7 +327,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void MessageToDTO_CashAgreement_Works()
         {
-            var msg = new CashAgreementMessage(
+            var message = new CashAgreementMessage(
                 1, 1, 1, 2,
                 55,
                 DateTime.Now,
@@ -337,7 +336,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 true,
                 false);
 
-            var dto = service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(message);
 
             Assert.Equal(MessageType.MessageCashAgreement, dto.type);
             Assert.Equal(55, dto.paymentId);
@@ -346,7 +345,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void MessageToDTO_RentalRequest_Works()
         {
-            var msg = new RentalRequestMessage(
+            var message = new RentalRequestMessage(
                 1, 1, 1, 2,
                 DateTime.Now,
                 "rent",
@@ -354,7 +353,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 false,
                 true);
 
-            var dto = service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(message);
 
             Assert.Equal(MessageType.MessageRentalRequest, dto.type);
             Assert.Equal(99, dto.requestId);
@@ -363,12 +362,113 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         [Fact]
         public void MessageToDTO_SystemMessage_Works()
         {
-            var msg = new SystemMessage(1, 1, DateTime.Now, "system");
+            var message = new SystemMessage(1, 1, DateTime.Now, "system");
 
-            var dto = service.MessageToMessageDTO(msg);
+            var dto = service.MessageToMessageDTO(message);
 
             Assert.Equal(MessageType.MessageSystem, dto.type);
             Assert.Equal("system", dto.content);
+        }
+
+        [Fact]
+        public void GetOtherUserNameByMessageDTO_ReturnsCorrectUser()
+        {
+            var dto = new MessageDTO(
+                1, 1, 1, 2, DateTime.Now, "hi",
+                MessageType.MessageText, "", false, false, false, false, -1, -1
+            );
+
+            var result = service.GetOtherUserNameByMessageDTO(dto);
+
+            Assert.Equal("user2", result);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_Image_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.MessageImage, imageUrl = "img.png" };
+
+            var message = service.MessageDTOToMessage(dto);
+
+            Assert.IsType<ImageMessage>(message);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_Rental_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.MessageRentalRequest };
+
+            var message = service.MessageDTOToMessage(dto);
+
+            Assert.IsType<RentalRequestMessage>(message);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_Cash_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.MessageCashAgreement };
+
+            var message = service.MessageDTOToMessage(dto);
+
+            Assert.IsType<CashAgreementMessage>(message);
+        }
+
+        [Fact]
+        public void MessageDTOToMessage_System_Works()
+        {
+            var dto = CreateTextDTO() with { type = MessageType.MessageSystem };
+
+            var message = service.MessageDTOToMessage(dto);
+
+            Assert.IsType<SystemMessage>(message);
+        }
+
+        [Fact]
+        public void ConversationToConversationDTO_MapsCorrectly()
+        {
+            var conversation= new Conversation(
+                1,
+                new[] { 1, 2 },
+                new List<Message> { new TextMessage(1, 1, 1, 2, DateTime.Now, "hi") },
+                new Dictionary<int, DateTime>
+                {
+                    { 1, DateTime.Now },
+                    { 2, DateTime.Now }
+                }
+            );
+
+            var dto = service.ConversationToConversationDTO(conversation);
+
+            Assert.Equal(1, dto.Id);
+            Assert.Single(dto.MessageList);
+        }
+
+        [Fact]
+        public void ReadReceiptToReadReceiptDTO_MapsCorrectly()
+        {
+            var readReceipt = new ReadReceipt(1, 1, 2, DateTime.Now);
+
+            var dto = service.ReadReceiptToReadReceiptDTO(readReceipt);
+
+            Assert.Equal(1, dto.conversationId);
+            Assert.Equal(1, dto.readerId);
+            Assert.Equal(2, dto.receiverId);
+        }
+
+        [Fact]
+        public void FetchConversations_MultipleConversations()
+        {
+            var conversation = new List<Conversation>
+            {
+                new Conversation(1, new[] {1,2}, new List<Message>(), new()),
+                new Conversation(2, new[] {1,3}, new List<Message>(), new())
+            };
+
+            repositoryMock.Setup(r => r.GetConversationsForUser(1)).Returns(conversation);
+
+            var result = service.FetchConversations();
+
+            Assert.Equal(2, result.Count);
         }
     }
 }

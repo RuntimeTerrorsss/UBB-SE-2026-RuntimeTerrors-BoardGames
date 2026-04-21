@@ -47,11 +47,11 @@ public class ChatPageViewModel
 
         conversations = conversationService.FetchConversations();
 
-        foreach (var convo in conversations)
+        foreach (var conversation in conversations)
         {
             LeftPanelModelView.HandleIncomingConversation(
-                convo,
-                conversationService.GetOtherUserNameByConversationDTO(convo),
+                conversation,
+                conversationService.GetOtherUserNameByConversationDTO(conversation),
                 currentUserId,
                 userRepository);
         }
@@ -68,10 +68,10 @@ public class ChatPageViewModel
     /// It also sends a read receipt for that conversation.
     /// </summary>
     /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void OnLeftPanelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    /// <param name="eventArgs"></param>
+    private void OnLeftPanelPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
     {
-        if (e.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
+        if (eventArgs.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
         {
             return;
         }
@@ -131,15 +131,15 @@ public class ChatPageViewModel
     /// <param name="senderName"></param>
     private void OnMessageReceived(MessageDTO message, string senderName)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == message.conversationId);
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == message.conversationId);
 
-        convo?.AddMessageToListDTO(message);
+        conversation?.AddMessageToListDTO(message);
 
         LeftPanelModelView.HandleIncomingMessage(message, senderName);
         ChatModelView.HandleIncomingMessage(message);
         if (ChatModelView.ConversationId == message.conversationId)
         {
-            SendReadReceipt(convo);
+            SendReadReceipt(conversation);
         }
     }
 
@@ -153,8 +153,8 @@ public class ChatPageViewModel
     /// <param name="resolved"></param>
     private void UpdateBookingRequest(int messageId, int conversationId, bool accepted, bool resolved)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == conversationId);
-        var message = convo?.MessageList.FirstOrDefault(m => m.id == messageId);
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == conversationId);
+        var message = conversation?.MessageList.FirstOrDefault(firstMessage => firstMessage.id == messageId);
         if (message == null)
         {
             return;
@@ -170,8 +170,8 @@ public class ChatPageViewModel
     /// <param name="conversationId"></param>
     private void UpdateCashAgreement(int messageId, int conversationId)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == conversationId);
-        var message = convo?.MessageList.FirstOrDefault(m => m.id == messageId);
+        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == conversationId);
+        var message = conversation?.MessageList.FirstOrDefault(firstMessage => firstMessage.id == messageId);
         if (message == null)
         {
             return;
@@ -191,12 +191,12 @@ public class ChatPageViewModel
     /// This method is called when a new conversation is received from the conversation service.
     /// This is to handle the case when someone wants to start a conversation with a user thats currently logged in.
     /// </summary>
-    /// <param name="convo"></param>
+    /// <param name="conversation"></param>
     /// <param name="otherUsername"></param>
-    private void OnConversationReceived(ConversationDTO convo, string otherUsername)
+    private void OnConversationReceived(ConversationDTO conversation, string otherUsername)
     {
-        conversations.Add(convo);
-        LeftPanelModelView.HandleIncomingConversation(convo, otherUsername, currentUserId);
+        conversations.Add(conversation);
+        LeftPanelModelView.HandleIncomingConversation(conversation, otherUsername, currentUserId);
     }
 
     /// <summary>

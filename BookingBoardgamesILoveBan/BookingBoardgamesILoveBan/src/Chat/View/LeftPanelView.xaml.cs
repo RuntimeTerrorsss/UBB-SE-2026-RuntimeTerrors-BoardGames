@@ -46,7 +46,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         {
             InitializeComponent();
         }
-        private void ConversationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ConversationList_SelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
         {
             if (ConversationList.SelectedItem is ConversationPreviewModel selected)
             {

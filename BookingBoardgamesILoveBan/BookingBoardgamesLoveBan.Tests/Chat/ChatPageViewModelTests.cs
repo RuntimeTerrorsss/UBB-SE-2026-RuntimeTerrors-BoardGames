@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BookingBoardgamesILoveBan.src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
@@ -9,6 +8,9 @@ using BookingBoardgamesILoveBan.Src.Enum;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.Model;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
@@ -16,144 +18,216 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     public class ChatPageViewModelTests
     {
         private readonly int currentUserId = 1;
-        private Mock<IUserRepository> userService;
+        private Mock<IUserRepository> userServiceMock;
+        private Mock<IConversationRepository> conversationRepositoryMock;
 
-        private ConversationService CreateService()
+        private ConversationService CreateConversationService()
         {
-            var repo = new Mock<IConversationRepository>();
+            conversationRepositoryMock = new Mock<IConversationRepository>();
 
-            repo.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
+            conversationRepositoryMock
+                .Setup(repository => repository.GetConversationsForUser(It.IsAny<int>()))
                 .Returns(new List<Conversation>
                 {
-            new Conversation(
-                1,
-                new[] { 1, 2 },
-                new List<Message>(),
-                new Dictionary<int, DateTime>
-                {
-                    { 1, DateTime.MinValue },
-                    { 2, DateTime.MinValue }
-                })
+                    new Conversation(
+                        1,
+                        new[] { 1, 2 },
+                        new List<Message>
+                        {
+                            new TextMessage(1, 1, 2, 1, DateTime.Now, "initial")
+                        },
+                        new Dictionary<int, DateTime>
+                        {
+                            { 1, DateTime.MinValue },
+                            { 2, DateTime.MinValue }
+                        }
+                    )
                 });
 
-            userService = new Mock<IUserRepository>();
-
-            userService
-                .Setup(u => u.GetById(It.IsAny<int>()))
+            userServiceMock = new Mock<IUserRepository>();
+            userServiceMock
+                .Setup(service => service.GetById(It.IsAny<int>()))
                 .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
 
             return new ConversationService(
-                repo.Object,
+                conversationRepositoryMock.Object,
                 currentUserId,
-                userService.Object);
+                userServiceMock.Object
+            );
         }
 
-        private ChatPageViewModel CreateVM()
+        private ChatPageViewModel CreateChatPageViewModel()
         {
-            return new ChatPageViewModel(currentUserId, CreateService(), userService.Object);
-        }
-
-        [Fact]
-        public void Constructor_Should_Load_Conversations()
-        {
-            var vm = CreateVM();
-
-            Assert.NotNull(vm.LeftPanelModelView);
-            Assert.NotNull(vm.ChatModelView);
+            return new ChatPageViewModel(
+                currentUserId,
+                CreateConversationService(),
+                userServiceMock.Object
+            );
         }
 
         [Fact]
-        public void OnMessageSent_Should_Send_Message()
+        public void Constructor_LoadsConversations()
         {
-            var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+            var chatPageViewModel = CreateChatPageViewModel();
 
-            var msg = new MessageDTO(1, "hello", MessageType.MessageText)
+            Assert.Single(chatPageViewModel.LeftPanelModelView.Conversations);
+        }
+
+        [Fact]
+        public void MessageSent_SetsCorrectReceiver()
+        {
+            var conversationService = CreateConversationService();
+
+            var chatPageViewModel = new ChatPageViewModel(
+                currentUserId,
+                conversationService,
+                userServiceMock.Object
+            );
+
+            var messageDto = new MessageDTO(1, "hello", MessageType.MessageText)
             {
                 conversationId = 1,
-                receiverId = 2
+                senderId = 1
             };
 
-            bool called = false;
-            service.ActionMessageProcessed += (m, u) => { called = true; };
+            chatPageViewModel.ChatModelView.RaiseMessageSent(messageDto);
 
-            vm.ChatModelView.RaiseMessageSent(msg);
-
-            Assert.True(true); // structural test (no crash)
+            conversationRepositoryMock.Verify(repository =>
+                repository.HandleNewMessage(It.Is<Message>(message =>
+                    message.MessageSenderId == 1 &&
+                    message.MessageReceiverId == 2
+                )),
+                Times.Once);
         }
 
         [Fact]
-        public void OnReadReceipt_Should_Update()
+        public void SelectingConversation_LoadsChat()
         {
-            var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+            var chatPageViewModel = CreateChatPageViewModel();
 
-            var receipt = new ReadReceiptDTO(1, 2, 1, DateTime.Now);
+            var selectedConversation = chatPageViewModel.LeftPanelModelView.Conversations.First();
 
-            service.ActionReadReceiptProcessed += null;
+            chatPageViewModel.LeftPanelModelView.SelectedConversation = selectedConversation;
 
-            Assert.True(true);
+            Assert.Equal(
+                selectedConversation.ConversationId,
+                chatPageViewModel.ChatModelView.ConversationId
+            );
         }
 
         [Fact]
-        public void OnBookingRequest_Should_Update_Message()
+        public void OnMessageReceived_MessageAddedToLeftPanel()
         {
-            var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+            var conversationService = CreateConversationService();
 
-            vm.ChatModelView.RaiseBookingRequestUpdate(5, 1, true, true);
+            var chatPageViewModel = new ChatPageViewModel(
+                currentUserId,
+                conversationService,
+                userServiceMock.Object
+            );
 
-            Assert.True(true);
+            var newMessage = new TextMessage(5, 1, 2, 1, DateTime.Now, "new message");
+
+            conversationService.OnMessageReceived(newMessage);
+
+            var conversationPreview = chatPageViewModel.LeftPanelModelView.Conversations.First();
+
+            Assert.Contains("new message", conversationPreview.LastMessageText);
         }
 
         [Fact]
-        public void OnCashAgreement_Should_Update()
+        public void ReadReceipt_UpdatesLastRead()
         {
-            var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+            var conversationService = CreateConversationService();
 
-            vm.ChatModelView.RaiseCashAgreementAccept(5, 1);
+            var chatPageViewModel = new ChatPageViewModel(
+                currentUserId,
+                conversationService,
+                userServiceMock.Object
+            );
 
-            Assert.True(true);
+            var timestamp = DateTime.Now;
+
+            conversationService.OnReadReceiptReceived(
+                new ReadReceipt(1, 2, 1, timestamp)
+            );
+
+            var updatedConversation =
+                chatPageViewModel.ConversationService.FetchConversations().First();
+
+            Assert.True(updatedConversation.LastRead[2] >= timestamp);
         }
 
         [Fact]
-        public void OnConversationReceived_Should_NotCrash()
+        public void BookingRequest_TriggersMessageUpdate()
         {
-            var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+            var conversationService = CreateConversationService();
 
-            var convo = new ConversationDTO(
-                1,
-                new[] { 1, 2 },
-                new List<MessageDTO>(),
-                new Dictionary<int, DateTime>
-                {
-                    { 1, DateTime.MinValue },
-                    { 2, DateTime.MinValue }
-                });
+            var chatPageViewModel = new ChatPageViewModel(
+                currentUserId,
+                conversationService,
+                userServiceMock.Object
+            );
 
-            service.ActionConversationProcessed += null;
+            chatPageViewModel.ChatModelView.RaiseBookingRequestUpdate(1, 1, true, true);
 
-            Assert.True(true);
+            conversationRepositoryMock.Verify(
+                repository => repository.HandleMessageUpdate(It.IsAny<Message>()),
+                Times.AtMostOnce()
+            );
         }
 
         [Fact]
-        public void OnMessageUpdate_Should_NotCrash()
+        public void CashAgreement_TriggersMessageUpdate()
         {
-            var service = CreateService();
-            var vm = new ChatPageViewModel(currentUserId, service, userService.Object);
+            var conversationService = CreateConversationService();
 
-            var msg = new MessageDTO(1, "hello", MessageType.MessageText)
-            {
-                conversationId = 1,
-                receiverId = 2,
-                isResolved = true
-            };
+            var chatPageViewModel = new ChatPageViewModel(
+                currentUserId,
+                conversationService,
+                userServiceMock.Object
+            );
 
-            service.ActionMessageUpdateProcessed += null;
+            chatPageViewModel.ChatModelView.RaiseCashAgreementAccept(1, 1);
 
-            Assert.True(true);
+            conversationRepositoryMock.Verify(
+                repository => repository.HandleMessageUpdate(It.IsAny<Message>()),
+                Times.AtMostOnce()
+            );
+        }
+
+        [Fact]
+        public void MessageUpdate_ReplacesMessageContent()
+        {
+            var conversationService = CreateConversationService();
+
+            var chatPageViewModel = new ChatPageViewModel(
+                currentUserId,
+                conversationService,
+                userServiceMock.Object
+            );
+
+            var selectedConversation = chatPageViewModel.LeftPanelModelView.Conversations.First();
+            chatPageViewModel.LeftPanelModelView.SelectedConversation = selectedConversation;
+
+            var updatedMessage = new TextMessage(1, 1, 2, 1, DateTime.Now, "updated");
+
+            conversationService.OnMessageUpdateReceived(updatedMessage);
+
+            Assert.Contains(
+                chatPageViewModel.ChatModelView.Messages,
+                message => message.Content == "updated"
+            );
+        }
+
+        [Fact]
+        public void RaiseBookingRequestUpdate_InvalidConversation_DoesNotCrash()
+        {
+            var chatPageViewModel = CreateChatPageViewModel();
+
+            chatPageViewModel.ChatModelView.RaiseBookingRequestUpdate(999, 999, true, true);
+
+            Assert.NotNull(chatPageViewModel);
         }
     }
 }

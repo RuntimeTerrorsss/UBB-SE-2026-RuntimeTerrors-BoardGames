@@ -45,13 +45,13 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         /// <returns></returns>
         public List<ConversationDTO> FetchConversations()
         {
-            List<ConversationDTO> convList = new List<ConversationDTO>();
+            List<ConversationDTO> conversationList = new List<ConversationDTO>();
 
-            foreach (var conv in ConversationRepository.GetConversationsForUser(UserId))
+            foreach (var conversation in ConversationRepository.GetConversationsForUser(UserId))
             {
-                convList.Add(ConversationToConversationDTO(conv));
+                conversationList.Add(ConversationToConversationDTO(conversation));
             }
-            return convList;
+            return conversationList;
         }
 
         /// <summary>
@@ -292,7 +292,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         {
             var messageDTOs = conversation.ConversationMessageList.Select(mess => MessageToMessageDTO(mess)).ToList();
             return new ConversationDTO(
-                convId: conversation.ConversationId,
+                conversationId: conversation.ConversationId,
                 participants: conversation.ConversationParticipantIds,
                 messages: messageDTOs,
                 lastRead: conversation.LastMessageReadTime);

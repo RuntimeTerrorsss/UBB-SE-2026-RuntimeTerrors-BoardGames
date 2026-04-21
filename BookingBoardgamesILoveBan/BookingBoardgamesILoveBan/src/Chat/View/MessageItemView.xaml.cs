@@ -218,9 +218,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                     chatImage.Source = bitmap;
                     imageBorder.Child = chatImage;
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Error loading image: {exception.Message}");
                     imageBorder.Child = CreateImagePlaceholder();
                 }
             }

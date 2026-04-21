@@ -85,8 +85,8 @@ public class ChatViewModel : INotifyPropertyChanged
         Messages.Clear();
         for (int i = 0; i < messages.Count; i++)
         {
-            var msg = messages[i];
-            var newMessageViewModel = new MessageViewModel(msg, CurrentUserId);
+            var message = messages[i];
+            var newMessageViewModel = new MessageViewModel(message, CurrentUserId);
             if (i < messages.Count - theirUnreadCount)
             {
                 newMessageViewModel.IsRead = true;
@@ -102,7 +102,6 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="message"></param>
     public void HandleIncomingMessage(MessageDTO message)
     {
-        // FIX: UGLYYYY but this avoids weird duplicates when a message is received in the active conversation
         if (message.conversationId != ConversationId)
         {
             return;
@@ -159,11 +158,11 @@ public class ChatViewModel : INotifyPropertyChanged
             -1,
             -1);
 
-        var vm = new MessageViewModel(dto, CurrentUserId);
+        var viewModel = new MessageViewModel(dto, CurrentUserId);
 
-        Messages.Add(vm);
+        Messages.Add(viewModel);
         InputText = string.Empty;
-        MessageSent.Invoke(dto); // notify master vm
+        MessageSent.Invoke(dto); // notify master viewModel
     }
 
     /// <summary>
@@ -174,12 +173,12 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="accepted"></param>
     public void ResolveBookingRequest(int messageId, bool accepted)
     {
-        var msg = Messages.FirstOrDefault(m => m.Id == messageId);
-        if (msg == null)
+        var message = Messages.FirstOrDefault(m => m.Id == messageId);
+        if (message == null)
         {
             return;
         }
-        BookingRequestUpdate?.Invoke(messageId, msg.ConversationId, accepted, accepted ? false : true);
+        BookingRequestUpdate?.Invoke(messageId, message.ConversationId, accepted, accepted ? false : true);
     }
 
     /// <summary>
@@ -188,12 +187,12 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="messageId"></param>
     public void UpdateCashAgreement(int messageId)
     {
-        var msg = Messages.FirstOrDefault(m => m.Id == messageId);
-        if (msg == null)
+        var message = Messages.FirstOrDefault(m => m.Id == messageId);
+        if (message == null)
         {
             return;
         }
-        CashAgreementAccept?.Invoke(messageId, msg.ConversationId);
+        CashAgreementAccept?.Invoke(messageId, message.ConversationId);
     }
 
     /// <summary>
@@ -203,7 +202,7 @@ public class ChatViewModel : INotifyPropertyChanged
     /// <param name="messageId"></param>
     public void ProceedToPayment(int messageId)
     {
-        var msg = Messages.FirstOrDefault(m => m.Id == messageId);
+        var message = Messages.FirstOrDefault(m => m.Id == messageId);
     }
 
     /// <summary>
@@ -226,8 +225,8 @@ public class ChatViewModel : INotifyPropertyChanged
             false, false,
             -1,
             -1);
-        var vm = new MessageViewModel(dto, CurrentUserId);
-        // Messages.Add(vm);
+        var viewModel = new MessageViewModel(dto, CurrentUserId);
+        // Messages.Add(viewModel);
         InputText = string.Empty;
         MessageSent.Invoke(dto);
     }

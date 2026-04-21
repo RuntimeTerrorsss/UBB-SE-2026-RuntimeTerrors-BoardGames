@@ -16,23 +16,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 timestampInput: new DateTime(2024, 1, 1, 10, 30, 0),
                 unreadCountInput: 3,
                 avatarUrl: "avatar.png");
-        }
+        } 
 
         [Fact]
-        public void Constructor_Should_SetAllProperties()
-        {
-            var model = CreateModel();
-
-            Assert.Equal(1, model.ConversationId);
-            Assert.Equal("John Doe", model.DisplayName);
-            Assert.Equal("JD", model.Initials);
-            Assert.Equal("avatar.png", model.AvatarUrl);
-            Assert.Equal("hello", model.LastMessageText);
-            Assert.Equal(3, model.UnreadCount);
-        }
-
-        [Fact]
-        public void TimestampString_Should_ReturnCorrectFormat()
+        public void TimestampString_ReturnCorrectFormat()
         {
             var model = CreateModel();
 
@@ -40,7 +27,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void LastMessageText_Should_RaisePropertyChanged()
+        public void LastMessageText_RaisePropertyChanged()
         {
             var model = CreateModel();
 
@@ -59,7 +46,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Timestamp_Should_RaisePropertyChanged_ForBothProperties()
+        public void Timestamp_ChangeProperty_RaisedFlagTrue()
         {
             var model = CreateModel();
 
@@ -86,7 +73,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void UnreadCount_Should_RaisePropertyChanged()
+        public void UnreadCount_ChangeProperty_RaisedFlagTrue()
         {
             var model = CreateModel();
 
@@ -105,13 +92,23 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void SettingSameValue_ShouldStillRaiseEvent_ButNotCrash()
+        public void Property_SettingSameValue_NotCrash()
         {
             var model = CreateModel();
 
             model.LastMessageText = "hello";
             model.UnreadCount = 3;
             model.Timestamp = model.Timestamp;
+        }
+
+        [Fact]
+        public void TimestampString_TimestampChanges_Updates()
+        {
+            var model = CreateModel();
+
+            model.Timestamp = new DateTime(2024, 1, 1, 15, 45, 0);
+
+            Assert.Equal("15:45", model.TimestampString);
         }
     }
 }

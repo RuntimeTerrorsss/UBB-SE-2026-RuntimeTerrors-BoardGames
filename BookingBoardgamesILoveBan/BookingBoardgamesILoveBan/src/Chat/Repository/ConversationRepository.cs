@@ -16,10 +16,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
     public class ConversationRepository : IConversationRepository
     {
         private Dictionary<int, IConversationService> Subscribers { get; set; }
-
+        private static string appConnectionString;
         public ConversationRepository()
         {
             Subscribers = new Dictionary<int, IConversationService>();
+            appConnectionString = DatabaseBootstrap.GetAppConnection();
         }
 
         #region Public Methods
@@ -136,7 +137,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         #endregion
 
         #region Database Communication
-        private static string appConnectionString = DatabaseBootstrap.GetAppConnection();
 
         // GETTERS
 
@@ -381,7 +381,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                 break;
 
                             case "CASH_AGREEMENT":
-                                string cashContent = (string)reader[7];
+                                string cashContent = reader[7] as string;
                                 int sellerId = reader.IsDBNull(9) ? -1 : reader.GetInt32(9);
                                 int buyerId = reader.IsDBNull(10) ? -1 : reader.GetInt32(10);
                                 bool acceptedBySeller = reader.IsDBNull(11) ? false : reader.GetBoolean(11);
@@ -401,7 +401,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                 break;
 
                             case "RENTAL_REQUEST":
-                                string rentalContent = (string)reader[8];
+                                string rentalContent = reader[8] as string;
                                 int requestId = reader.IsDBNull(13) ? -1 : reader.GetInt32(13);
                                 bool isResolved = reader.IsDBNull(14) ? false : reader.GetBoolean(14);
                                 bool isAccepted = reader.IsDBNull(15) ? false : reader.GetBoolean(15);
@@ -577,7 +577,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                                DEFAULT VALUES;";
                 var insertCommand = new SqlCommand(insertConversationQuery, connection);
                 int newConversationId = (int)insertCommand.ExecuteScalar();
-                insertCommand.ExecuteScalar();
 
                 var insertConversationUsersQuery = @"INSERT INTO ConversationUser (cid, uid, LastRead) VALUES (@cid, @uid, @lastRead)";
                 var insertUserCommand = new SqlCommand(insertConversationUsersQuery, connection);

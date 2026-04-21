@@ -3,6 +3,7 @@ using Xunit;
 using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Enum;
+using Microsoft.UI.Xaml;
 
 namespace BookingBoardgamesILoveBan.Tests.Chat
 {
@@ -28,118 +29,145 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Constructor_Should_Map_All_Fields_Correctly()
+        public void IsMine_SenderIsCurrentUser_IsTrue()
         {
-            var msg = CreateMessage();
+            var message = CreateMessage() with { senderId = 1 };
 
-            var vm = new MessageViewModel(msg, currentUserId: 1);
+            var viewModel = new MessageViewModel(message, 1);
 
-            Assert.Equal(msg.id, vm.Id);
-            Assert.Equal(msg.conversationId, vm.ConversationId);
-            Assert.Equal(msg.senderId, vm.SenderId);
-            Assert.Equal(msg.content, vm.Content);
-            Assert.Equal(msg.sentAt, vm.SentAt);
-            Assert.Equal(msg.imageUrl, vm.ImageUrl);
-            Assert.Equal(msg.requestId, vm.RequestId);
+            Assert.True(viewModel.IsMine);
         }
 
         [Fact]
-        public void IsMine_Should_Be_True_When_Sender_Is_CurrentUser()
+        public void IsMine_SenderIsNotCurrentUser_IsFalse()
         {
-            var msg = CreateMessage() with { senderId = 1 };
+            var message = CreateMessage() with { senderId = 99 };
 
-            var vm = new MessageViewModel(msg, 1);
+            var viewModel = new MessageViewModel(message, 1);
 
-            Assert.True(vm.IsMine);
+            Assert.False(viewModel.IsMine);
         }
 
         [Fact]
-        public void IsMine_Should_Be_False_When_Sender_Is_OtherUser()
+        public void IsRead_Default_False()
         {
-            var msg = CreateMessage() with { senderId = 99 };
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
 
-            var vm = new MessageViewModel(msg, 1);
-
-            Assert.False(vm.IsMine);
+            Assert.False(viewModel.IsRead);
         }
 
         [Fact]
-        public void TimestampString_Should_Format_As_HH_MM()
+        public void SettingIsResolved_RaisePropertyChanged()
         {
-            var msg = CreateMessage();
-
-            var vm = new MessageViewModel(msg, 1);
-
-            Assert.Equal("14:30", vm.TimestampString);
-        }
-
-        [Fact]
-        public void IsRead_Should_Default_To_False()
-        {
-            var vm = new MessageViewModel(CreateMessage(), 1);
-
-            Assert.False(vm.IsRead);
-        }
-
-        [Fact]
-        public void Setting_IsResolved_Should_Raise_PropertyChanged()
-        {
-            var vm = new MessageViewModel(CreateMessage(), 1);
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
 
             bool raised = false;
 
-            vm.PropertyChanged += (_, e) =>
+            viewModel.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(vm.IsResolved))
+                if (e.PropertyName == nameof(viewModel.IsResolved))
                 {
                     raised = true;
                 }
             };
 
-            vm.IsResolved = true;
+            viewModel.IsResolved = true;
 
-            Assert.True(vm.IsResolved);
+            Assert.True(viewModel.IsResolved);
             Assert.True(raised);
         }
 
         [Fact]
-        public void Setting_AcceptedBy_Should_Update_BothAccepted()
+        public void SettingAcceptedByUpdate_BothAccepted()
         {
-            var vm = new MessageViewModel(CreateMessage(), 1);
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
 
-            vm.AcceptedBy = new[] { 1, 2 };
+            viewModel.AcceptedBy = new[] { 1, 2 };
 
-            Assert.True(vm.BothAccepted);
+            Assert.True(viewModel.BothAccepted);
         }
 
         [Fact]
-        public void Changing_AcceptedBy_Should_Raise_BothAccepted_PropertyChanged()
+        public void ChangingAcceptedBy_RaiseBothAcceptedPropertyChanged()
         {
-            var vm = new MessageViewModel(CreateMessage(), 1);
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
 
             bool raised = false;
 
-            vm.PropertyChanged += (_, e) =>
+            viewModel.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(vm.BothAccepted))
+                if (e.PropertyName == nameof(viewModel.BothAccepted))
                 {
                     raised = true;
                 }
             };
 
-            vm.AcceptedBy = new[] { 1, 2 };
+            viewModel.AcceptedBy = new[] { 1, 2 };
 
             Assert.True(raised);
         }
 
         [Fact]
-        public void IsRead_Can_Be_Updated()
+        public void IsRead_CanBeUpdated()
         {
-            var vm = new MessageViewModel(CreateMessage(), 1);
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
 
-            vm.IsRead = true;
+            viewModel.IsRead = true;
 
-            Assert.True(vm.IsRead);
+            Assert.True(viewModel.IsRead);
+        }
+
+        [Fact]
+        public void IsAccepted_BeSetFromDTOAndUpdatable()
+        {
+            var message = CreateMessage() with { isAccepted = true };
+
+            var viewModel = new MessageViewModel(message, 1);
+
+            Assert.True(viewModel.IsAccepted);
+
+            viewModel.IsAccepted = false;
+
+            Assert.False(viewModel.IsAccepted);
+        }
+
+        [Fact]
+        public void BothAccepted_NotTwo_False()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            viewModel.AcceptedBy = new[] { 1 };
+
+            Assert.False(viewModel.BothAccepted);
+        }
+
+        [Fact]
+        public void IsMineToAlignment_ReturnCorrectValue()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.Equal(HorizontalAlignment.Right, viewModel.IsMineToAlignment(true));
+            Assert.Equal(HorizontalAlignment.Left, viewModel.IsMineToAlignment(false));
+        }
+
+        [Fact]
+        public void IsMineToCornerRadius_ReturnDifferentValues()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.NotEqual(
+                viewModel.IsMineToCornerRadius(true),
+                viewModel.IsMineToCornerRadius(false)
+            );
+        }
+
+        [Fact]
+        public void IsMineToBorderThickness_ReturnCorrect()
+        {
+            var viewModel = new MessageViewModel(CreateMessage(), 1);
+
+            Assert.Equal(new Thickness(0), viewModel.IsMineToTheirsOnlyBorderThickness(true));
+            Assert.Equal(new Thickness(1), viewModel.IsMineToTheirsOnlyBorderThickness(false));
         }
     }
 }

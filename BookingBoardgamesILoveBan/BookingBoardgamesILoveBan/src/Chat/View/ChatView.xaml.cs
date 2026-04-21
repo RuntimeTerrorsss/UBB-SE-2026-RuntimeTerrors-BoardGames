@@ -88,14 +88,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             ScrollToBottom();
         }
 
-        private void OnMessagesChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void OnMessagesChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArguments)
         {
-            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+            if (eventArguments.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
             {
-                foreach (MessageViewModel vm in e.NewItems)
+                foreach (MessageViewModel viewModel in eventArguments.NewItems)
                 {
                     var itemView = new MessageItemView();
-                    itemView.SetMessage(vm, CurrentUserId);
+                    itemView.SetMessage(viewModel, CurrentUserId);
 
                     itemView.AcceptRequested += OnAcceptRequested;
                     itemView.DeclineRequested += OnDeclineRequested;
@@ -112,23 +112,23 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             }
         }
 
-        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs eventArguments)
         {
-            if (e.PropertyName == nameof(ChatViewModel.DisplayName))
+            if (eventArguments.PropertyName == nameof(ChatViewModel.DisplayName))
             {
                 BannerDisplayName.Text = chatViewModel.DisplayName;
             }
-            else if (e.PropertyName == nameof(ChatViewModel.InputText))
+            else if (eventArguments.PropertyName == nameof(ChatViewModel.InputText))
             {
                 MessageInput.Text = chatViewModel.InputText;
             }
-            else if (e.PropertyName == nameof(ChatViewModel.AvatarUrl))
+            else if (eventArguments.PropertyName == nameof(ChatViewModel.AvatarUrl))
             {
                 SetupAvatar();
             }
         }
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
+        private void SendButton_Click(object sender, RoutedEventArgs eventArguments)
         {
             if (pendingImageFileName != null)
             {
@@ -151,9 +151,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                     string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", chatViewModel.AvatarUrl);
                     AvatarPicture.ProfilePicture = new BitmapImage(new Uri(fullPath));
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    Debug.WriteLine($"Error loading avatar: {ex.Message}");
+                    Debug.WriteLine($"Error loading avatar: {exception.Message}");
                     AvatarPicture.ProfilePicture = null;
                 }
             }
@@ -173,7 +173,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             });
         }
 
-        private async void MessageInput_Paste(object sender, TextControlPasteEventArgs e)
+        private async void MessageInput_Paste(object sender, TextControlPasteEventArgs eventArguments)
         {
             var clipboard = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
             var formats = clipboard.AvailableFormats;
@@ -181,7 +181,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
             if (clipboard.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Bitmap))
             {
-                e.Handled = true; // prevent pasting raw text
+                eventArguments.Handled = true; // prevent pasting raw text
 
                 var streamRef = await clipboard.GetBitmapAsync();
                 var stream = await streamRef.OpenReadAsync();
@@ -211,7 +211,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             ImagePreviewPanel.Visibility = Visibility.Collapsed;
         }
 
-        private void RemoveImageButton_Click(object sender, RoutedEventArgs e)
+        private void RemoveImageButton_Click(object sender, RoutedEventArgs eventArguments)
         {
             ClearPendingImage();
         }

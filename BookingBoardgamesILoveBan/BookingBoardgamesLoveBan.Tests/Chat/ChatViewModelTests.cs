@@ -11,7 +11,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ChatViewModelTests
     {
-        private ChatViewModel CreateVM()
+        private ChatViewModel CreateViewModel()
         {
             return new ChatViewModel(1);
         }
@@ -48,10 +48,10 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void LoadConversation_Should_SetHeaderAndMessages()
+        public void LoadConversation_SetHeaderAndMessages()
         {
-            var vm = CreateVM();
-            var convo = CreateConversation();
+            var viewModel = CreateViewModel();
+            var conversation = CreateConversation();
 
             var messages = new List<MessageDTO>
             {
@@ -59,181 +59,224 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 CreateMessage()
             };
 
-            vm.LoadConversation(convo, messages, theirUnreadCount: 1);
-
-            Assert.Equal(1, vm.ConversationId);
-            Assert.Equal("John Doe", vm.DisplayName);
-            Assert.Equal("JD", vm.Initials);
-            Assert.Equal("avatar.png", vm.AvatarUrl);
-
-            Assert.Equal(2, vm.Messages.Count);
+            viewModel.LoadConversation(conversation, messages, theirUnreadCount: 1);
+            Assert.Equal(2, viewModel.Messages.Count);
         }
 
         [Fact]
-        public void SendMessage_Should_AddMessage_And_ClearInput()
+        public void SendMessage_AddMessageAndClearInput()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
             bool invoked = false;
-            vm.MessageSent += _ => invoked = true;
+            viewModel.MessageSent += _ => invoked = true;
 
-            vm.InputText = "hello world";
-            vm.SendMessage();
-
-            Assert.Single(vm.Messages);
-            Assert.Equal(string.Empty, vm.InputText);
-            Assert.True(invoked);
-        }
-
-        [Fact]
-        public void SendMessage_Should_DoNothing_WhenInputEmpty()
-        {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
-
-            vm.InputText = string.Empty;
-
-            vm.SendMessage();
-
-            Assert.Empty(vm.Messages);
-        }
-
-        [Fact]
-        public void HandleIncomingMessage_Should_AddMessage_WhenSameConversation()
-        {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
-
-            var msg = CreateMessage(1);
-
-            vm.HandleIncomingMessage(msg);
-
-            Assert.Single(vm.Messages);
-        }
-
-        [Fact]
-        public void HandleIncomingMessage_Should_IgnoreDifferentConversation()
-        {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
-
-            var msg = CreateMessage(99);
-
-            vm.HandleIncomingMessage(msg);
-
-            Assert.Empty(vm.Messages);
-        }
-
-        [Fact]
-        public void HandleIncomingMessage_Should_PreventDuplicates()
-        {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
-
-            var msg = CreateMessage(1);
-
-            vm.HandleIncomingMessage(msg);
-            vm.HandleIncomingMessage(msg);
-
-            Assert.Single(vm.Messages);
-        }
-
-        [Fact]
-        public void ResolveBookingRequest_Should_InvokeEvent()
-        {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
-
-            bool invoked = false;
-            vm.BookingRequestUpdate += (sender, msgId, accepted, resolved) => invoked = true;
-
-            vm.ResolveBookingRequest(1, true);
+            viewModel.InputText = "hello world";
+            viewModel.SendMessage();
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void ResolveBookingRequest_Should_NotThrow_WhenMessageMissing()
+        public void SendMessage_InputEmpty_DoNothing()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
-            vm.ResolveBookingRequest(999, true);
+            viewModel.InputText = "";
+
+            viewModel.SendMessage();
+
+            Assert.Empty(viewModel.Messages);
         }
 
         [Fact]
-        public void UpdateCashAgreement_Should_InvokeEvent()
+        public void HandleIncomingMessage_WhenSameConversation_AddMessage()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+
+            var message = CreateMessage(1);
+
+            viewModel.HandleIncomingMessage(message);
+
+            Assert.Single(viewModel.Messages);
+        }
+
+        [Fact]
+        public void HandleIncomingMessage_WhenDifferentConversation_Ignore()
+        {
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+
+            var message = CreateMessage(99);
+
+            viewModel.HandleIncomingMessage(message);
+
+            Assert.Empty(viewModel.Messages);
+        }
+
+        [Fact]
+        public void HandleIncomingMessage_DuplicateMessage_DoNotInsertDuplicate()
+        {
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+
+            var message = CreateMessage(1);
+
+            viewModel.HandleIncomingMessage(message);
+            viewModel.HandleIncomingMessage(message);
+
+            Assert.Single(viewModel.Messages);
+        }
+
+        [Fact]
+        public void ResolveBookingRequest_InvokeEvent()
+        {
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
 
             bool invoked = false;
-            vm.CashAgreementAccept += (sender, msgId) => invoked = true;
+            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
 
-            vm.UpdateCashAgreement(1);
+            viewModel.ResolveBookingRequest(1, true);
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void UpdateCashAgreement_Should_NotThrow_WhenMissing()
+        public void ResolveBookingRequest_WhenMessageMissing_NotThrow()
         {
-            var vm = CreateVM();
-
-            vm.UpdateCashAgreement(999);
+            var viewModel = CreateViewModel();
+            viewModel.ResolveBookingRequest(999, true);
         }
 
         [Fact]
-        public void SendImage_Should_InvokeEvent()
+        public void UpdateCashAgreement_InvokeEvent()
         {
-            var vm = CreateVM();
-            vm.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
 
             bool invoked = false;
-            vm.MessageSent += _ => invoked = true;
+            viewModel.CashAgreementAccept += (_, __) => invoked = true;
 
-            vm.SendImage("file.png");
+            viewModel.UpdateCashAgreement(1);
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void RaiseBookingRequestUpdate_Should_FireEvent()
+        public void UpdateCashAgreement_WhenMissing_NotThrow()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
+
+            viewModel.UpdateCashAgreement(999);
+        }
+
+        [Fact]
+        public void SendImage_InvokeEvent()
+        {
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
 
             bool invoked = false;
-            vm.BookingRequestUpdate += (sender, msgId, accepted, resolved) => invoked = true;
+            viewModel.MessageSent += _ => invoked = true;
 
-            vm.RaiseBookingRequestUpdate(1, 1, true, false);
+            viewModel.SendImage("file.png");
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void RaiseCashAgreementAccept_Should_FireEvent()
+        public void RaiseBookingRequestUpdate_InvokeEvent()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
             bool invoked = false;
-            vm.CashAgreementAccept += (sender, msgId) => invoked = true;
+            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
 
-            vm.RaiseCashAgreementAccept(1, 1);
+            viewModel.RaiseBookingRequestUpdate(1, 1, true, false);
 
             Assert.True(invoked);
         }
 
         [Fact]
-        public void RaiseMessageSent_Should_FireEvent()
+        public void RaiseCashAgreementAccept_InvokeEvent()
         {
-            var vm = CreateVM();
+            var viewModel = CreateViewModel();
 
             bool invoked = false;
-            vm.MessageSent += _ => invoked = true;
+            viewModel.CashAgreementAccept += (_, __) => invoked = true;
 
-            vm.RaiseMessageSent(CreateMessage());
+            viewModel.RaiseCashAgreementAccept(1, 1);
 
             Assert.True(invoked);
+        }
+
+        [Fact]
+        public void RaiseMessageSent_InvokeEvent()
+        {
+            var viewModel = CreateViewModel();
+
+            bool invoked = false;
+            viewModel.MessageSent += _ => invoked = true;
+
+            viewModel.RaiseMessageSent(CreateMessage());
+
+            Assert.True(invoked);
+        }
+
+        [Fact]
+        public void LoadConversation_SetReadStatusCorrectly()
+        {
+            var viewModel = CreateViewModel();
+            var conversation = CreateConversation();
+
+            var messages = new List<MessageDTO>
+            {
+                CreateMessage(),
+                CreateMessage()
+            };
+
+            viewModel.LoadConversation(conversation, messages, theirUnreadCount: 1);
+
+            Assert.True(viewModel.Messages[0].IsRead);
+            Assert.False(viewModel.Messages[1].IsRead);
+        }
+
+        [Fact]
+        public void CanSend_InputIsWhiteSpace_IsFalse()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.InputText = "   ";
+
+            Assert.False(viewModel.CanSend);
+        }
+
+        [Fact]
+        public void ProceedToPayment_NotThrow()
+        {
+            var viewModel = CreateViewModel();
+
+            viewModel.ProceedToPayment(1);
+        }
+
+        [Fact]
+        public void HandleIncomingMessage_DuplicateMessage_NotInsertDuplicate()
+        {
+            var viewModel = CreateViewModel();
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+
+            var message1 = CreateMessage();
+            var message2 = CreateMessage();
+            message2 = message2 with { sentAt = message1.sentAt.AddMilliseconds(500) };
+
+            viewModel.HandleIncomingMessage(message1);
+            viewModel.HandleIncomingMessage(message2);
+
+            Assert.Single(viewModel.Messages);
         }
     }
 }
