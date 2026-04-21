@@ -1,4 +1,4 @@
-﻿using BookingBoardgamesILoveBan.src.Chat.ViewModel;
+﻿using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
