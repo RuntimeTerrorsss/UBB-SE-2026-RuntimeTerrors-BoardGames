@@ -29,6 +29,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
         private int pageSize = 10;
         private int totalPages = 1;
 
+        private const int MinimumPageCount = 1;
+
         public ObservableCollection<PaymentDto> Payments { get; set; }
 
         public RelayCommand<PaymentDto> OpenReceiptCommand { get; }
@@ -78,12 +80,12 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
             }
         }
 
-        private async void DebounceSearch(CancellationToken token)
+        private async void DebounceSearch(CancellationToken searchCancellationToken)
         {
             try
             {
-                await Task.Delay(500, token);
-                if (!token.IsCancellationRequested)
+                await Task.Delay(500, searchCancellationToken);
+                if (!searchCancellationToken.IsCancellationRequested)
                 {
                     ApplyFilter(resetPage: true);
                 }
@@ -183,16 +185,16 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
             {
                 return;
             }
-            string path = paymentService.GetReceiptDocumentPath(paymentDto.Id);
+            string receiptFilePath = paymentService.GetReceiptDocumentPath(paymentDto.Id);
 
             try
             {
-                var fileInfo = new System.IO.FileInfo(path);
-                if (fileInfo.Exists)
+                var receiptFileInfo = new System.IO.FileInfo(receiptFilePath);
+                if (receiptFileInfo.Exists)
                 {
                     // windows storage file reference to launch safely
-                    var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(fileInfo.FullName);
-                    await Windows.System.Launcher.LaunchFileAsync(file);
+                    var storageFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(receiptFileInfo.FullName);
+                    await Windows.System.Launcher.LaunchFileAsync(storageFile);
                 }
             }
             catch (System.Exception)
@@ -220,7 +222,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
                 Payments.Add(paymentDto);
             }
 
-            TotalPages = pagedResult.TotalPages == 0 ? 1 : pagedResult.TotalPages;
+            TotalPages = pagedResult.TotalPages == 0 ? MinimumPageCount : pagedResult.TotalPages;
 
             TotalAmount = paymentService.CalculateTotalAmount(pagedResult.Items);
         }

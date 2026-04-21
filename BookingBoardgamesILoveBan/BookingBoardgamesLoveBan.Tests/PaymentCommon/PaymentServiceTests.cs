@@ -1,205 +1,143 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
-using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
-using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Mapper;
+using BookingBoardgamesILoveBan.Src.PaymentCash.Service;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
-using BookingBoardgamesILoveBan.Src.PaymentCommon.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
+using Moq;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
 {
-    public class PaymentServiceTests // unit tests
+    public class PaymentServiceTests
     {
-        // ================================ fakes ======================================
-        private class FakePaymentRepository : IPaymentRepository
-        {
-            private readonly List<Payment> payments = new ();
-            private int nextId = 1;
-
-            public IReadOnlyList<Payment> GetAll()
-            {
-                return payments;
-            }
-
-            public Payment GetById(int tid)
-            {
-                foreach (Payment payment in payments)
-                {
-                    if (payment.Tid == tid)
-                    {
-                        return payment;
-                    }
-                }
-                throw new Exception("No payment found");
-            }
-
-            public int AddPayment(Payment payment)
-            {
-                payment.Tid = nextId++;
-                payments.Add(payment);
-                return payment.Tid;
-            }
-
-            public bool DeletePayment(Payment payment)
-            {
-                int foundPaymentId = -1;
-                for (int i = 0; i < payments.Count; i++)
-                {
-                    if (payments[i].Tid == payment.Tid)
-                    {
-                        foundPaymentId = i;
-                        break;
-                    }
-                }
-                if (foundPaymentId == -1)
-                {
-                    return false;
-                }
-                payments.RemoveAt(foundPaymentId);
-                return true;
-            }
-
-            public Payment UpdatePayment(Payment updated)
-            {
-                var old = GetById(updated.Tid);
-                if (old == null)
-                {
-                    return null;
-                }
-
-                var copy = new Payment
-                {
-                    Tid = old.Tid,
-                    FilePath = old.FilePath,
-                    RequestId = old.RequestId,
-                    ClientId = old.ClientId,
-                    OwnerId = old.OwnerId,
-                    Amount = old.Amount,
-                    PaymentMethod = old.PaymentMethod,
-                    State = old.State
-                };
-                old.FilePath = updated.FilePath;
-                old.DateOfTransaction = updated.DateOfTransaction;
-                old.DateConfirmedBuyer = updated.DateConfirmedBuyer;
-                old.DateConfirmedSeller = updated.DateConfirmedSeller;
-                return copy;
-            }
-        }
-
-        private class FakeReceiptService : IReceiptService
-        {
-            public string GenerateReceiptRelativePath(int requestId)
-            {
-                return $"receipts\\receipt_{requestId}_test.pdf";
-            }
-
-            public string GetReceiptDocument(Payment payment)
-            {
-                return $"C:\\Documents\\BookingBoardgames\\receipts\\receipt_{payment.RequestId}_test.pdf";
-            }
-        }
-
-        private class FakePaymentService : PaymentService // abstract class
-        {
-            public FakePaymentService(IPaymentRepository repo, IReceiptService receiptService)
-                : base(repo, receiptService)
-            {
-            }
-        }
-
-        // ================================ setup ======================================
-        private readonly PaymentService paymentService;
-        private readonly IPaymentRepository paymentRepository;
-        private readonly IReceiptService receiptService;
-
-        public PaymentServiceTests()
-        {
-            paymentRepository = new FakePaymentRepository();
-            receiptService = new FakeReceiptService();
-            paymentService = new FakePaymentService(paymentRepository, receiptService);
-        }
-
-        private Payment CreateAndAddPayment(string filePath = null)
-        {
-            var payment = new Payment
-            {
-                RequestId = 1,
-                ClientId = 1,
-                OwnerId = 2,
-                Amount = 500,
-                PaymentMethod = "Card",
-                State = 0,
-                FilePath = filePath
-            };
-            payment.Tid = paymentRepository.AddPayment(payment);
-            return payment;
-        }
-
-        // ================================ GenerateReceipt ======================================
         [Fact]
-        public void GenerateReceipt_SetsFilePathOnPayment()
+        public void GenerateReceipt_LoadsPaymentUsingProvidedIdentifier()
         {
-            var payment = CreateAndAddPayment();
-            Assert.Null(payment.FilePath);
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            paymentRepositoryMock
+                .Setup(paymentRepository => paymentRepository.GetById(25))
+                .Returns(new Payment(25, 9, 2, 3, 10m, "CARD"));
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
-            paymentService.GenerateReceipt(payment.Tid);
+            cashPaymentService.GenerateReceipt(25);
 
-            var updated = paymentRepository.GetById(payment.Tid);
-            Assert.NotNull(updated.FilePath);
-            Assert.NotEmpty(updated.FilePath);
+            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.GetById(25), Times.Once);
         }
 
         [Fact]
-        public void GenerateReceipt_FilePathContainsRequestId()
+        public void GenerateReceipt_AssignsGeneratedReceiptPathToPayment()
         {
-            var payment = CreateAndAddPayment();
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(1, 42, 2, 3, 10m, "CARD") { FilePath = null };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(42)).Returns("receipts/42.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
-            paymentService.GenerateReceipt(payment.Tid);
+            cashPaymentService.GenerateReceipt(1);
 
-            var updated = paymentRepository.GetById(payment.Tid);
-            Assert.Contains(payment.RequestId.ToString(), updated.FilePath);
-        }
-
-        // ================================ GetReceipt ======================================
-        [Fact]
-        public void GetReceipt_PaymentAlreadyHasFilePath_ReturnsPath()
-        {
-            var payment = CreateAndAddPayment("receipts\\receipt_1_existing.pdf");
-
-            var result = paymentService.GetReceipt(payment.Tid);
-
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
+            Assert.Equal("receipts/42.pdf", paymentEntity.FilePath);
         }
 
         [Fact]
-        public void GetReceipt_PaymentHasNoFilePath_GeneratesAndReturnsPath()
+        public void GenerateReceipt_PersistsUpdatedPayment()
         {
-            var payment = CreateAndAddPayment(filePath: null);
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(1, 42, 2, 3, 10m, "CARD");
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(42)).Returns("receipts/42.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
-            var result = paymentService.GetReceipt(payment.Tid);
+            cashPaymentService.GenerateReceipt(1);
 
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
+            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.UpdatePayment(paymentEntity), Times.Once);
         }
 
         [Fact]
-        public void GetReceipt_PaymentHasNoFilePath_SetsFilePathOnPayment()
+        public void GetReceipt_WhenPaymentAlreadyHasFilePath_DoesNotGenerateNewReceiptPath()
         {
-            var payment = CreateAndAddPayment(filePath: null);
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(2, 50, 2, 3, 10m, "CARD") { FilePath = "receipts/existing.pdf" };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(2)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/existing.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
-            paymentService.GetReceipt(payment.Tid);
+            cashPaymentService.GetReceipt(2);
 
-            var updated = paymentRepository.GetById(payment.Tid);
-            Assert.NotNull(updated.FilePath);
-            Assert.NotEmpty(updated.FilePath);
+            receiptServiceMock.Verify(receiptService => receiptService.GenerateReceiptRelativePath(It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void GetReceipt_WhenPaymentAlreadyHasFilePath_ReturnsReceiptDocumentFromReceiptService()
+        {
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(2, 50, 2, 3, 10m, "CARD") { FilePath = "receipts/existing.pdf" };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(2)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/existing.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
+
+            var receiptDocumentPath = cashPaymentService.GetReceipt(2);
+
+            Assert.Equal("C:/docs/existing.pdf", receiptDocumentPath);
+        }
+
+        [Fact]
+        public void GetReceipt_WhenFilePathIsMissing_GeneratesReceiptPathUsingPaymentRequestIdentifier()
+        {
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { FilePath = string.Empty };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(70)).Returns("receipts/70.pdf");
+            receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/70.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
+
+            cashPaymentService.GetReceipt(3);
+
+            receiptServiceMock.Verify(receiptService => receiptService.GenerateReceiptRelativePath(70), Times.Once);
+        }
+
+        [Fact]
+        public void GetReceipt_WhenFilePathIsMissing_RefreshesPaymentFromRepositoryAfterGeneratingReceipt()
+        {
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { FilePath = null };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(70)).Returns("receipts/70.pdf");
+            receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/70.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
+
+            cashPaymentService.GetReceipt(3);
+
+            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.GetById(3), Times.Exactly(3));
+        }
+
+        [Fact]
+        public void GetReceipt_WhenFilePathIsMissing_ReturnsReceiptDocumentForUpdatedPayment()
+        {
+            var paymentRepositoryMock = new Mock<IPaymentRepository>();
+            var receiptServiceMock = new Mock<IReceiptService>();
+            var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
+            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { FilePath = null };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(paymentEntity);
+            receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(70)).Returns("receipts/70.pdf");
+            receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/70.pdf");
+            var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
+
+            var receiptDocumentPath = cashPaymentService.GetReceipt(3);
+
+            Assert.Equal("C:/docs/70.pdf", receiptDocumentPath);
         }
     }
 }
-
-

@@ -17,7 +17,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
     public class ReceiptServiceTests
     {
         // ================================ fakes ======================================
-        private class FakeUserService : IUserRepository
+        private class FakeUserRepository : IUserRepository
         {
             public User GetById(int id)
             {
@@ -70,7 +70,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         public ReceiptServiceTests()
         {
             receiptService = new ReceiptService(
-                    new FakeUserService(),
+                    new FakeUserRepository(),
                     new FakeRequestService(),
                     new FakeGameService());
         }

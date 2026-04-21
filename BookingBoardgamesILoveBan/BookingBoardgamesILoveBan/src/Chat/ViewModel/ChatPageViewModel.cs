@@ -8,7 +8,7 @@ using BookingBoardgamesILoveBan.Src.Chat.Service;
 using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 
-namespace BookingBoardgamesILoveBan.src.Chat.ViewModel;
+namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 
 public class ChatPageViewModel
 {
@@ -22,6 +22,7 @@ public class ChatPageViewModel
         get => conversationService;
     }
     private List<ConversationDTO> conversations = new ();
+
     public ChatPageViewModel(int currentUser)
     : this(currentUser, new ConversationService(App.ConversationRepository, currentUser))
     {
@@ -31,7 +32,7 @@ public class ChatPageViewModel
     {
     }
 
-    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository uService)
+    public ChatPageViewModel(int currentUser, ConversationService service, IUserRepository userRepository)
     {
         LeftPanelModelView = new LeftPanelViewModel();
         ChatModelView = new ChatViewModel(currentUser);
@@ -52,7 +53,7 @@ public class ChatPageViewModel
                 conversation,
                 conversationService.GetOtherUserNameByConversationDTO(conversation),
                 currentUserId,
-                uService);
+                userRepository);
         }
 
         conversationService.ActionMessageProcessed += OnMessageReceived;
@@ -79,15 +80,15 @@ public class ChatPageViewModel
             return;
         }
 
-        var convo = conversations.FirstOrDefault(c => c.Id == LeftPanelModelView.SelectedConversation.ConversationId);
-        if (convo == null)
+        var conversation = conversations.FirstOrDefault(c => c.Id == LeftPanelModelView.SelectedConversation.ConversationId);
+        if (conversation == null)
         {
             return;
         }
-        int selectedConversationOtherUserUnreadCount = convo.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
-        ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, convo.MessageList, selectedConversationOtherUserUnreadCount);
+        int selectedConversationOtherUserUnreadCount = conversation.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
+        ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, selectedConversationOtherUserUnreadCount);
 
-        SendReadReceipt(convo);
+        SendReadReceipt(conversation);
     }
 
     /// <summary>
@@ -98,7 +99,7 @@ public class ChatPageViewModel
     /// <param name="message"></param>
     private void OnMessageSent(MessageDTO message)
     {
-        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == message.conversationId);
+        var conversation = conversations.FirstOrDefault(c => c.Id == message.conversationId);
         message = message with { receiverId = conversation.Participants[0] == message.senderId ? conversation.Participants[1] : conversation.Participants[0] };
         conversationService.SendMessage(message);
     }
@@ -204,12 +205,12 @@ public class ChatPageViewModel
     /// <param name="readReceipt"></param>
     private void OnReadReceiptReceived(ReadReceiptDTO readReceipt)
     {
-        var convo = conversations.FirstOrDefault(c => c.Id == readReceipt.conversationId);
-        convo.LastRead[readReceipt.readerId] = readReceipt.receiptTimeStamp;
-        convo.UpdateUnreadCounts();
+        var conversation = conversations.FirstOrDefault(c => c.Id == readReceipt.conversationId);
+        conversation.LastRead[readReceipt.readerId] = readReceipt.receiptTimeStamp;
+        conversation.UpdateUnreadCounts();
         if (ChatModelView.ConversationId == readReceipt.conversationId && readReceipt.readerId != currentUserId)
         {
-            ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, convo.MessageList, convo.UnreadCount[readReceipt.readerId]);
+            ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, conversation.UnreadCount[readReceipt.readerId]);
         }
     }
 
@@ -220,7 +221,7 @@ public class ChatPageViewModel
     /// <param name="senderName"></param>
     private void OnMessageUpdateReceived(MessageDTO updatedMessage, string senderName)
     {
-        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == updatedMessage.conversationId);
+        var conversation = conversations.FirstOrDefault(c => c.Id == updatedMessage.conversationId);
         if (conversation == null)
         {
             return;

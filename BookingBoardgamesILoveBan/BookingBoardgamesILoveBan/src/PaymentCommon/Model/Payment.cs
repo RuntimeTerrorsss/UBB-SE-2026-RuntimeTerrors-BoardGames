@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Model
@@ -6,6 +6,12 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Model
 	public class Payment
 	{
 		public int Tid { get; set; }
+		public int TransactionId
+		{
+			get => this.Tid;
+			set => this.Tid = value;
+		}
+
 		public int RequestId { get; set; }
 		public int ClientId { get; set; }
 		public int OwnerId { get; set; }
@@ -18,22 +24,22 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCommon.Model
 		public int State;
 		public string? FilePath { get; set; }
 
-		public Payment(int id, int requestId, int clientId, int ownerId, decimal amount, string method)
+		public Payment(int paymentId, int requestId, int clientId, int ownerId, decimal amount, string paymentMethod)
 		{
-			Tid = id;
-			RequestId = requestId;
-			ClientId = clientId;
-			OwnerId = ownerId;
-			Amount = amount;
-			PaymentMethod = method;
+			this.Tid = paymentId;
+			this.RequestId = requestId;
+			this.ClientId = clientId;
+			this.OwnerId = ownerId;
+			this.Amount = amount;
+			this.PaymentMethod = paymentMethod;
 
-			DateOfTransaction = DateTime.Now;
-			DateConfirmedBuyer = null;
-			DateConfirmedSeller = null;
+			this.DateOfTransaction = DateTime.Now;
+			this.DateConfirmedBuyer = null;
+			this.DateConfirmedSeller = null;
 
-			State = PaymentConstrants.StatePending;
+			this.State = PaymentConstrants.StatePending;
 
-			FilePath = null;
+			this.FilePath = null;
 		}
         public Payment()
 		{

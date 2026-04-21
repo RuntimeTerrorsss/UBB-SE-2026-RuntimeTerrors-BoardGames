@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Constants;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Repository;
@@ -11,61 +11,66 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.Service
 {
 	public class CashPaymentService : PaymentService, ICashPaymentService
 	{
-        private ICashPaymentMapper mapper;
+        private const string CashPaymentMethod = "CASH";
+        private readonly ICashPaymentMapper cashPaymentMapper;
 
-		public CashPaymentService(IPaymentRepository repository, ICashPaymentMapper mapper, IReceiptService receiptService) : base(repository, receiptService)
+		public CashPaymentService(
+            IPaymentRepository repository,
+            ICashPaymentMapper cashPaymentMapper,
+            IReceiptService receiptService) : base(repository, receiptService)
 		{
-			this.mapper = mapper;
+			this.cashPaymentMapper = cashPaymentMapper;
 		}
 
-		public int AddCashPayment(CashPaymentDto paymentDto)
+		public int AddCashPayment(CashPaymentDto cashPaymentDataTransferObject)
 		{
-            PaymentCommon.Model.Payment payment = this.mapper.ToEntity(paymentDto);
-			payment.State = PaymentConstrants.StateCompleted;
+            Payment paymentEntity = this.cashPaymentMapper.ToEntity(cashPaymentDataTransferObject);
+            paymentEntity.PaymentMethod = CashPaymentMethod;
+			paymentEntity.State = PaymentConstrants.StateCompleted;
 
-			int paymentId = this.paymentRepository.AddPayment(payment);
+			int paymentIdentifier = this.paymentRepository.AddPayment(paymentEntity);
 
-			return paymentId;
+			return paymentIdentifier;
 		}
 
-		public CashPaymentDto GetCashPayment(int paymentId)
+		public CashPaymentDto GetCashPayment(int paymentIdentifier)
 		{
-			return this.mapper.ToDto(this.paymentRepository.GetById(paymentId));
+			return this.cashPaymentMapper.ToDto(this.paymentRepository.GetById(paymentIdentifier));
 		}
 
-		public void ConfirmDelivery(int paymentId)
+		public void ConfirmDelivery(int paymentIdentifier)
 		{
-            PaymentCommon.Model.Payment payment = this.paymentRepository.GetById(paymentId);
-			payment.DateConfirmedBuyer = DateTime.Now;
+            Payment paymentToConfirm = this.paymentRepository.GetById(paymentIdentifier);
+			paymentToConfirm.DateConfirmedBuyer = DateTime.Now;
 
-			if (this.IsAllConfirmed(paymentId))
+			if (this.IsAllConfirmed(paymentIdentifier))
 			{
-				this.receiptService.GenerateReceiptRelativePath(payment.RequestId);
+				this.receiptService.GenerateReceiptRelativePath(paymentToConfirm.RequestId);
 			}
 
-			this.paymentRepository.UpdatePayment(payment);
+			this.paymentRepository.UpdatePayment(paymentToConfirm);
 		}
 
-		public void ConfirmPayment(int paymentId)
+		public void ConfirmPayment(int paymentIdentifier)
 		{
-            PaymentCommon.Model.Payment payment = this.paymentRepository.GetById(paymentId);
-			payment.DateConfirmedSeller = DateTime.Now;
+            Payment paymentToConfirm = this.paymentRepository.GetById(paymentIdentifier);
+			paymentToConfirm.DateConfirmedSeller = DateTime.Now;
 
-			if (this.IsAllConfirmed(paymentId))
+			if (this.IsAllConfirmed(paymentIdentifier))
 			{
-				this.receiptService.GenerateReceiptRelativePath(payment.RequestId);
+				this.receiptService.GenerateReceiptRelativePath(paymentToConfirm.RequestId);
 			}
 
-			this.paymentRepository.UpdatePayment(payment);
+			this.paymentRepository.UpdatePayment(paymentToConfirm);
 		}
 
-		public bool IsAllConfirmed(int paymentId)
+		public bool IsAllConfirmed(int paymentIdentifier)
 		{
-            PaymentCommon.Model.Payment payment = this.paymentRepository.GetById(paymentId);
+            Payment paymentEntity = this.paymentRepository.GetById(paymentIdentifier);
 
-			if (payment.DateConfirmedSeller != null && payment.DateConfirmedBuyer != null)
+			if (paymentEntity.DateConfirmedSeller != null && paymentEntity.DateConfirmedBuyer != null)
 			{
-				payment.State = PaymentConstrants.StateConfirmed;
+				paymentEntity.State = PaymentConstrants.StateConfirmed;
 
 				return true;
 			}
@@ -73,11 +78,11 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.Service
 			return false;
 		}
 
-		public bool IsDeliveryConfirmed(int paymentId)
+		public bool IsDeliveryConfirmed(int paymentIdentifier)
 		{
-            PaymentCommon.Model.Payment payment = this.paymentRepository.GetById(paymentId);
+            Payment paymentEntity = this.paymentRepository.GetById(paymentIdentifier);
 
-			if (payment.DateConfirmedBuyer != null)
+			if (paymentEntity.DateConfirmedBuyer != null)
 			{
 				return true;
 			}
@@ -85,11 +90,11 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.Service
 			return false;
 		}
 
-		public bool IsPaymentConfirmed(int paymentId)
+		public bool IsPaymentConfirmed(int paymentIdentifier)
 		{
-            PaymentCommon.Model.Payment payment = this.paymentRepository.GetById(paymentId);
+            Payment paymentEntity = this.paymentRepository.GetById(paymentIdentifier);
 
-			if (payment.DateConfirmedSeller != null)
+			if (paymentEntity.DateConfirmedSeller != null)
 			{
 				return true;
 			}

@@ -9,15 +9,14 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 {
     public class RelayCommandTests
     {
-        // ================================ RelayCommand ======================================
         [Fact]
-        public void RelayCommand_NullExecute_ThrowsArgumentNullException()
+        public void NullExecute_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RelayCommand<int>(null));
         }
 
         [Fact]
-        public void RelayCommand_Execute_CallsAction()
+        public void Execute_CallsAction()
         {
             bool called = false;
             var command = new RelayCommand<int>(_ => called = true);
@@ -28,7 +27,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommand_Execute_PassesParameterCorrectly()
+        public void Execute_PassesParameterCorrectly()
         {
             int received = 0;
             var command = new RelayCommand<int>(value => received = value);
@@ -39,7 +38,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommand_CanExecute_NoPredicate_ReturnsTrue()
+        public void CanExecute_NoPredicate_ReturnsTrue()
         {
             var command = new RelayCommand<int>(_ => { });
 
@@ -47,7 +46,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommand_CanExecute_PredicateReturnsTrue_ReturnsTrue()
+        public void CanExecute_PredicateReturnsTrue_ReturnsTrue()
         {
             var command = new RelayCommand<int>(_ => { }, _ => true);
 
@@ -55,7 +54,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommand_CanExecute_PredicateReturnsFalse_ReturnsFalse()
+        public void CanExecute_PredicateReturnsFalse_ReturnsFalse()
         {
             var command = new RelayCommand<int>(_ => { }, _ => false);
 
@@ -63,7 +62,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommand_RaiseCanExecuteChanged_FiresEvent()
+        public void RaiseCanExecuteChanged_FiresEvent()
         {
             var command = new RelayCommand<int>(_ => { });
             bool eventFired = false;
@@ -75,23 +74,25 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommand_RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
+        public void RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
         {
             var command = new RelayCommand<int>(_ => { });
             var exception = Record.Exception(() => command.RaiseCanExecuteChanged());
 
             Assert.Null(exception);
         }
+    }
 
-        // ================================ RelayCommandNoParam ======================================
+    public class RelayCommandNoParamTests
+    {
         [Fact]
-        public void RelayCommandNoParam_NullExecute_ThrowsArgumentNullException()
+        public void NullExecute_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RelayCommandNoParam(null));
         }
 
         [Fact]
-        public void RelayCommandNoParam_Execute_CallsAction()
+        public void Execute_CallsAction()
         {
             bool called = false;
             var command = new RelayCommandNoParam(() => called = true);
@@ -102,7 +103,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommandNoParam_CanExecute_NoFunc_ReturnsTrue()
+        public void CanExecute_NoFunc_ReturnsTrue()
         {
             var command = new RelayCommandNoParam(() => { });
 
@@ -110,7 +111,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommandNoParam_CanExecute_FuncReturnsTrue_ReturnsTrue()
+        public void CanExecute_FuncReturnsTrue_ReturnsTrue()
         {
             var command = new RelayCommandNoParam(() => { }, () => true);
 
@@ -118,7 +119,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommandNoParam_CanExecute_FuncReturnsFalse_ReturnsFalse()
+        public void CanExecute_FuncReturnsFalse_ReturnsFalse()
         {
             var command = new RelayCommandNoParam(() => { }, () => false);
 
@@ -126,7 +127,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommandNoParam_RaiseCanExecuteChanged_FiresEvent()
+        public void RaiseCanExecuteChanged_FiresEvent()
         {
             var command = new RelayCommandNoParam(() => { });
             bool eventFired = false;
@@ -138,7 +139,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommandNoParam_RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
+        public void RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
         {
             var command = new RelayCommandNoParam(() => { });
             var exception = Record.Exception(() => command.RaiseCanExecuteChanged());
@@ -147,7 +148,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RelayCommandNoParam_Execute_IgnoresParameter()
+        public void Execute_IgnoresParameter()
         {
             bool called = false;
             var command = new RelayCommandNoParam(() => called = true);
