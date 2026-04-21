@@ -214,7 +214,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.ViewModel
             RequestIdentifier = requestId;
             DeliveryAddress = deliveryAddress;
             BookingMessageIdentifier = bookingMessageIdentifier;
-            RequestDto requestDataTransferObject = this.cardPaymentService.GetRequestDataTransferObject(requestId);
+            RequestDataTransferObject requestDataTransferObject = this.cardPaymentService.GetRequestDataTransferObject(requestId);
             ConversationService = conversationService;
 
             ClientIdentifier = requestDataTransferObject.ClientId;

@@ -32,7 +32,7 @@ namespace BookingBoardgamesILoveBan.Tests.PaymentCard.ViewModel
             int daysToAdd = 2;
 
             mockCardPaymentService.Setup(cardPaymentServiceMock => cardPaymentServiceMock.GetRequestDataTransferObject(It.IsAny<int>()))
-                .Returns(new RequestDto(requestIdentifier, gameName, clientIdentifier, ownerIdentifier, ownerName, clientName, DateTime.Now, DateTime.Now.AddDays(daysToAdd), paymentPrice));
+                .Returns(new RequestDataTransferObject(requestIdentifier, gameName, clientIdentifier, ownerIdentifier, ownerName, clientName, DateTime.Now, DateTime.Now.AddDays(daysToAdd), paymentPrice));
         }
 
         private CardPaymentViewModel CreateViewModel()

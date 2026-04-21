@@ -10,12 +10,12 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.GameMock
     {
         public Game(int id, string name, decimal pricePerDay)
         {
-            Gid = id;
+            Id = id;
             Name = name;
             PricePerDay = pricePerDay;
         }
 
-        public int Gid { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; }
 

@@ -28,7 +28,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             viewModel = new DeliveryViewModel(
                 currentUserId: 1,
                 mapService: fakeMapService,
-                userService: fakeUserService,
+                userRepository: fakeUserService,
                 validator: fakeValidator);
         }
 

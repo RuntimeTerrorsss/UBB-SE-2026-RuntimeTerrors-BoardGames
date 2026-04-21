@@ -100,7 +100,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
                     paymentMethod: cardPayment.PaymentMethod);
         }
 
-        public virtual RequestDto GetRequestDataTransferObject(int requestIdentifier)
+        public virtual RequestDataTransferObject GetRequestDataTransferObject(int requestIdentifier)
         {
             Request request = this.requestService.GetRequestById(requestIdentifier);
             string gameName = this.requestService.GetGameName(request.Id);
@@ -108,7 +108,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
             string clientName = this.userRepository.GetById(request.ClientId).Username;
             decimal gamePrice = this.requestService.GetRequestPrice(request.Id);
 
-            return new RequestDto(request.Id, gameName, request.ClientId, request.OwnerId, ownerName, clientName, request.StartDate, request.EndDate, gamePrice);
+            return new RequestDataTransferObject(request.Id, gameName, request.ClientId, request.OwnerId, ownerName, clientName, request.StartDate, request.EndDate, gamePrice);
         }
     }
 }

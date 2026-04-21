@@ -11,17 +11,18 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
 {
     public class DeliveryViewModel
     {
+        private const int DefaultUserId = 1;
         public DeliveryViewModel(
             int currentUserId,
             IMapService mapService,
-            IUserRepository userService,
+            IUserRepository userRepository,
             IValidator<Dictionary<string, string>, Address> validator)
         {
-            MapService = mapService;
-            UserService = userService;
-            Validator = validator;
             CurrentId = currentUserId;
-            CurrentUser = UserService.GetById(currentUserId);
+            MapService = mapService;
+            UserRepository = userRepository;
+            Validator = validator;
+            CurrentUser = UserRepository.GetById(currentUserId);
             CurrentAddress = CurrentUser != null
                 ? new Address(CurrentUser.Country, CurrentUser.City, CurrentUser.Street, CurrentUser.StreetNumber)
                 : new Address();
@@ -39,20 +40,20 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
 
         public User CurrentUser { get; set; }
 
-        public int CurrentId { get; set; } = 1;
+        public int CurrentId { get; set; } = DefaultUserId;
 
         public Action OnNavigateToPayment { get; set; }
 
         private IMapService MapService { get; set; }
 
-        private IUserRepository UserService { get; set; }
+        private IUserRepository UserRepository { get; set; }
 
         private IValidator<Dictionary<string, string>, Address> Validator { get; set; }
 
         public void Initialize(int userId)
         {
             CurrentId = userId;
-            CurrentUser = UserService.GetById(userId);
+            CurrentUser = UserRepository.GetById(userId);
 
             if (CurrentUser != null)
             {
@@ -112,7 +113,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.ViewModel
             {
                 if (IsSaveAddress && CurrentUser is not null)
                 {
-                    UserService.SaveAddress(CurrentUser.Id, CurrentAddress);
+                    UserRepository.SaveAddress(CurrentUser.Id, CurrentAddress);
                 }
 
                 OnNavigateToPayment?.Invoke();

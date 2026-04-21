@@ -7,7 +7,7 @@ namespace BookingBoardgamesILoveBan.Src.Interface.View
     {
         public object Convert(object value, System.Type targetType, object parameter, string language)
         {
-            if (value is true)
+            if (value is bool boolValue && boolValue)
             {
                 return Visibility.Visible;
             }

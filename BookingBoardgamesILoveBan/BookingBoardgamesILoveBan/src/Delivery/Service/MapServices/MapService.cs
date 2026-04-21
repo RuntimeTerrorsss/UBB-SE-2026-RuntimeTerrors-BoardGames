@@ -9,47 +9,49 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices
 {
     public class MapService : IMapService
     {
+        private const string NominatimUrlTemplate = "https://nominatim.openstreetmap.org/reverse?lat={0}&lon={1}&format=json";
+        private const string UserAgentValue = "BookingBoardgamesILoveBan/1.0";
+        private const double DefaultCoordinate = 0.0;
         private readonly HttpClient httpClient = new HttpClient();
 
         public MapService()
         {
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "BookingBoardgamesILoveBan/1.0");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", UserAgentValue);
         }
 
         public async Task<Address> GetAddressFromMapAsync(double latitude, double longitude)
         {
-            if (latitude == 0 && longitude == 0)
+            if (latitude == DefaultCoordinate && longitude == DefaultCoordinate)
             {
                 return null;
             }
 
             try
             {
-                string url = FormattableString.Invariant($"https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json");
-
-                HttpResponseMessage response = await httpClient.GetAsync(url);
+                string requestUrl = string.Format(System.Globalization.CultureInfo.InvariantCulture, NominatimUrlTemplate, latitude, longitude);
+                HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
                 response.EnsureSuccessStatusCode();
 
-                string json = await response.Content.ReadAsStringAsync();
+                string jsonResponse = await response.Content.ReadAsStringAsync();
 
-                using (JsonDocument doc = JsonDocument.Parse(json))
+                using (JsonDocument jsonDocument = JsonDocument.Parse(jsonResponse))
                 {
-                    JsonElement addr = doc.RootElement.GetProperty("address");
+                    JsonElement address = jsonDocument.RootElement.GetProperty("address");
 
                     return new Address
                     {
-                        Country = addr.TryGetProperty("country", out JsonElement country) ? country.GetString() ?? string.Empty : string.Empty,
-                        City = addr.TryGetProperty("city", out JsonElement city) ? city.GetString() ?? string.Empty
-                                     : addr.TryGetProperty("town", out JsonElement town) ? town.GetString() ?? string.Empty
-                                     : addr.TryGetProperty("village", out JsonElement village) ? village.GetString() ?? string.Empty : string.Empty,
-                        Street = addr.TryGetProperty("road", out JsonElement road) ? road.GetString() ?? string.Empty : string.Empty,
-                        StreetNumber = addr.TryGetProperty("house_number", out JsonElement number) ? number.GetString() ?? string.Empty : string.Empty,
+                        Country = address.TryGetProperty("country", out JsonElement country) ? country.GetString() ?? string.Empty : string.Empty,
+                        City = address.TryGetProperty("city", out JsonElement city) ? city.GetString() ?? string.Empty
+                                     : address.TryGetProperty("town", out JsonElement town) ? town.GetString() ?? string.Empty
+                                     : address.TryGetProperty("village", out JsonElement village) ? village.GetString() ?? string.Empty : string.Empty,
+                        Street = address.TryGetProperty("road", out JsonElement road) ? road.GetString() ?? string.Empty : string.Empty,
+                        StreetNumber = address.TryGetProperty("house_number", out JsonElement number) ? number.GetString() ?? string.Empty : string.Empty,
                     };
                 }
             }
-            catch
+            catch (Exception exception)
             {
-                Debug.Write("Error when getting address from map in service");
+                Debug.Write($"Error in MapService: {exception.Message}");
                 return null;
             }
         }
