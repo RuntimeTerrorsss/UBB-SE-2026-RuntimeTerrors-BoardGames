@@ -112,7 +112,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
             }
         }
 
-        private void OnFieldChanged(object sender, TextChangedEventArgs e)
+        private void OnFieldChanged(object sender, TextChangedEventArgs textEventArguments)
         {
             if (sender is TextBox tb && tb.Tag is string fieldName)
             {
@@ -120,22 +120,22 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
             }
         }
 
-        private void OnSaveAddressChecked(object sender, RoutedEventArgs e)
+        private void OnSaveAddressChecked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.IsSaveAddress = true;
 
-        private void OnSaveAddressUnchecked(object sender, RoutedEventArgs e)
+        private void OnSaveAddressUnchecked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.IsSaveAddress = false;
 
-        private void OnOpenMapClicked(object sender, RoutedEventArgs e)
+        private void OnOpenMapClicked(object sender, RoutedEventArgs routedEventArguments)
             => _ = InitializeMapAsync();
 
-        private void OnCloseMapClicked(object sender, RoutedEventArgs e)
+        private void OnCloseMapClicked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.CloseMap();
 
-        private void OnSubmitClicked(object sender, RoutedEventArgs e)
+        private void OnSubmitClicked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.SubmitDelivery();
 
-        private async void OnConfirmLocationClicked(object sender, RoutedEventArgs e)
+        private async void OnConfirmLocationClicked(object sender, RoutedEventArgs routedEventArguments)
             => await deliveryViewModel.ConfirmMapLocationAsync(pendingLatitude, pendingLongitude);
 
         private async Task InitializeMapAsync()
