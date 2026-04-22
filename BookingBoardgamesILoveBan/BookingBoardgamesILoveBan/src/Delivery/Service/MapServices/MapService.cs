@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,11 +12,19 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Service.MapServices
         private const string NominatimUrlTemplate = "https://nominatim.openstreetmap.org/reverse?lat={0}&lon={1}&format=json";
         private const string UserAgentValue = "BookingBoardgamesILoveBan/1.0";
         private const double DefaultCoordinate = 0.0;
-        private readonly HttpClient httpClient = new HttpClient();
+        private readonly HttpClient httpClient;
 
-        public MapService()
+        public MapService() : this(new HttpClient())
         {
-            httpClient.DefaultRequestHeaders.Add("User-Agent", UserAgentValue);
+        }
+
+        public MapService(HttpClient client)
+        {
+            httpClient = client;
+            if (!httpClient.DefaultRequestHeaders.Contains("User-Agent"))
+            {
+                httpClient.DefaultRequestHeaders.Add("User-Agent", UserAgentValue);
+            }
         }
 
         public async Task<Address> GetAddressFromMapAsync(double latitude, double longitude)

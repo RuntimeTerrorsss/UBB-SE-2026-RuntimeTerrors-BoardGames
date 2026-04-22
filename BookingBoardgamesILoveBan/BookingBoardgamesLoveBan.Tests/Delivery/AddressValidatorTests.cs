@@ -1,4 +1,4 @@
-﻿using BookingBoardgamesILoveBan.Src.Delivery.Model;
+using BookingBoardgamesILoveBan.Src.Delivery.Model;
 using BookingBoardgamesILoveBan.Src.Delivery.Model.Validators;
 
 namespace BookingBoardgamesLoveBan.Tests.Delivery
@@ -8,7 +8,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         private readonly AddressValidator addressValidator = new AddressValidator();
 
         [Fact]
-        public void EmptyAddressTest()
+        public void Validate_EmptyAddress_ReturnsAllErrors()
         {
             Address emptyAddress = new Address(string.Empty, string.Empty, string.Empty, string.Empty);
             Dictionary<string, string> errors = addressValidator.Validate(emptyAddress);
@@ -26,7 +26,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void ValidAddressTest()
+        public void Validate_ValidAddress_ReturnsNoErrors()
         {
             Address validAddress = new Address("Romania", "Cluj-Napoca", "Teodor Mihali", "58");
             Dictionary<string, string> errors = addressValidator.Validate(validAddress);
@@ -35,91 +35,99 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void MostlyValidAddressTest()
+        public void Validate_OneMissingField_ReturnsSpecificError()
         {
-            Assert.Equal(
+            var expected = new[]
+            {
                 new Dictionary<string, string> { { "Country", "Country is required" } },
-                addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", "Teodor Mihali", "58")));
-
-            Assert.Equal(
                 new Dictionary<string, string> { { "City", "City is required" } },
-                addressValidator.Validate(new Address("Romania", string.Empty, "Teodor Mihali", "58")));
-
-            Assert.Equal(
                 new Dictionary<string, string> { { "Street", "Street is required" } },
-                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, "58")));
+                new Dictionary<string, string> { { "StreetNumber", "StreetNumber is required" } }
+            };
 
-            Assert.Equal(
-                new Dictionary<string, string> { { "StreetNumber", "StreetNumber is required" } },
-                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", "Teodor Mihali", string.Empty)));
+            var actual = new[]
+            {
+                addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", "Teodor Mihali", "58")),
+                addressValidator.Validate(new Address("Romania", string.Empty, "Teodor Mihali", "58")),
+                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, "58")),
+                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", "Teodor Mihali", string.Empty))
+            };
+
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void HalfValidAddressTest()
+        public void Validate_TwoMissingFields_ReturnsSpecificErrors()
         {
-            Assert.Equal(
+            var expected = new[]
+            {
                 new Dictionary<string, string>
                 {
                     { "Country", "Country is required" },
                     { "City", "City is required" }
                 },
-                addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", "58")));
-
-            Assert.Equal(
                 new Dictionary<string, string>
                 {
                     { "Street", "Street is required" },
                     { "StreetNumber", "StreetNumber is required" }
                 },
-                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, string.Empty)));
-
-            Assert.Equal(
                 new Dictionary<string, string>
                 {
                     { "City", "City is required" },
                     { "Street", "Street is required" }
-                },
-                addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, "58")));
+                }
+            };
+
+            var actual = new[]
+            {
+                addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", "58")),
+                addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, string.Empty)),
+                addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, "58"))
+            };
+
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void MostlyEmptyAddressTest()
+        public void Validate_ThreeMissingFields_ReturnsSpecificErrors()
         {
-            Assert.Equal(
+            var expected = new[]
+            {
                 new Dictionary<string, string>
                 {
                     { "City", "City is required" },
                     { "Street", "Street is required" },
                     { "StreetNumber", "StreetNumber is required" }
                 },
-                addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, string.Empty)));
-
-            Assert.Equal(
                 new Dictionary<string, string>
                 {
                     { "Country", "Country is required" },
                     { "Street", "Street is required" },
                     { "StreetNumber", "StreetNumber is required" }
                 },
-                addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", string.Empty, string.Empty)));
-
-            Assert.Equal(
                 new Dictionary<string, string>
                 {
                     { "Country", "Country is required" },
                     { "City", "City is required" },
                     { "StreetNumber", "StreetNumber is required" }
                 },
-                addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", string.Empty)));
-
-            Assert.Equal(
                 new Dictionary<string, string>
                 {
                     { "Country", "Country is required" },
                     { "City", "City is required" },
                     { "Street", "Street is required" }
-                },
-                addressValidator.Validate(new Address(string.Empty, string.Empty, string.Empty, "58")));
+                }
+            };
+
+            var actual = new[]
+            {
+                addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, string.Empty)),
+                addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", string.Empty, string.Empty)),
+                addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", string.Empty)),
+                addressValidator.Validate(new Address(string.Empty, string.Empty, string.Empty, "58"))
+            };
+
+            Assert.Equal(expected, actual);
         }
     }
 }

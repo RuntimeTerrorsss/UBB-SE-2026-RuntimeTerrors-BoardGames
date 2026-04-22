@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,14 +33,14 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void OpenMap_SetsIsMapVisibleTrue()
+        public void OpenMap_Invoked_SetsIsMapVisibleTrue()
         {
             viewModel.OpenMap();
             Assert.True(viewModel.IsMapVisible);
         }
 
         [Fact]
-        public void OpenMap_TriggersStateChanged()
+        public void OpenMap_Invoked_TriggersStateChanged()
         {
             bool fired = false;
             viewModel.StateChanged += () => fired = true;
@@ -49,7 +49,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void CloseMap_SetsIsMapVisibleFalse()
+        public void CloseMap_Invoked_SetsIsMapVisibleFalse()
         {
             viewModel.OpenMap();
             viewModel.CloseMap();
@@ -58,7 +58,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void CloseMap_TriggersStateChanged()
+        public void CloseMap_Invoked_TriggersStateChanged()
         {
             bool fired = false;
             viewModel.StateChanged += () => fired = true;
@@ -91,7 +91,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void SubmitDelivery_TriggersStateChanged()
+        public void SubmitDelivery_Always_TriggersStateChanged()
         {
             bool fired = false;
             viewModel.StateChanged += () => fired = true;
@@ -112,7 +112,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void SubmitDelivery_WithNoErrors_SavesAddress_WhenIsSaveAddressAndUserNotNull()
+        public void SubmitDelivery_IsSaveAddressAndUserNotNull_SavesAddress()
         {
             fakeUserService.UserToReturn = new User(1, "name", "Romania", "Cluj", "street", "no");
             fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
@@ -124,10 +124,41 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var exception = Record.Exception(() => vm.SubmitDelivery());
 
             Assert.Null(exception);
+            Assert.True(fakeUserService.SaveAddressCalled);
         }
 
         [Fact]
-        public void OnFieldChange_RemovesValidationError_WhenKeyExists()
+        public void SubmitDelivery_IsSaveAddressFalse_DoesNotSaveAddress()
+        {
+            fakeUserService.UserToReturn = new User(1, "name", "Romania", "Cluj", "street", "no");
+            fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
+
+            var vm = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
+            vm.IsSaveAddress = false;
+            vm.OnNavigateToPayment = () => { };
+
+            vm.SubmitDelivery();
+
+            Assert.False(fakeUserService.SaveAddressCalled);
+        }
+
+        [Fact]
+        public void SubmitDelivery_CurrentUserNull_DoesNotSaveAddress()
+        {
+            fakeUserService.UserToReturn = null;
+            fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
+
+            var vm = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
+            vm.IsSaveAddress = true;
+            vm.OnNavigateToPayment = () => { };
+
+            vm.SubmitDelivery();
+
+            Assert.False(fakeUserService.SaveAddressCalled);
+        }
+
+        [Fact]
+        public void OnFieldChange_KeyExists_RemovesValidationError()
         {
             viewModel.ValidationErrors["City"] = "City is required";
 
@@ -137,7 +168,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void OnFieldChange_TriggersStateChanged_WhenErrorRemoved()
+        public void OnFieldChange_ErrorRemoved_TriggersStateChanged()
         {
             viewModel.ValidationErrors["City"] = "City is required";
             bool fired = false;
@@ -149,7 +180,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void OnFieldChange_DoesNotTriggerStateChanged_WhenNoErrorToRemove()
+        public void OnFieldChange_NoErrorToRemove_DoesNotTriggerStateChanged()
         {
             bool fired = false;
             viewModel.StateChanged += () => fired = true;
@@ -157,6 +188,28 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             viewModel.OnFieldChange("City", "Cluj-Napoca");
 
             Assert.False(fired);
+        }
+
+        [Fact]
+        public void OnFieldChange_ValidProperty_UpdatesFieldValue()
+        {
+            viewModel.CurrentAddress.City = "Old City";
+
+            viewModel.OnFieldChange("City", "New City");
+
+            Assert.Equal("New City", viewModel.CurrentAddress.City);
+        }
+
+        [Fact]
+        public void OnFieldChange_InvalidProperty_DoesNothing()
+        {
+            var originalAddress = new Address("Country", "City", "Street", "Number");
+            viewModel.CurrentAddress = new Address("Country", "City", "Street", "Number");
+
+            viewModel.OnFieldChange("NonExistentProperty", "New Value");
+
+            Assert.Equal(originalAddress.City, viewModel.CurrentAddress.City);
+            Assert.Equal(originalAddress.Country, viewModel.CurrentAddress.Country);
         }
 
         [Fact]
@@ -205,19 +258,20 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public void Initialize_WithValidUser_UpdatesCurrentAddress()
+        public void Initialize_ValidUser_UpdatesCurrentAddress()
         {
             fakeUserService.UserToReturn = new User(2, "name", "Romania", "Sibiu", "Strada Mare", "5");
 
             viewModel.Initialize(2);
 
+            Assert.Equal(2, viewModel.CurrentId);
             Assert.Equal(
                 new { Country = "Romania", City = "Sibiu" },
                 new { viewModel.CurrentAddress.Country, viewModel.CurrentAddress.City });
         }
 
         [Fact]
-        public void Initialize_WithNullUser_DoesNotThrow()
+        public void Initialize_NullUser_DoesNotThrow()
         {
             fakeUserService.UserToReturn = null;
 
@@ -239,6 +293,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         private class FakeUserService : IUserRepository
         {
             public User UserToReturn { get; set; } = null;
+            public bool SaveAddressCalled { get; set; } = false;
 
             public User GetById(int id)
             {
@@ -247,6 +302,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
 
             public void SaveAddress(int id, Address address)
             {
+                SaveAddressCalled = true;
             }
 
             public decimal GetUserBalance(int userId)
