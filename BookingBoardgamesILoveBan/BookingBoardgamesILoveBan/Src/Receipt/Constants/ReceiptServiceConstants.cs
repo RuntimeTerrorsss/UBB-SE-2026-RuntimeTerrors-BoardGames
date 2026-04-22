@@ -27,5 +27,6 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Constants
         public const string FileDateFormat = "yyMMdd";
         public const string DisplayDateFormat = "dd/MM/yyyy";
         public const string FileNameSeparator = "_";
+        public const string DocumentTitle = "Receipt";
     }
 }

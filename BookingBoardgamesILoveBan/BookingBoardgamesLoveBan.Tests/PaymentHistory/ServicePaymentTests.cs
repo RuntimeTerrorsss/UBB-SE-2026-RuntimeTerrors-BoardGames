@@ -1,88 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+﻿using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Model;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Xunit.Sdk;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 {
     public class ServicePaymentTests // unit tests
     {
-        // ================================ fakes ======================================
-        private class FakeRepositoryPayment : IRepositoryPayment
-        {
-            private readonly List<HistoryPayment> payments;
-
-            public FakeRepositoryPayment(List<HistoryPayment> payments)
-            {
-                this.payments = payments;
-            }
-
-            public IReadOnlyList<HistoryPayment> GetAllPayments()
-            {
-                return payments;
-            }
-
-            public HistoryPayment GetPaymentById(int id)
-            {
-                foreach (var payment in payments)
-                {
-                    if (payment.Tid == id)
-                    {
-                        return payment;
-                    }
-                }
-                throw new Exception("payment not found");
-            }
-        }
-
-        private class FakeReceiptService : IReceiptService
-        {
-            public string GenerateReceiptRelativePath(int requestId)
-            {
-                return $"receipts\\receipt_{requestId}_test.pdf";
-            }
-
-            public string GetReceiptDocument(Payment payment)
-            {
-                return $"C:\\Documents\\BookingBoardgames\\receipts\\receipt_{payment.RequestId}_test.pdf";
-            }
-        }
-
-        // ================================ setup ======================================
-        private IRepositoryPayment repositoryPayment;
-        private IReceiptService receiptService;
+        private Mock<IRepositoryPayment> repositoryPaymentMock;
+        private Mock<IReceiptService> receiptServiceMock;
         private IServicePayment servicePayment;
 
         private void InitializeService(List<HistoryPayment> payments)
         {
-            repositoryPayment = new FakeRepositoryPayment(payments);
-            receiptService = new FakeReceiptService();
-            servicePayment = new ServicePayment(repositoryPayment, receiptService);
+            repositoryPaymentMock = new Mock<IRepositoryPayment>();
+            receiptServiceMock = new Mock<IReceiptService>();
+
+            repositoryPaymentMock
+                .Setup(repository => repository.GetAllPayments())
+                .Returns(payments);
+
+            repositoryPaymentMock
+                .Setup(repository => repository.GetPaymentById(It.IsAny<int>()))
+                .Returns((int id) => payments.FirstOrDefault(p => p.Tid == id));
+
+            receiptServiceMock
+                .Setup(service => service.GenerateReceiptRelativePath(It.IsAny<int>()))
+                .Returns((int id) => $"receipts\\receipt_{id}_test.pdf");
+
+            receiptServiceMock
+                .Setup(service => service.GetReceiptDocument(It.IsAny<Payment>()))
+                .Returns((Payment payment) => $"C:\\Documents\\receipt_{payment.RequestId}.pdf");
+
+            servicePayment = new ServicePayment(
+                repositoryPaymentMock.Object,
+                receiptServiceMock.Object
+            );
         }
 
         private HistoryPayment MakePayment(int id, string gameName, string ownerName, string method, decimal amount, DateTime? date = null)
         {
-            var p = new HistoryPayment(id, 1, 1, 2, method, amount)
+            var createdPayment = new HistoryPayment(id, 1, 1, 2, method, amount)
             {
                 GameName = gameName,
                 OwnerName = ownerName,
                 DateOfTransaction = date ?? DateTime.Now
             };
-            return p;
+            return createdPayment;
         }
 
         // ================================ GetAllPaymentsForUI ======================================
         [Fact]
-        public void GetAllPaymentsForUI_EmptyRepo_ReturnsEmptyList()
+        public void GetAllPaymentsForUI_EmptyRepository_ReturnsEmptyList()
         {
             InitializeService(new List<HistoryPayment>());
             var result = servicePayment.GetAllPaymentsForUI();
@@ -91,24 +70,24 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void GetAllPaymentsForUI_ReturnsAllPayments()
+        public void GetAllPaymentsForUI_NonEmptyRepository_ReturnsAllPayments()
         {
             InitializeService(new List<HistoryPayment> { MakePayment(1, "Game1", "Name1", "Card", 10), MakePayment(2, "Game2", "Name2", "Cash", 20) });
-            var result = servicePayment.GetAllPaymentsForUI();
+            var returnedPayments = servicePayment.GetAllPaymentsForUI();
 
-            Assert.Equal(2, result.Count);
-            Assert.Equal("Game1", result[0].ProductName);
-            Assert.Equal("Game2", result[1].ProductName);
+            Assert.Equal(2, returnedPayments.Count);
+            Assert.Equal("Game1", returnedPayments[0].ProductName);
+            Assert.Equal("Game2", returnedPayments[1].ProductName);
         }
 
         [Fact]
-        public void GetAllPaymentsForUI_ReturnsMatchingNames()
+        public void GetAllPaymentsForUI_NonEmptyRepository_ReturnsMatchingNames()
         {
             InitializeService(new List<HistoryPayment> { MakePayment(1, "Game1", "Name1", "Card", 10), MakePayment(2, "Game2", "Name2", "Cash", 20) });
-            var result = servicePayment.GetAllPaymentsForUI();
+            var returnedPayments = servicePayment.GetAllPaymentsForUI();
 
-            Assert.Equal("Game1", result[0].ProductName);
-            Assert.Equal("Game2", result[1].ProductName);
+            Assert.Equal("Game1", returnedPayments[0].ProductName);
+            Assert.Equal("Game2", returnedPayments[1].ProductName);
         }
 
         [Fact]
@@ -117,10 +96,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var payments = new List<HistoryPayment> { MakePayment(1, null, null, "Card", 10) };
             InitializeService(payments);
 
-            var result = servicePayment.GetAllPaymentsForUI();
+            var returnedPayments = servicePayment.GetAllPaymentsForUI();
 
-            Assert.Equal("Unknown Game", result[0].ProductName);
-            Assert.Equal("Unknown Owner", result[0].ReceiverName);
+            Assert.Equal("Unknown Game", returnedPayments[0].ProductName);
+            Assert.Equal("Unknown Owner", returnedPayments[0].ReceiverName);
         }
 
         // ================================ CalculateTotalAmount ======================================
@@ -128,22 +107,22 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void CalculateTotalAmount_NullInput_ReturnsZero()
         {
             InitializeService(new List<HistoryPayment>());
-            var result = servicePayment.CalculateTotalAmount(null);
+            var totalAmount = servicePayment.CalculateTotalAmount(null);
 
-            Assert.Equal(0, result);
+            Assert.Equal(0, totalAmount);
         }
 
         [Fact]
         public void CalculateTotalAmount_EmptyList_ReturnsZero()
         {
             InitializeService(new List<HistoryPayment>());
-            var result = servicePayment.CalculateTotalAmount(new List<PaymentDto>());
+            var totalAmount = servicePayment.CalculateTotalAmount(new List<PaymentDto>());
 
-            Assert.Equal(0, result);
+            Assert.Equal(0, totalAmount);
         }
 
         [Fact]
-        public void CalculateTotalAmount_SumsAmountsCorrectly()
+        public void CalculateTotalAmount_NonEmptyList_SumsAmountsCorrectly()
         {
             InitializeService(new List<HistoryPayment>());
             var payments = new List<PaymentDto>
@@ -152,9 +131,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                     new PaymentDto { Amount = 20.00m },
                     new PaymentDto { Amount = 5.25m }
                 };
-            var result = servicePayment.CalculateTotalAmount(payments);
+            var totalAmount = servicePayment.CalculateTotalAmount(payments);
 
-            Assert.Equal(35.75m, result);
+            Assert.Equal(35.75m, totalAmount);
         }
 
         // ================================ GetFilteredPayments ======================================
@@ -169,10 +148,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, PaymentMethod.CARD);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AllTime, PaymentMethod.CARD);
 
-            Assert.All(result.Items, p => Assert.Equal("Card", p.PaymentMethod));
-            Assert.Equal(2, result.TotalCount);
+            Assert.All(filteredPayments.Items, payment => Assert.Equal("Card", payment.PaymentMethod));
+            Assert.Equal(2, filteredPayments.TotalCount);
         }
 
         [Fact]
@@ -185,10 +164,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, PaymentMethod.CASH);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AllTime, PaymentMethod.CASH);
 
-            Assert.Single(result.Items);
-            Assert.Equal("Cash", result.Items.ElementAt(0).PaymentMethod);
+            Assert.Single(filteredPayments.Items);
+            Assert.Equal("Cash", filteredPayments.Items.ElementAt(0).PaymentMethod);
         }
 
         [Fact]
@@ -202,9 +181,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, searchQuery: "chess");
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AllTime, searchQuery: "chess");
 
-            Assert.Equal(2, result.TotalCount);
+            Assert.Equal(2, filteredPayments.TotalCount);
         }
 
         [Fact]
@@ -215,9 +194,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                     MakePayment(1, "Chess", "Alice", "Card", 10)
                 };
             InitializeService(payments);
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, searchQuery: "monopoly");
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AllTime, searchQuery: "monopoly");
 
-            Assert.Empty(result.Items);
+            Assert.Empty(filteredPayments.Items);
         }
 
         [Fact]
@@ -231,11 +210,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AlphabeticalAsc);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AlphabeticalAsc);
 
-            Assert.Equal("Catan", result.Items.ElementAt(0).ProductName);
-            Assert.Equal("Chess", result.Items.ElementAt(1).ProductName);
-            Assert.Equal("Risk", result.Items.ElementAt(2).ProductName);
+            Assert.Equal("Catan", filteredPayments.Items.ElementAt(0).ProductName);
+            Assert.Equal("Chess", filteredPayments.Items.ElementAt(1).ProductName);
+            Assert.Equal("Risk", filteredPayments.Items.ElementAt(2).ProductName);
         }
 
         [Fact]
@@ -249,11 +228,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AlphabeticalDesc);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AlphabeticalDesc);
 
-            Assert.Equal("Risk", result.Items.ElementAt(0).ProductName);
-            Assert.Equal("Chess", result.Items.ElementAt(1).ProductName);
-            Assert.Equal("Catan", result.Items.ElementAt(2).ProductName);
+            Assert.Equal("Risk", filteredPayments.Items.ElementAt(0).ProductName);
+            Assert.Equal("Chess", filteredPayments.Items.ElementAt(1).ProductName);
+            Assert.Equal("Catan", filteredPayments.Items.ElementAt(2).ProductName);
         }
 
         [Fact]
@@ -267,9 +246,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.Newest);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.Newest);
 
-            Assert.Equal("Risk", result.Items.ElementAt(0).ProductName);
+            Assert.Equal("Risk", filteredPayments.Items.ElementAt(0).ProductName);
         }
 
         [Fact]
@@ -283,9 +262,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.Oldest);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.Oldest);
 
-            Assert.Equal("Risk", result.Items.ElementAt(0).ProductName);
+            Assert.Equal("Risk", filteredPayments.Items.ElementAt(0).ProductName);
         }
 
         [Fact]
@@ -298,10 +277,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.Last3Months);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.Last3Months);
 
-            Assert.Single(result.Items);
-            Assert.Equal("Chess", result.Items.ElementAt(0).ProductName);
+            Assert.Single(filteredPayments.Items);
+            Assert.Equal("Chess", filteredPayments.Items.ElementAt(0).ProductName);
         }
 
         [Fact]
@@ -314,10 +293,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.Last6Months);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.Last6Months);
 
-            Assert.Single(result.Items);
-            Assert.Equal("Chess", result.Items.ElementAt(0).ProductName);
+            Assert.Single(filteredPayments.Items);
+            Assert.Equal("Chess", filteredPayments.Items.ElementAt(0).ProductName);
         }
 
         [Fact]
@@ -330,10 +309,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 };
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.Last9Months);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.Last9Months);
 
-            Assert.Single(result.Items);
-            Assert.Equal("Chess", result.Items.ElementAt(0).ProductName);
+            Assert.Single(filteredPayments.Items);
+            Assert.Equal("Chess", filteredPayments.Items.ElementAt(0).ProductName);
         }
 
         [Fact]
@@ -344,10 +323,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 .ToList();
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 2, pageSize: 10);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 2, pageSize: 10);
 
-            Assert.Equal(10, result.Items.Count());
-            Assert.Equal(2, result.PageNumber);
+            Assert.Equal(10, filteredPayments.Items.Count());
+            Assert.Equal(2, filteredPayments.PageNumber);
         }
 
         [Fact]
@@ -358,10 +337,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 .ToList();
             InitializeService(payments);
 
-            var result = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 3, pageSize: 10);
+            var filteredPayments = servicePayment.GetFilteredPayments(FilterType.AllTime, pageNumber: 3, pageSize: 10);
 
-            Assert.Equal(5, result.Items.Count());
-            Assert.Equal(3, result.PageNumber);
+            Assert.Equal(5, filteredPayments.Items.Count());
+            Assert.Equal(3, filteredPayments.PageNumber);
         }
 
         // ================================ GetReceiptDocumentPath ======================================
@@ -372,9 +351,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var payments = new List<HistoryPayment> { payment };
             InitializeService(payments);
 
-            var result = servicePayment.GetReceiptDocumentPath(1);
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
+            var documentPath = servicePayment.GetReceiptDocumentPath(1);
+            Assert.NotNull(documentPath);
+            Assert.NotEmpty(documentPath);
         }
 
         [Fact]
@@ -384,8 +363,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var payments = new List<HistoryPayment> { payment };
             InitializeService(payments);
 
-            var result = servicePayment.GetReceiptDocumentPath(1);
-            Assert.NotNull(result);
+            var documentPath = servicePayment.GetReceiptDocumentPath(1);
+            Assert.NotNull(documentPath);
         }
 
         [Fact]
@@ -395,8 +374,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             var payments = new List<HistoryPayment> { payment };
             InitializeService(payments);
 
-            var result = servicePayment.GetReceiptDocumentPath(1);
-            Assert.NotNull(result);
+            var documentPath = servicePayment.GetReceiptDocumentPath(1);
+            Assert.NotNull(documentPath);
         }
     }
 }

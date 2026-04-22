@@ -10,7 +10,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
     public class ViewModelBaseTests
     {
         // ================================ class ======================================
-        private class TestViewModel : ViewModelBase
+        private class TestViewModel : ViewModelBase // it is an abstract class
         {
             private string name;
             private int count;
@@ -39,17 +39,20 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         // ================================ setup ======================================
-        private readonly TestViewModel viewModel;
+        private TestViewModel viewModel;
 
-        public ViewModelBaseTests()
+        private TestViewModel InitializeViewModelBase()
         {
             viewModel = new TestViewModel();
+            return viewModel;
         }
 
         // ================================ OnPropertyChanged ======================================
         [Fact]
-        public void OnPropertyChanged_FiresPropertyChangedEvent()
+        public void OnPropertyChanged_WhenCalled_FiresPropertyChangedEvent()
         {
+            var viewModel = InitializeViewModelBase();
+
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
             viewModel.TriggerOnPropertyChanged("Name");
@@ -58,8 +61,10 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void OnPropertyChanged_PassesCorrectPropertyName()
+        public void OnPropertyChanged_WhenCalled_PassesCorrectPropertyName()
         {
+            var viewModel = InitializeViewModelBase();
+
             string? receivedName = null;
             viewModel.PropertyChanged += (sender, eventArguments) => receivedName = eventArguments.PropertyName;
             viewModel.TriggerOnPropertyChanged("Name");
@@ -70,6 +75,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void OnPropertyChanged_NoSubscribers_DoesNotThrow()
         {
+            var viewModel = InitializeViewModelBase();
+
             var exception = Record.Exception(() => viewModel.TriggerOnPropertyChanged("Name"));
 
             Assert.Null(exception);
@@ -79,6 +86,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_NewValue_ReturnsTrue()
         {
+            var viewModel = InitializeViewModelBase();
+
             viewModel.Name = "Alice";
 
             Assert.Equal("Alice", viewModel.Name);
@@ -87,6 +96,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_NewValue_FiresPropertyChangedEvent()
         {
+            var viewModel = InitializeViewModelBase();
+
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
             viewModel.Name = "Alice";
@@ -97,6 +108,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_NewValue_FiresWithCorrectPropertyName()
         {
+            var viewModel = InitializeViewModelBase();
+
             string? receivedName = null;
             viewModel.PropertyChanged += (sender, eventArguments) => receivedName = eventArguments.PropertyName;
             viewModel.Name = "Alice";
@@ -107,6 +120,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_SameValue_ReturnsFalse()
         {
+            var viewModel = InitializeViewModelBase();
+
             viewModel.Name = "Alice";
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
@@ -118,6 +133,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_SameValue_DoesNotFirePropertyChanged()
         {
+            var viewModel = InitializeViewModelBase();
+
             viewModel.Name = "Alice";
             int fireCount = 0;
             viewModel.PropertyChanged += (sender, eventArguments) => fireCount++;
@@ -129,6 +146,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_NullToValue_FiresPropertyChanged()
         {
+            var viewModel = InitializeViewModelBase();
+
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
             viewModel.Name = "Alice";
@@ -139,6 +158,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_ValueToNull_FiresPropertyChanged()
         {
+            var viewModel = InitializeViewModelBase();
+
             viewModel.Name = "Alice";
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
@@ -150,6 +171,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_NullToNull_DoesNotFirePropertyChanged()
         {
+            var viewModel = InitializeViewModelBase();
+
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
             viewModel.Name = null;
@@ -160,6 +183,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_IntType_FiresPropertyChanged()
         {
+            var viewModel = InitializeViewModelBase();
+
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;
             viewModel.Count = 5;
@@ -170,6 +195,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_IntType_WorksCorrectly()
         {
+            var viewModel = InitializeViewModelBase();
+
             viewModel.Count = 5;
 
             Assert.Equal(5, viewModel.Count);
@@ -178,6 +205,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SetProperty_SameIntValue_DoesNotFirePropertyChanged()
         {
+            var viewModel = InitializeViewModelBase();
+
             viewModel.Count = 5;
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) => fired = true;

@@ -10,35 +10,35 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
     public class RelayCommandTests
     {
         [Fact]
-        public void NullExecute_ThrowsArgumentNullException()
+        public void Constructor_WhenExecuteIsNull_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RelayCommand<int>(null));
         }
 
         [Fact]
-        public void Execute_CallsAction()
+        public void Execute_WhenCalled_CallsAction()
         {
-            bool called = false;
-            var command = new RelayCommand<int>(_ => called = true);
+            bool isCalled = false;
+            var command = new RelayCommand<int>(_ => isCalled = true);
 
             command.Execute(1);
 
-            Assert.True(called);
+            Assert.True(isCalled);
         }
 
         [Fact]
-        public void Execute_PassesParameterCorrectly()
+        public void Execute_WhenCalled_PassesParameterCorrectly()
         {
-            int received = 0;
-            var command = new RelayCommand<int>(value => received = value);
+            int receivedParameter = 0;
+            var command = new RelayCommand<int>(value => receivedParameter = value);
 
-            command.Execute(42);
+            command.Execute(28);
 
-            Assert.Equal(42, received);
+            Assert.Equal(28, receivedParameter);
         }
 
         [Fact]
-        public void CanExecute_NoPredicate_ReturnsTrue()
+        public void CanExecute_WhenNoPredicateProvided_ReturnsTrue()
         {
             var command = new RelayCommand<int>(_ => { });
 
@@ -46,7 +46,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void CanExecute_PredicateReturnsTrue_ReturnsTrue()
+        public void CanExecute_WhenPredicateReturnsTrue_ReturnsTrue()
         {
             var command = new RelayCommand<int>(_ => { }, _ => true);
 
@@ -54,7 +54,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void CanExecute_PredicateReturnsFalse_ReturnsFalse()
+        public void CanExecute_WhenPredicateReturnsFalse_ReturnsFalse()
         {
             var command = new RelayCommand<int>(_ => { }, _ => false);
 
@@ -62,7 +62,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RaiseCanExecuteChanged_FiresEvent()
+        public void RaiseCanExecuteChanged_WhenCalled_FiresEvent()
         {
             var command = new RelayCommand<int>(_ => { });
             bool eventFired = false;
@@ -74,7 +74,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
+        public void RaiseCanExecuteChanged_WhenNoSubscribers_DoesNotThrow()
         {
             var command = new RelayCommand<int>(_ => { });
             var exception = Record.Exception(() => command.RaiseCanExecuteChanged());
@@ -86,24 +86,24 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
     public class RelayCommandNoParamTests
     {
         [Fact]
-        public void NullExecute_ThrowsArgumentNullException()
+        public void Constructor_WhenExecuteIsNull_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RelayCommandNoParam(null));
         }
 
         [Fact]
-        public void Execute_CallsAction()
+        public void Execute_WhenCalled_CallsAction()
         {
-            bool called = false;
-            var command = new RelayCommandNoParam(() => called = true);
+            bool isCalled = false;
+            var command = new RelayCommandNoParam(() => isCalled = true);
 
             command.Execute(null);
 
-            Assert.True(called);
+            Assert.True(isCalled);
         }
 
         [Fact]
-        public void CanExecute_NoFunc_ReturnsTrue()
+        public void CanExecute_WhenNoPredicateProvided_ReturnsTrue()
         {
             var command = new RelayCommandNoParam(() => { });
 
@@ -111,7 +111,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void CanExecute_FuncReturnsTrue_ReturnsTrue()
+        public void CanExecute_WhenPredicateReturnsTrue_ReturnsTrue()
         {
             var command = new RelayCommandNoParam(() => { }, () => true);
 
@@ -119,7 +119,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void CanExecute_FuncReturnsFalse_ReturnsFalse()
+        public void CanExecute_WhenPredicateReturnsFalse_ReturnsFalse()
         {
             var command = new RelayCommandNoParam(() => { }, () => false);
 
@@ -127,7 +127,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RaiseCanExecuteChanged_FiresEvent()
+        public void RaiseCanExecuteChanged_WhenCalled_FiresEvent()
         {
             var command = new RelayCommandNoParam(() => { });
             bool eventFired = false;
@@ -139,7 +139,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void RaiseCanExecuteChanged_NoSubscribers_DoesNotThrow()
+        public void RaiseCanExecuteChanged_WhenNoSubscribers_DoesNotThrow()
         {
             var command = new RelayCommandNoParam(() => { });
             var exception = Record.Exception(() => command.RaiseCanExecuteChanged());
@@ -148,14 +148,14 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void Execute_IgnoresParameter()
+        public void Execute_WhenCalled_IgnoresParameter()
         {
-            bool called = false;
-            var command = new RelayCommandNoParam(() => called = true);
+            bool isCalled = false;
+            var command = new RelayCommandNoParam(() => isCalled = true);
 
             command.Execute("ignored parameter");
 
-            Assert.True(called);
+            Assert.True(isCalled);
         }
     }
 }

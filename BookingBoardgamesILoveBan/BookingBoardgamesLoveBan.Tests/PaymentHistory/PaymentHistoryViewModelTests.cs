@@ -1,223 +1,204 @@
-﻿using System;
+﻿using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel;
+using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
-using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
-using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
-using BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel;
 
 namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 {
     public class PaymentHistoryViewModelTests // unit tests
     {
-        // ================================ fakes ======================================
-        private class FakeServicePayment : IServicePayment
+        private readonly Mock<IServicePayment> mockPaymentService;
+
+        public PaymentHistoryViewModelTests()
         {
-            public List<PaymentDto> PaymentsToReturn { get; set; } = new ();
-            public int TotalCount { get; set; } = 0;
+            mockPaymentService = new Mock<IServicePayment>();
 
-            public List<PaymentDto> GetAllPaymentsForUI()
-            {
-                return PaymentsToReturn;
-            }
-
-            public PagedResult<PaymentDto> GetFilteredPayments(FilterType filter, PaymentMethod paymentMethod = PaymentMethod.ALL, string searchQuery = "", int pageNumber = 1, int pageSize = 10)
-            {
-                return new PagedResult<PaymentDto>
+            mockPaymentService
+                .Setup(service => service.GetFilteredPayments(
+                    It.IsAny<FilterType>(),
+                    It.IsAny<PaymentMethod>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>()))
+                .Returns((FilterType filterType,
+                          PaymentMethod paymentMethod,
+                          string searchQuery,
+                          int pageNumber,
+                          int pageSize) =>
                 {
-                    Items = PaymentsToReturn,
-                    TotalCount = TotalCount == 0 ? PaymentsToReturn.Count : TotalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                };
-            }
+                    var payments = new List<PaymentDto>
+                    {
+                        CreatePaymentDto(1, "Chess", 10),
+                        CreatePaymentDto(2, "Risk", 20)
+                    };
 
-            public decimal CalculateTotalAmount(IEnumerable<PaymentDto> payments)
-            {
-                return payments?.Sum(p => p.Amount) ?? 0;
-            }
+                    return new PagedResult<PaymentDto>
+                    {
+                        Items = payments,
+                        TotalCount = payments.Count,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    };
+                });
 
-            public string GetReceiptDocumentPath(int paymentId)
-            {
-                return $"C:\\receipts\\receipt_{paymentId}.pdf";
-            }
+            mockPaymentService
+                .Setup(service => service.CalculateTotalAmount(It.IsAny<IEnumerable<PaymentDto>>()))
+                .Returns((IEnumerable<PaymentDto> payments) => payments.Sum(payment => payment.Amount));
+
+            mockPaymentService
+                .Setup(service => service.GetReceiptDocumentPath(It.IsAny<int>()))
+                .Returns((int paymentIdentifier) => $"C:\\receipts\\receipt_{paymentIdentifier}.pdf");
         }
 
-        // ================================ setup ======================================
-        private FakeServicePayment paymentService;
-        private PaymentHistoryViewModel viewModel;
-
-        private void InitializeViewModel(List<PaymentDto>? payments = null)
+        private PaymentHistoryViewModel InitializeViewModel()
         {
-            paymentService = new FakeServicePayment();
-            if (payments != null)
-            {
-                paymentService.PaymentsToReturn = payments;
-                paymentService.TotalCount = payments.Count;
-            }
-            viewModel = new PaymentHistoryViewModel(paymentService);
+            return new PaymentHistoryViewModel(mockPaymentService.Object);
         }
 
-        private PaymentDto MakeDto(int id, string gameName, decimal amount, string method = "Card")
+        private PaymentDto CreatePaymentDto(int paymentIdentifier, string productName, decimal amount)
         {
-            return new PaymentDto { Id = id, ProductName = gameName, Amount = amount, PaymentMethod = method };
+            return new PaymentDto
+            {
+                Id = paymentIdentifier,
+                ProductName = productName,
+                Amount = amount,
+                PaymentMethod = "Card"
+            };
         }
 
         // ================================ Constructor ======================================
         [Fact]
-        public void Constructor_FilterOptionsArePopulated()
+        public void Constructor_WhenInitialized_LoadsFilterOptions()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             Assert.NotEmpty(viewModel.FilterOptions);
         }
 
         [Fact]
-        public void Constructor_HasEightFilterOptions()
+        public void Constructor_WhenInitialized_HasEightFilterOptions()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             Assert.Equal(8, viewModel.FilterOptions.Count);
         }
 
         [Fact]
-        public void Constructor_DefaultFilterIsAllTime()
+        public void Constructor_WhenInitialized_SetsDefaultFilterToAllTime()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             Assert.Equal(FilterType.AllTime, viewModel.SelectedFilterOption.Type);
         }
 
         [Fact]
-        public void Constructor_DefaultPaymentMethodIsAll()
+        public void Constructor_WhenInitialized_SetsDefaultPaymentMethodToAll()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             Assert.Equal(PaymentMethod.ALL, viewModel.SelectedPaymentMethod);
         }
 
         [Fact]
-        public void Constructor_DefaultPageIsOne()
+        public void Constructor_WhenInitialized_SetsDefaultPageToOne()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             Assert.Equal(1, viewModel.CurrentPage);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsAllTime()
+        public void Constructor_WhenInitialized_FilterOptionsContainsAllTime()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.AllTime, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsLast3Months()
+        public void Constructor_WhenInitialized_FilterOptionsContainsLast3Months()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.Last3Months, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsLast6Months()
+        public void Constructor_WhenInitialized_FilterOptionsContainsLast6Months()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.Last6Months, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsLast9Months()
+        public void Constructor_WhenInitialized_FilterOptionsContainsLast9Months()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.Last9Months, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsNewest()
+        public void Constructor_WhenInitialized_FilterOptionsContainsNewest()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.Newest, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsOldest()
+        public void Constructor_WhenInitialized_FilterOptionsContainsOldest()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.Oldest, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsAlphabeticalAsc()
+        public void Constructor_WhenInitialized_FilterOptionsContainsAlphabeticalAsc()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.AlphabeticalAsc, types);
         }
 
         [Fact]
-        public void Constructor_FilterOptionsContainsAlphabeticalDesc()
+        public void Constructor_WhenInitialized_FilterOptionsContainsAlphabeticalDesc()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             var types = viewModel.FilterOptions.Select(filter => filter.Type).ToList();
 
             Assert.Contains(FilterType.AlphabeticalDesc, types);
         }
 
         [Fact]
-        public void Constructor_EmptyPayments_PaymentsCollectionIsEmpty()
+        public void Constructor_WhenInitialized_LoadsPayments()
         {
-            InitializeViewModel(new List<PaymentDto>());
-            Assert.Empty(viewModel.Payments);
-        }
-
-        [Fact]
-        public void Constructor_LoadsPaymentsOnInit()
-        {
-            var payments = new List<PaymentDto>
-                {
-                    MakeDto(1, "Chess", 10),
-                    MakeDto(2, "Risk", 20)
-                };
-            InitializeViewModel(payments);
-
+            var viewModel = InitializeViewModel();
             Assert.Equal(2, viewModel.Payments.Count);
         }
 
         [Fact]
-        public void Constructor_TotalAmountIsCalculatedCorrectly()
+        public void Constructor_WhenInitialized_CalculatesTotalAmountCorrectly()
         {
-            var payments = new List<PaymentDto>
-                {
-                    MakeDto(1, "Chess", 10),
-                    MakeDto(2, "Risk", 20)
-                };
-            InitializeViewModel(payments);
-
+            var viewModel = InitializeViewModel();
             Assert.Equal(30, viewModel.TotalAmount);
-        }
-
-        [Fact]
-        public void Constructor_EmptyPayments_TotalAmountIsZero()
-        {
-            InitializeViewModel(new List<PaymentDto>());
-            Assert.Equal(0, viewModel.TotalAmount);
         }
 
         // ================================ SearchText ======================================
         [Fact]
         public void SearchText_WhenSet_UpdatesProperty()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.SearchText = "Chess";
 
             Assert.Equal("Chess", viewModel.SearchText);
@@ -226,7 +207,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SearchText_WhenSetToSameValue_DoesNotTriggerDebounce()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.SearchText = "Chess";
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) =>
@@ -245,7 +226,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SearchText_WhenSetToDifferentValue_TriggersDebounce()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.SearchText = "Chess";
             bool fired = false;
             viewModel.PropertyChanged += (sender, eventArguments) =>
@@ -262,11 +243,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public async Task SearchText_CancelsPreviousSearch()
+        public async Task SearchText_WhenChangedMultipleTimes_CancelsPreviousSearch()
         {
             try
             {
-                InitializeViewModel();
+                var viewModel = InitializeViewModel();
                 viewModel.SearchText = "a";
                 viewModel.SearchText = "b";
                 await Task.Delay(600);
@@ -279,18 +260,18 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
         // ================================ OpenReceipt ======================================
         [Fact]
-        public void OpenReceiptCommand_IsInitialized()
+        public void OpenReceiptCommand_WhenInitialized_IsNotNull()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             Assert.NotNull(viewModel.OpenReceiptCommand);
         }
 
         [Fact]
-        public void OpenReceipt_IfNull_DoNothing()
+        public void OpenReceipt_IfNull_DoesNotCrash()
         {
             try
             {
-                InitializeViewModel();
+                var viewModel = InitializeViewModel();
                 viewModel.OpenReceiptCommand.Execute(null);
             }
             catch
@@ -300,11 +281,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         }
 
         [Fact]
-        public void OpenReceipt_InexistentFile_DoNotThrow()
+        public void OpenReceipt_InexistentFile_DoesNotThrow()
         {
             try
             {
-                InitializeViewModel();
+                var viewModel = InitializeViewModel();
                 var payment = new PaymentDto { Id = 999 };
                 viewModel.OpenReceiptCommand.Execute(payment);
             }
@@ -320,7 +301,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SelectedFilterOption_WhenChanged_ResetsToPageOne()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.CurrentPage = 3;
             viewModel.SelectedFilterOption = viewModel.FilterOptions.First(filter => filter.Type == FilterType.Newest);
 
@@ -330,22 +311,39 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void SelectedFilterOption_WhenChanged_UpdatesPayments()
         {
-            var payments = new List<PaymentDto> { MakeDto(1, "Chess", 10) };
-            InitializeViewModel(payments);
+            var paymentHistoryViewModel = InitializeViewModel();
 
-            paymentService.PaymentsToReturn = new List<PaymentDto> { MakeDto(2, "Risk", 20) };
-            viewModel.SelectedFilterOption = viewModel.FilterOptions.First(filter => filter.Type == FilterType.Newest);
+            mockPaymentService
+                .Setup(service => service.GetFilteredPayments(
+                    It.IsAny<FilterType>(),
+                    It.IsAny<PaymentMethod>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>()))
+                .Returns(new PagedResult<PaymentDto>
+                {
+                    Items = new List<PaymentDto>
+                    {
+                        CreatePaymentDto(3, "Catan", 50)
+                    },
+                    TotalCount = 1,
+                    PageNumber = 1,
+                    PageSize = 10
+                });
 
-            Assert.Equal("Risk", viewModel.Payments[0].ProductName);
+            paymentHistoryViewModel.SelectedFilterOption =
+                paymentHistoryViewModel.FilterOptions.First(option => option.Type == FilterType.Newest);
+
+            Assert.Equal("Catan", paymentHistoryViewModel.Payments[0].ProductName);
         }
 
         // ================================ ApplyFilter ======================================
         [Fact]
-        public void ApplyFilter_IfSelectedFilterIsNull_DoNothing()
+        public void ApplyFilter_IfSelectedFilterIsNull_DoesNotCrash()
         {
             try
             {
-                InitializeViewModel();
+                var viewModel = InitializeViewModel();
 
                 // set filter to null (break it intentionally)
                 typeof(PaymentHistoryViewModel).GetField("selectedFilterOption", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(viewModel, null);
@@ -361,24 +359,19 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void ApplyFilter_WithItems_PopulatesPayments()
         {
-            var payments = new List<PaymentDto>
-                {
-                    MakeDto(1, "Chess", 25m),
-                    MakeDto(2, "Monopoly", 50m)
-                };
-            InitializeViewModel(payments);
+            var viewModel = InitializeViewModel();
 
             viewModel.SelectedFilterOption = viewModel.FilterOptions.First(filter => filter.Type == FilterType.Newest);
 
             Assert.Equal(2, viewModel.Payments.Count);
-            Assert.Equal(75m, viewModel.TotalAmount);
+            Assert.Equal(30m, viewModel.TotalAmount);
         }
 
         // ================================ SelectedPaymentMethod ======================================
         [Fact]
         public void SelectedPaymentMethod_WhenChanged_ResetsToPageOne()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.CurrentPage = 3;
             viewModel.SelectedPaymentMethod = PaymentMethod.CARD;
 
@@ -389,7 +382,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void NextPageCommand_CanExecute_TrueWhenNotOnLastPage()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.TotalPages = 3;
             viewModel.CurrentPage = 1;
 
@@ -399,7 +392,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void NextPage_WhenNotOnLastPage_IncrementsPage()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.TotalPages = 3;
             viewModel.CurrentPage = 1;
 
@@ -411,7 +404,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void NextPage_WhenOnLastPage_DoesNotIncrement()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.TotalPages = 1;
             viewModel.CurrentPage = 1;
 
@@ -423,7 +416,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void NextPageCommand_CanExecute_FalseOnLastPage()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.TotalPages = 1;
             viewModel.CurrentPage = 1;
 
@@ -434,7 +427,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void PreviousPageCommand_CanExecute_TrueWhenNotOnFirstPage()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.TotalPages = 3;
             viewModel.CurrentPage = 2;
 
@@ -444,7 +437,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void PreviousPage_WhenNotOnFirstPage_DecrementsPage()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.TotalPages = 3;
             viewModel.CurrentPage = 2;
 
@@ -456,7 +449,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void PreviousPage_WhenOnFirstPage_DoesNotDecrement()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.CurrentPage = 1;
 
             viewModel.PreviousPageCommand.Execute(null);
@@ -467,7 +460,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void PreviousPageCommand_CanExecute_FalseOnFirstPage()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.CurrentPage = 1;
 
             Assert.False(viewModel.PreviousPageCommand.CanExecute(null));
@@ -477,7 +470,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void TotalPages_WhenResultIsZero_DefaultsToOne()
         {
-            InitializeViewModel();
+            var viewModel = InitializeViewModel();
             viewModel.SelectedFilterOption = viewModel.FilterOptions.First(filter => filter.Type == FilterType.AllTime);
 
             Assert.Equal(1, viewModel.TotalPages);

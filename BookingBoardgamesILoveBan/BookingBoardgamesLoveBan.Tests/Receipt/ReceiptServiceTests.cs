@@ -1,78 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.Src.Delivery.Model;
+﻿using BookingBoardgamesILoveBan.Src.Delivery.Model;
 using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Payments;
 
 namespace BookingBoardgamesLoveBan.Tests.Receipt
 {
     public class ReceiptServiceTests
     {
-        // ================================ fakes ======================================
-        private class FakeUserRepository : IUserRepository
-        {
-            public User GetById(int id)
-            {
-                return new User(id, $"user_{id}", "country", "city", "str", "number");
-            }
-            public void SaveAddress(int id, Address address)
-            {
-            }
-            public decimal GetUserBalance(int userId)
-            {
-                return 0;
-            }
-            public void UpdateBalance(int userId, decimal newBalance)
-            {
-            }
-        }
+        private Mock<IUserRepository> userRepositoryMock;
+        private Mock<IGameRepository> gameRepositoryMock;
+        private Mock<IRequestService> requestServiceMock;
+        private ReceiptService receiptService;
 
-        private class FakeGameService : IGameRepository
+        private void InitializeService()
         {
-            public Game GetById(int id)
-            {
-                return new Game(id, $"game_{id}", 100m);
-            }
-            public decimal GetPriceGameById(int gameId)
-            {
-                return 0;
-            }
-        }
+            userRepositoryMock = new Mock<IUserRepository>();
+            gameRepositoryMock = new Mock<IGameRepository>();
+            requestServiceMock = new Mock<IRequestService>();
 
-        private class FakeRequestService : IRequestService
-        {
-            public Request GetRequestById(int id) => new Request(
-                id,
-                1, 1, 2,
-                DateTime.Now,
-                DateTime.Now.AddDays(3));
-            public decimal GetRequestPrice(int requestId)
-            {
-                return 0;
-            }
-            public string GetGameName(int requestId)
-            {
-                return "game_1";
-            }
-        }
+            userRepositoryMock
+                .Setup(repo => repo.GetById(It.IsAny<int>()))
+                .Returns((int id) => new User(id, $"user_{id}", "country", "city", "street", "number"));
 
-        // ================================ setup ======================================
-        private readonly ReceiptService receiptService;
+            gameRepositoryMock
+                .Setup(repo => repo.GetById(It.IsAny<int>()))
+                .Returns((int id) => new Game(id, $"game_{id}", 100m));
 
-        public ReceiptServiceTests()
-        {
+            requestServiceMock
+                .Setup(service => service.GetRequestById(It.IsAny<int>()))
+                .Returns((int id) => new Request(id, 1, 2, 3, DateTime.Now, DateTime.Now.AddDays(3)));
+
             receiptService = new ReceiptService(
-                    new FakeUserRepository(),
-                    new FakeRequestService(),
-                    new FakeGameService());
+                userRepositoryMock.Object,
+                requestServiceMock.Object,
+                gameRepositoryMock.Object
+            );
         }
 
         private static string ToFullPath(string relativePath)
@@ -99,40 +71,46 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
 
         // ================================ GenerateReceiptRelativePath ======================================
         [Fact]
-        public void GenerateReceiptRelativePath_ReturnsPathFolder()
+        public void GenerateReceiptRelativePath_WhenCalled_ReturnsPathFolder()
         {
-            var result = receiptService.GenerateReceiptRelativePath(1);
-            Assert.StartsWith("receipts\\", result);
+            InitializeService();
+
+            var receiptPath = receiptService.GenerateReceiptRelativePath(1);
+            Assert.StartsWith("receipts\\", receiptPath);
         }
 
         [Fact]
-        public void GenerateReceiptRelativePath_ReturnsPathEndingWithPdf()
+        public void GenerateReceiptRelativePath_WhenCalled_ReturnsPathEndingWithPdf()
         {
-            var result = receiptService.GenerateReceiptRelativePath(1);
-            Assert.EndsWith(".pdf", result);
+            InitializeService();
+            var receiptPath = receiptService.GenerateReceiptRelativePath(1);
+            Assert.EndsWith(".pdf", receiptPath);
         }
 
         [Fact]
-        public void GenerateReceiptRelativePath_ContainsRequestId()
+        public void GenerateReceiptRelativePath_WhenCalled_ContainsRequestId()
         {
-            var result = receiptService.GenerateReceiptRelativePath(1);
-            Assert.Contains("1", result);
+            InitializeService();
+            var receiptPath = receiptService.GenerateReceiptRelativePath(1);
+            Assert.Contains("1", receiptPath);
         }
 
         [Fact]
-        public void GenerateReceiptRelativePath_SameIds()
+        public void GenerateReceiptRelativePath_SameIds_DifferentPaths()
         {
-            var result1 = receiptService.GenerateReceiptRelativePath(1);
+            InitializeService();
+            var receiptPath = receiptService.GenerateReceiptRelativePath(1);
             System.Threading.Thread.Sleep(1000);
-            var result2 = receiptService.GenerateReceiptRelativePath(1);
+            var receiptPathAfter1Second = receiptService.GenerateReceiptRelativePath(1);
 
-            Assert.NotEqual(result1, result2);
+            Assert.NotEqual(receiptPath, receiptPathAfter1Second);
         }
 
         // ================================ GetReceiptDocument ======================================
         [Fact]
         public void GetReceiptDocument_NullFilePath_ThrowsException()
         {
+            InitializeService();
             var payment = new Payment { FilePath = null };
             Assert.Throws<InvalidOperationException>(() => receiptService.GetReceiptDocument(payment));
         }
@@ -140,6 +118,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         [Fact]
         public void GetReceiptDocument_EmptyFilePath_ThrowsException()
         {
+            InitializeService();
             var payment = new Payment { FilePath = string.Empty };
             Assert.Throws<InvalidOperationException>(() => receiptService.GetReceiptDocument(payment));
         }
@@ -147,6 +126,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         [Fact]
         public void GetReceiptDocument_FileExists_ReturnsPath()
         {
+            InitializeService();
             string relativePath = $"receipts\\receipt_1_{DateTime.Now:yyMMdd_HHmmss}.pdf";
             string fullPath = ToFullPath(relativePath);
 
@@ -154,17 +134,18 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             System.IO.File.WriteAllBytes(fullPath, new byte[] { 0x25, 0x50, 0x44, 0x46 });
 
             var payment = new Payment { FilePath = relativePath };
-            var result = receiptService.GetReceiptDocument(payment);
+            var returnedPath = receiptService.GetReceiptDocument(payment);
 
-            Assert.Equal(fullPath, result);
+            Assert.Equal(fullPath, returnedPath);
 
             // clean
             System.IO.File.Delete(fullPath);
         }
 
         [Fact]
-        public void GetReceiptDocument_InexistentFile_CardPayment_CreatesPdfAndReturnsPath()
+        public void GetReceiptDocument_InexistentFileCardPayment_CreatesPdfAndReturnsPath()
         {
+            InitializeService();
             string relativePath = $"receipts\\receipt_1_{DateTime.Now:yyMMdd_HHmmss}.pdf";
             string fullPath = ToFullPath(relativePath);
 
@@ -174,18 +155,19 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             }
 
             var payment = MakePayment(relativePath, "card");
-            var result = receiptService.GetReceiptDocument(payment);
+            var returnedPath = receiptService.GetReceiptDocument(payment);
 
-            Assert.True(System.IO.File.Exists(result));
-            Assert.EndsWith(".pdf", result);
+            Assert.True(System.IO.File.Exists(returnedPath));
+            Assert.EndsWith(".pdf", returnedPath);
 
             // clean
-            System.IO.File.Delete(result);
+            System.IO.File.Delete(returnedPath);
         }
 
         [Fact]
-        public void GetReceiptDocument_InexistentFile_CashPayment_CreatesPdfAndReturnsPath()
+        public void GetReceiptDocument_InexistentFileCashPayment_CreatesPdfAndReturnsPath()
         {
+            InitializeService();
             string relativePath = $"receipts\\receipt_1_{DateTime.Now:yyMMdd_HHmmss}.pdf";
             string fullPath = ToFullPath(relativePath);
 
@@ -195,16 +177,17 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             }
 
             var payment = MakePayment(relativePath, "cash");
-            var result = receiptService.GetReceiptDocument(payment);
-            Assert.True(System.IO.File.Exists(result));
+            var returnedPath = receiptService.GetReceiptDocument(payment);
+            Assert.True(System.IO.File.Exists(returnedPath));
 
             // clean
-            System.IO.File.Delete(result);
+            System.IO.File.Delete(returnedPath);
         }
 
         [Fact]
         public void GetReceiptDocument_InvalidFilename_FallsBackToTodayDate()
         {
+            InitializeService();
             string relativePath = "receipts\\receipt_BADNAME.pdf";
             string fullPath = ToFullPath(relativePath);
 
@@ -214,12 +197,12 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             }
 
             var payment = MakePayment(relativePath, "card");
-            var result = receiptService.GetReceiptDocument(payment);
+            var returnedPath = receiptService.GetReceiptDocument(payment);
 
-            Assert.True(System.IO.File.Exists(result));
+            Assert.True(System.IO.File.Exists(returnedPath));
 
             // clean
-            System.IO.File.Delete(result);
+            System.IO.File.Delete(returnedPath);
         }
     }
 }
