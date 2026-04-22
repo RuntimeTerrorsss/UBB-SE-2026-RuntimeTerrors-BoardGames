@@ -29,7 +29,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             this.InitializeComponent();
         }
 
-        // Called externally (e.g. from ViewModel) when a read receipt arrives for this message
         public void MarkAsRead()
         {
             if (statusIcon != null)
@@ -40,14 +39,17 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private TextBlock CreateStatusIcon(bool isRead)
         {
+            double smallIconFontSize = 11;
+            double topMargin = 1;
+            double rightMargin = 2;
+
             statusIcon = new TextBlock
             {
-                // Single check = sent, double check = read
                 Text = isRead ? "\uE73E\uE73E" : "\uE73E",
-                Margin = new Thickness(0, 1, 2, 0),
+                Margin = new Thickness(0, topMargin, rightMargin, 0),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 FontFamily = (FontFamily)Application.Current.Resources["SymbolThemeFontFamily"],
-                FontSize = 11,
+                FontSize = smallIconFontSize,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorTertiaryBrush"]
             };
             return statusIcon;
@@ -81,27 +83,31 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private void RenderSystemMessage(MessageViewModel message)
         {
+            double systemMessageFontSize = 11;
+            double topMargin = 4;
+            double bottomMargin = 8;
+
             var textBlock = new TextBlock
             {
-                Margin = new Thickness(0, 4, 0, 8),
+                Margin = new Thickness(0, topMargin, 0, bottomMargin),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 11,
+                FontSize = systemMessageFontSize,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorTertiaryBrush"],
                 TextWrapping = TextWrapping.Wrap
             };
-            foreach (var part in Regex.Split(message.Content, @"(\S+\.pdf)"))
+            foreach (var messagePart in Regex.Split(message.Content, @"(\S+\.pdf)"))
             {
-                var path = part;
-                if (path.EndsWith(".pdf"))
+                var currentPath = messagePart;
+                if (currentPath.EndsWith(".pdf"))
                 {
-                    var hl = new Hyperlink();
-                    hl.Inlines.Add(new Run { Text = "File" });
-                    hl.Click += (s, e) => System.Diagnostics.Process.Start("explorer.exe", path);
-                    textBlock.Inlines.Add(hl);
+                    var fileHyperlink = new Hyperlink();
+                    fileHyperlink.Inlines.Add(new Run { Text = "File" });
+                    fileHyperlink.Click += (sender, routedEventArgs) => System.Diagnostics.Process.Start("explorer.exe", currentPath);
+                    textBlock.Inlines.Add(fileHyperlink);
                 }
                 else
                 {
-                    textBlock.Inlines.Add(new Run { Text = path });
+                    textBlock.Inlines.Add(new Run { Text = currentPath });
                 }
             }
             MessagePresenter.Content = textBlock;
@@ -109,55 +115,60 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private void RenderTextMessage(MessageViewModel message, int currentUserId)
         {
+            double maximumBubbleWidth = 480;
+            double itemSpacing = 2;
+            double horizontalPadding = 12;
+            double verticalPadding = 8;
+            double standardBorderThickness = 1;
+            double curvedCornerRadius = 12;
+            double flatCornerRadius = 2;
+
             bool isMine = message.SenderId == currentUserId;
 
             var stackPanel = new StackPanel
             {
-                MaxWidth = 480,
+                MaxWidth = maximumBubbleWidth,
                 HorizontalAlignment = isMine ? HorizontalAlignment.Right : HorizontalAlignment.Left,
-                Spacing = 2
+                Spacing = itemSpacing
             };
 
             var border = new Border
             {
-                Padding = new Thickness(12, 8, 12, 8),
-                CornerRadius = isMine ? new CornerRadius(12, 12, 2, 12) : new CornerRadius(12, 12, 12, 2)
+                Padding = new Thickness(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding),
+                CornerRadius = isMine ? new CornerRadius(curvedCornerRadius, curvedCornerRadius, flatCornerRadius, curvedCornerRadius) : new CornerRadius(curvedCornerRadius, curvedCornerRadius, curvedCornerRadius, flatCornerRadius)
             };
 
             var textBlock = new TextBlock { TextWrapping = TextWrapping.Wrap };
-            foreach (var part in Regex.Split(message.Content, @"(https://\S+)"))
+            foreach (var messagePart in Regex.Split(message.Content, @"(https://\S+)"))
             {
-                if (part.StartsWith("https://") && Uri.TryCreate(part, UriKind.Absolute, out var uri))
+                if (messagePart.StartsWith("https://") && Uri.TryCreate(messagePart, UriKind.Absolute, out var validatedUri))
                 {
-                    var hl = new Hyperlink { NavigateUri = uri };
-                    hl.Inlines.Add(new Run { Text = part });
-                    textBlock.Inlines.Add(hl);
+                    var linkHyperlink = new Hyperlink { NavigateUri = validatedUri };
+                    linkHyperlink.Inlines.Add(new Run { Text = messagePart });
+                    textBlock.Inlines.Add(linkHyperlink);
                 }
                 else
                 {
-                    textBlock.Inlines.Add(new Run { Text = part });
+                    textBlock.Inlines.Add(new Run { Text = messagePart });
                 }
             }
 
             if (isMine)
             {
-                // My message - accent background
                 border.Background = (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"];
                 textBlock.Foreground = new SolidColorBrush(Microsoft.UI.Colors.White);
             }
             else
             {
-                // Their message - light background with border
                 border.Background = (Brush)Application.Current.Resources["LayerFillColorDefaultBrush"];
                 border.BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"];
-                border.BorderThickness = new Thickness(1);
+                border.BorderThickness = new Thickness(standardBorderThickness);
                 textBlock.Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"];
             }
 
             border.Child = textBlock;
             stackPanel.Children.Add(border);
 
-            // Show status icon for my messages; reflects IsRead from the viewmodel
             if (isMine)
             {
                 stackPanel.Children.Add(CreateStatusIcon(message.IsRead));
@@ -167,19 +178,29 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private void RenderImageMessage(MessageViewModel message, int currentUserId)
         {
+            double maximumImagePanelWidth = 320;
+            double imagePreviewWidth = 280;
+            double imagePreviewHeight = 180;
+            double itemSpacing = 2;
+            double outerPadding = 4;
+            double standardBorderThickness = 1;
+            double innerCornerRadius = 8;
+            double curvedCornerRadius = 12;
+            double flatCornerRadius = 2;
+
             bool isMine = message.SenderId == currentUserId;
 
             var stackPanel = new StackPanel
             {
-                MaxWidth = 320,
+                MaxWidth = maximumImagePanelWidth,
                 HorizontalAlignment = isMine ? HorizontalAlignment.Right : HorizontalAlignment.Left,
-                Spacing = 2
+                Spacing = itemSpacing
             };
 
             var outerBorder = new Border
             {
-                Padding = new Thickness(4),
-                CornerRadius = isMine ? new CornerRadius(12, 12, 2, 12) : new CornerRadius(12, 12, 12, 2)
+                Padding = new Thickness(outerPadding),
+                CornerRadius = isMine ? new CornerRadius(curvedCornerRadius, curvedCornerRadius, flatCornerRadius, curvedCornerRadius) : new CornerRadius(curvedCornerRadius, curvedCornerRadius, curvedCornerRadius, flatCornerRadius)
             };
 
             if (isMine)
@@ -190,15 +211,15 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             {
                 outerBorder.Background = (Brush)Application.Current.Resources["LayerFillColorDefaultBrush"];
                 outerBorder.BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"];
-                outerBorder.BorderThickness = new Thickness(1);
+                outerBorder.BorderThickness = new Thickness(standardBorderThickness);
             }
 
             var imageBorder = new Border
             {
-                Width = 280,
-                Height = 180,
+                Width = imagePreviewWidth,
+                Height = imagePreviewHeight,
                 Background = (Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"],
-                CornerRadius = new CornerRadius(8)
+                CornerRadius = new CornerRadius(innerCornerRadius)
             };
 
             if (message.ImageUrl != null && message.ImageUrl.Length > 0)
@@ -212,10 +233,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
                 try
                 {
-                    string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", message.ImageUrl);
-                    var bitmap = new BitmapImage(new Uri(fullPath));
+                    string fullImagePath = Path.Combine(AppContext.BaseDirectory, "Images", message.ImageUrl);
+                    var loadedBitmap = new BitmapImage(new Uri(fullImagePath));
 
-                    chatImage.Source = bitmap;
+                    chatImage.Source = loadedBitmap;
                     imageBorder.Child = chatImage;
                 }
                 catch (Exception exception)
@@ -226,14 +247,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             }
             else
             {
-                // No image data, show placeholder
                 imageBorder.Child = CreateImagePlaceholder();
             }
 
             outerBorder.Child = imageBorder;
             stackPanel.Children.Add(outerBorder);
 
-            // Show status icon for my messages; reflects IsRead from the viewmodel
             if (isMine)
             {
                 stackPanel.Children.Add(CreateStatusIcon(message.IsRead));
@@ -244,196 +263,224 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private StackPanel CreateImagePlaceholder()
         {
-            var placeholder = new StackPanel
+            double iconFontSize = 32;
+            double textFontSize = 12;
+            double elementSpacing = 6;
+
+            var placeholderPanel = new StackPanel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                Spacing = 6
+                Spacing = elementSpacing
             };
 
-            var icon = new FontIcon
+            var placeholderIcon = new FontIcon
             {
                 Glyph = "\uEB9F",
-                FontSize = 32,
+                FontSize = iconFontSize,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorTertiaryBrush"]
             };
 
-            var text = new TextBlock
+            var placeholderText = new TextBlock
             {
                 Text = "Image",
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 12,
+                FontSize = textFontSize,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorTertiaryBrush"]
             };
 
-            placeholder.Children.Add(icon);
-            placeholder.Children.Add(text);
+            placeholderPanel.Children.Add(placeholderIcon);
+            placeholderPanel.Children.Add(placeholderText);
 
-            return placeholder;
+            return placeholderPanel;
         }
 
         private void RenderBookingRequest(MessageViewModel message, int currentUserId)
         {
+            double maximumRequestWidth = 400;
+            double verticalMargin = 10;
+            double horizontalPadding = 16;
+            double verticalPadding = 12;
+            double standardBorderThickness = 1;
+            double outerCornerRadius = 10;
+            double panelSpacing = 10;
+            double titleFontSize = 13;
+            double contentFontSize = 12;
+            double buttonSpacing = 8;
+            double minimumButtonWidth = 90;
+
             var border = new Border
             {
-                MaxWidth = 400,
-                Margin = new Thickness(0, 10, 0, 10),
-                Padding = new Thickness(16, 12, 16, 12),
+                MaxWidth = maximumRequestWidth,
+                Margin = new Thickness(0, verticalMargin, 0, verticalMargin),
+                Padding = new Thickness(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
                 BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(10)
+                BorderThickness = new Thickness(standardBorderThickness),
+                CornerRadius = new CornerRadius(outerCornerRadius)
             };
 
-            var stackPanel = new StackPanel { Spacing = 10 };
+            var stackPanel = new StackPanel { Spacing = panelSpacing };
 
-            var title = new TextBlock
+            var titleTextBlock = new TextBlock
             {
                 Text = "Rental Request",
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 13,
+                FontSize = titleFontSize,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
             };
 
-            var contentText = new TextBlock
+            var bodyTextBlock = new TextBlock
             {
                 Text = message.Content,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 12,
+                FontSize = contentFontSize,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
                 TextWrapping = TextWrapping.Wrap
             };
 
-            stackPanel.Children.Add(title);
-            stackPanel.Children.Add(contentText);
+            stackPanel.Children.Add(titleTextBlock);
+            stackPanel.Children.Add(bodyTextBlock);
 
-            // Show buttons only if not resolved | and isnt mine
             if ((!message.IsResolved && !message.IsAccepted) && message.SenderId != currentUserId)
             {
-                var buttonPanel = new StackPanel
+                var actionButtonPanel = new StackPanel
                 {
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Orientation = Orientation.Horizontal,
-                    Spacing = 8
+                    Spacing = buttonSpacing
                 };
 
-                var acceptButton = new Button
+                var acceptActionButton = new Button
                 {
                     Content = "Accept",
-                    MinWidth = 90,
+                    MinWidth = minimumButtonWidth,
                     Style = (Style)Application.Current.Resources["AccentButtonStyle"]
                 };
 
-                var declineButton = new Button
+                var declineActionButton = new Button
                 {
                     Content = "Decline",
-                    MinWidth = 90
+                    MinWidth = minimumButtonWidth
                 };
-                acceptButton.Click += (s, e) => AcceptRequested?.Invoke(this, message.Id);
-                declineButton.Click += (s, e) => DeclineRequested?.Invoke(this, message.Id);
-                buttonPanel.Children.Add(acceptButton);
-                buttonPanel.Children.Add(declineButton);
-                stackPanel.Children.Add(buttonPanel);
+
+                acceptActionButton.Click += (sender, routedEventArgs) => AcceptRequested?.Invoke(this, message.Id);
+                declineActionButton.Click += (sender, routedEventArgs) => DeclineRequested?.Invoke(this, message.Id);
+
+                actionButtonPanel.Children.Add(acceptActionButton);
+                actionButtonPanel.Children.Add(declineActionButton);
+                stackPanel.Children.Add(actionButtonPanel);
             }
             else if (message.SenderId == currentUserId && !message.IsResolved)
             {
                 if (!message.IsAccepted)
                 {
-                    var buttonPanel = new StackPanel
+                    var cancelPanel = new StackPanel
                     {
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Orientation = Orientation.Horizontal,
-                        Spacing = 8
+                        Spacing = buttonSpacing
                     };
 
-                    var cancelButton = new Button
+                    var cancelRequestButton = new Button
                     {
                         Content = "Cancel",
-                        MinWidth = 90
+                        MinWidth = minimumButtonWidth
                     };
 
-                    cancelButton.Click += (s, e) => CancelRequested?.Invoke(this, message.Id);
+                    cancelRequestButton.Click += (sender, routedEventArgs) => CancelRequested?.Invoke(this, message.Id);
 
-                    buttonPanel.Children.Add(cancelButton);
-                    stackPanel.Children.Add(buttonPanel);
+                    cancelPanel.Children.Add(cancelRequestButton);
+                    stackPanel.Children.Add(cancelPanel);
                 }
                 else
                 {
-                    var buttonPanel = new StackPanel
+                    var paymentPanel = new StackPanel
                     {
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Orientation = Orientation.Horizontal,
-                        Spacing = 8
+                        Spacing = buttonSpacing
                     };
 
-                    var cancelButton = new Button
+                    var proceedPaymentButton = new Button
                     {
                         Content = "Proceed to payment",
-                        MinWidth = 90
+                        MinWidth = minimumButtonWidth
                     };
-                    cancelButton.Click += (s, e) => ProceedToPaymentRequested?.Invoke(this, (currentUserId, message.RequestId, message.Id));
 
-                    buttonPanel.Children.Add(cancelButton);
-                    stackPanel.Children.Add(buttonPanel);
+                    proceedPaymentButton.Click += (sender, routedEventArgs) => ProceedToPaymentRequested?.Invoke(this, (currentUserId, message.RequestId, message.Id));
+
+                    paymentPanel.Children.Add(proceedPaymentButton);
+                    stackPanel.Children.Add(paymentPanel);
                 }
             }
 
-                border.Child = stackPanel;
+            border.Child = stackPanel;
             MessagePresenter.Content = border;
         }
 
         private void RenderCashAgreement(MessageViewModel message, int currentUserId)
         {
+            double maximumAgreementWidth = 380;
+            double verticalMargin = 4;
+            double horizontalPadding = 14;
+            double verticalPadding = 10;
+            double standardBorderThickness = 1;
+            double outerCornerRadius = 10;
+            double panelSpacing = 8;
+            double titleFontSize = 13;
+            double contentFontSize = 12;
+
             var border = new Border
             {
-                MaxWidth = 380,
-                Margin = new Thickness(0, 4, 0, 4),
-                Padding = new Thickness(14, 10, 14, 10),
+                MaxWidth = maximumAgreementWidth,
+                Margin = new Thickness(0, verticalMargin, 0, verticalMargin),
+                Padding = new Thickness(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
                 BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(10)
+                BorderThickness = new Thickness(standardBorderThickness),
+                CornerRadius = new CornerRadius(outerCornerRadius)
             };
 
-            var stackPanel = new StackPanel { Spacing = 8 };
+            var stackPanel = new StackPanel { Spacing = panelSpacing };
 
-            var title = new TextBlock
+            var titleTextBlock = new TextBlock
             {
                 Text = "Cash Transaction Agreement",
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 13,
+                FontSize = titleFontSize,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
             };
 
-            var contentText = new TextBlock
+            var bodyTextBlock = new TextBlock
             {
                 Text = message.Content,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 12,
+                FontSize = contentFontSize,
                 Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
                 TextWrapping = TextWrapping.Wrap
             };
 
-            stackPanel.Children.Add(title);
-            stackPanel.Children.Add(contentText);
+            stackPanel.Children.Add(titleTextBlock);
+            stackPanel.Children.Add(bodyTextBlock);
 
             bool currentUserAccepted = message.AcceptedBy != null && message.AcceptedBy.Contains(currentUserId);
             bool isSeller = message.SenderId == currentUserId;
 
             if (!currentUserAccepted)
             {
-                var agreeButton = new Button
+                var confirmAgreementButton = new Button
                 {
                     Content = isSeller ? "I received the cash payment" : "I received the boardgame",
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Style = (Style)Application.Current.Resources["AccentButtonStyle"]
                 };
-                agreeButton.Click += (s, e) => AgreementAccepted(this, message.Id);
-                stackPanel.Children.Add(agreeButton);
+                confirmAgreementButton.Click += (sender, routedEventArgs) => AgreementAccepted(this, message.Id);
+                stackPanel.Children.Add(confirmAgreementButton);
             }
 
             border.Child = stackPanel;

@@ -7,7 +7,7 @@ using BookingBoardgamesILoveBan.Src.Chat.Model;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.DTO
 {
-    public record ReadReceiptDTO(
+    public record ReadReceiptDataTransferObject(
         int conversationId,
         int readerId,
         int receiverId,

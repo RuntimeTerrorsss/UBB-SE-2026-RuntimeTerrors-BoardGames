@@ -17,11 +17,13 @@ public class ChatPageViewModel
 
     private readonly int currentUserId;
     private readonly ConversationService conversationService;
+
     public ConversationService ConversationService
     {
         get => conversationService;
     }
-    private List<ConversationDTO> conversations = new ();
+
+    private List<ConversationDataTransferObject> conversations = new ();
 
     public ChatPageViewModel(int currentUser)
     : this(currentUser, new ConversationService(App.ConversationRepository, currentUser))
@@ -44,14 +46,13 @@ public class ChatPageViewModel
         ChatModelView.CashAgreementAccept += UpdateCashAgreement;
 
         conversationService = service;
-
         conversations = conversationService.FetchConversations();
 
-        foreach (var conversation in conversations)
+        foreach (var conversationItem in conversations)
         {
             LeftPanelModelView.HandleIncomingConversation(
-                conversation,
-                conversationService.GetOtherUserNameByConversationDTO(conversation),
+                conversationItem,
+                conversationService.GetOtherUserNameByConversationDTO(conversationItem),
                 currentUserId,
                 userRepository);
         }
@@ -62,16 +63,9 @@ public class ChatPageViewModel
         conversationService.ActionMessageUpdateProcessed += OnMessageUpdateReceived;
     }
 
-    /// <summary>
-    /// Whenever the selected conversation in the left panel changes, this method is triggered.
-    /// It finds the corresponding conversation DTO and loads the messages into the chat view model.
-    /// It also sends a read receipt for that conversation.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="eventArgs"></param>
-    private void OnLeftPanelPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
+    private void OnLeftPanelPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
     {
-        if (eventArgs.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
+        if (propertyChangedEventArgs.PropertyName != nameof(LeftPanelViewModel.SelectedConversation))
         {
             return;
         }
@@ -80,160 +74,116 @@ public class ChatPageViewModel
             return;
         }
 
-        var conversation = conversations.FirstOrDefault(c => c.Id == LeftPanelModelView.SelectedConversation.ConversationId);
-        if (conversation == null)
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == LeftPanelModelView.SelectedConversation.ConversationId);
+        if (matchedConversation == null)
         {
             return;
         }
-        int selectedConversationOtherUserUnreadCount = conversation.UnreadCount.FirstOrDefault(x => x.Key != currentUserId).Value;
-        ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, selectedConversationOtherUserUnreadCount);
 
-        SendReadReceipt(conversation);
+        int selectedConversationOtherUserUnreadCount = matchedConversation.UnreadCount.FirstOrDefault(unreadItem => unreadItem.Key != currentUserId).Value;
+        ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, matchedConversation.MessageList, selectedConversationOtherUserUnreadCount);
+
+        SendReadReceipt(matchedConversation);
     }
 
-    /// <summary>
-    /// This method is called when a message is sent from the chat view model.
-    /// It finds the corresponding conversation DTO to determine the receiver of the message,
-    /// then calls the conversation service to send the message.
-    /// </summary>
-    /// <param name="message"></param>
-    private void OnMessageSent(MessageDTO message)
+    private void OnMessageSent(MessageDataTransferObject message)
     {
-        var conversation = conversations.FirstOrDefault(c => c.Id == message.conversationId);
-        message = message with { receiverId = conversation.Participants[0] == message.senderId ? conversation.Participants[1] : conversation.Participants[0] };
+        int firstParticipantIndex = 0;
+        int secondParticipantIndex = 1;
+
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == message.conversationId);
+        message = message with { receiverId = matchedConversation.Participants[firstParticipantIndex] == message.senderId ? matchedConversation.Participants[secondParticipantIndex] : matchedConversation.Participants[firstParticipantIndex] };
         conversationService.SendMessage(message);
     }
 
-    /// <summary>
-    /// This method sends a read receipt for a given conversation. It is called when a conversation is selected in the left panel
-    /// or when receiving a new message for the currently open conversation.
-    /// </summary>
-    /// <param name="conversation"></param>
-    private void SendReadReceipt(ConversationDTO conversation)
+    private void SendReadReceipt(ConversationDataTransferObject conversation)
     {
         conversationService.SendReadReceipt(conversation);
     }
 
-    /// <summary>
-    /// This method is called when a message is updated (e.g. booking request accepted/declined, cash agreement accepted).
-    /// </summary>
-    /// <param name="message"></param>
-    private void OnSendMessageUpdate(MessageDTO message)
+    private void OnSendMessageUpdate(MessageDataTransferObject message)
     {
         conversationService.UpdateMessage(message);
     }
 
-    /// <summary>
-    /// This method is called when a new message is received from the conversation service.
-    /// It finds the corresponding conversation DTO and adds the new message to it.
-    /// </summary>
-    /// <param name="message"></param>
-    /// <param name="senderName"></param>
-    private void OnMessageReceived(MessageDTO message, string senderName)
+    private void OnMessageReceived(MessageDataTransferObject message, string senderName)
     {
-        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == message.conversationId);
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == message.conversationId);
 
-        conversation?.AddMessageToListDTO(message);
+        matchedConversation?.AddMessageToListDTO(message);
 
         LeftPanelModelView.HandleIncomingMessage(message, senderName);
         ChatModelView.HandleIncomingMessage(message);
         if (ChatModelView.ConversationId == message.conversationId)
         {
-            SendReadReceipt(conversation);
+            SendReadReceipt(matchedConversation);
         }
     }
 
-    /// <summary>
-    /// This method is called when a booking request is accepted, declined or cancelled.
-    /// It sends an updated version of the corresponding message to the conversation service.
-    /// </summary>
-    /// <param name="messageId"></param>
-    /// <param name="conversationId"></param>
-    /// <param name="accepted"></param>
-    /// <param name="resolved"></param>
     private void UpdateBookingRequest(int messageId, int conversationId, bool accepted, bool resolved)
     {
-        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == conversationId);
-        var message = conversation?.MessageList.FirstOrDefault(firstMessage => firstMessage.id == messageId);
-        if (message == null)
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == conversationId);
+        var targetMessage = matchedConversation?.MessageList.FirstOrDefault(messageItem => messageItem.id == messageId);
+        if (targetMessage == null)
         {
             return;
         }
-        message = message with { isResolved = resolved, isAccepted = accepted };
-        OnSendMessageUpdate(message);
+        targetMessage = targetMessage with { isResolved = resolved, isAccepted = accepted };
+        OnSendMessageUpdate(targetMessage);
     }
 
-    /// <summary>
-    /// This method is called when a cash agreement is accepted by either the buyer or the seller.
-    /// </summary>
-    /// <param name="messageId"></param>
-    /// <param name="conversationId"></param>
     private void UpdateCashAgreement(int messageId, int conversationId)
     {
-        var conversation = conversations.FirstOrDefault(firstConversation => firstConversation.Id == conversationId);
-        var message = conversation?.MessageList.FirstOrDefault(firstMessage => firstMessage.id == messageId);
-        if (message == null)
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == conversationId);
+        var targetMessage = matchedConversation?.MessageList.FirstOrDefault(messageItem => messageItem.id == messageId);
+        if (targetMessage == null)
         {
             return;
         }
-        if (currentUserId == message.senderId)
+        if (currentUserId == targetMessage.senderId)
         {
-            message = message with { isAcceptedBySeller = true };
+            targetMessage = targetMessage with { isAcceptedBySeller = true };
         }
-        if (currentUserId == message.receiverId)
+        if (currentUserId == targetMessage.receiverId)
         {
-            message = message with { isAcceptedByBuyer = true };
+            targetMessage = targetMessage with { isAcceptedByBuyer = true };
         }
-        OnSendMessageUpdate(message);
+        OnSendMessageUpdate(targetMessage);
     }
 
-    /// <summary>
-    /// This method is called when a new conversation is received from the conversation service.
-    /// This is to handle the case when someone wants to start a conversation with a user thats currently logged in.
-    /// </summary>
-    /// <param name="conversation"></param>
-    /// <param name="otherUsername"></param>
-    private void OnConversationReceived(ConversationDTO conversation, string otherUsername)
+    private void OnConversationReceived(ConversationDataTransferObject conversation, string otherUsername)
     {
         conversations.Add(conversation);
         LeftPanelModelView.HandleIncomingConversation(conversation, otherUsername, currentUserId);
     }
 
-    /// <summary>
-    /// This method is called when a read receipt is received from the conversation service.
-    /// </summary>
-    /// <param name="readReceipt"></param>
-    private void OnReadReceiptReceived(ReadReceiptDTO readReceipt)
+    private void OnReadReceiptReceived(ReadReceiptDataTransferObject readReceipt)
     {
-        var conversation = conversations.FirstOrDefault(c => c.Id == readReceipt.conversationId);
-        conversation.LastRead[readReceipt.readerId] = readReceipt.receiptTimeStamp;
-        conversation.UpdateUnreadCounts();
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == readReceipt.conversationId);
+        matchedConversation.LastRead[readReceipt.readerId] = readReceipt.receiptTimeStamp;
+        matchedConversation.UpdateUnreadCounts();
         if (ChatModelView.ConversationId == readReceipt.conversationId && readReceipt.readerId != currentUserId)
         {
-            ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, conversation.UnreadCount[readReceipt.readerId]);
+            ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, matchedConversation.MessageList, matchedConversation.UnreadCount[readReceipt.readerId]);
         }
     }
 
-    /// <summary>
-    /// This method is called when a message update is received from the conversation service.
-    /// </summary>
-    /// <param name="updatedMessage"></param>
-    /// <param name="senderName"></param>
-    private void OnMessageUpdateReceived(MessageDTO updatedMessage, string senderName)
+    private void OnMessageUpdateReceived(MessageDataTransferObject updatedMessage, string senderName)
     {
-        var conversation = conversations.FirstOrDefault(c => c.Id == updatedMessage.conversationId);
-        if (conversation == null)
+        int noUnreadMessagesCount = 0;
+        var matchedConversation = conversations.FirstOrDefault(conversationItem => conversationItem.Id == updatedMessage.conversationId);
+        if (matchedConversation == null)
         {
             return;
         }
-        for (int i = 0; i < conversation.MessageList.Count; i++)
+        for (int i = 0; i < matchedConversation.MessageList.Count; i++)
         {
-            if (conversation.MessageList[i].id == updatedMessage.id)
+            if (matchedConversation.MessageList[i].id == updatedMessage.id)
             {
-                conversation.MessageList[i] = updatedMessage;
+                matchedConversation.MessageList[i] = updatedMessage;
                 if (ChatModelView.ConversationId == updatedMessage.conversationId)
                 {
-                    ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, conversation.MessageList, 0); // unreadcount is 0 cus like think about it how could they have possibly sent an update if they handnt read the convo!
+                    ChatModelView.LoadConversation(LeftPanelModelView.SelectedConversation, matchedConversation.MessageList, noUnreadMessagesCount);
                 }
                 break;
             }

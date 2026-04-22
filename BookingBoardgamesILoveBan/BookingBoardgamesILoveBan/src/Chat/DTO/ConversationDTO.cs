@@ -1,32 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BookingBoardgamesILoveBan.Src.Chat.DTO;
-using BookingBoardgamesILoveBan.Src.Chat.Model;
-using BookingBoardgamesILoveBan.Src.Model;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.DTO
 {
-    public class ConversationDTO
+    public class ConversationDataTransferObject
     {
         public int Id { get; set; }
-        public List<MessageDTO> MessageList { get; set; }
+        public List<MessageDataTransferObject> MessageList { get; set; }
         public int[] Participants { get; set; }
         public Dictionary<int, DateTime> LastRead { get; set; }
-        public Dictionary<int, int> UnreadCount { get; set; } // <id, count>
-        public ConversationDTO(int conversationId, int[] participants, List<MessageDTO> messages, Dictionary<int, DateTime> lastRead)
+        public Dictionary<int, int> UnreadCount { get; set; }
+
+        public ConversationDataTransferObject(int conversationId, int[] participants, List<MessageDataTransferObject> messages, Dictionary<int, DateTime> lastRead)
         {
             Id = conversationId;
             Participants = participants;
             MessageList = messages;
             LastRead = lastRead;
-            UnreadCount = participants.ToDictionary(p => p, p => 0);
+            UnreadCount = participants.ToDictionary(participant => participant, participant => 0);
             UpdateUnreadCounts();
         }
 
-        public void AddMessageToListDTO(MessageDTO newMessage)
+        public void AddMessageToListDTO(MessageDataTransferObject newMessage)
         {
             MessageList.Add(newMessage);
             UpdateUnreadCounts();
@@ -34,20 +30,24 @@ namespace BookingBoardgamesILoveBan.Src.Chat.DTO
 
         public void UpdateUnreadCounts()
         {
-            UnreadCount[Participants[0]] = 0;
-            UnreadCount[Participants[1]] = 0;
+            int firstParticipantIndex = 0;
+            int secondParticipantIndex = 1;
+            int defaultUnreadCount = 0;
+            int systemMessageSenderIdentifier = 0;
 
-            foreach (var message in MessageList)
+            UnreadCount[Participants[firstParticipantIndex]] = defaultUnreadCount;
+            UnreadCount[Participants[secondParticipantIndex]] = defaultUnreadCount;
+
+            foreach (var messageItem in MessageList)
             {
-                // ignore system message
-                if (message.receiverId == 0)
+                if (messageItem.receiverId == systemMessageSenderIdentifier)
                 {
                     continue;
                 }
 
-                if (message.sentAt >= LastRead[message.receiverId])
+                if (messageItem.sentAt >= LastRead[messageItem.receiverId])
                 {
-                    UnreadCount[message.receiverId]++;
+                    UnreadCount[messageItem.receiverId]++;
                 }
             }
         }

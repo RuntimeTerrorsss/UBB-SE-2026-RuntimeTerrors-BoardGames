@@ -13,91 +13,111 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     {
         private ChatViewModel CreateViewModel()
         {
-            return new ChatViewModel(1);
+            int currentUserId = 1;
+            return new ChatViewModel(currentUserId);
         }
 
         private ConversationPreviewModel CreateConversation()
         {
+            int targetConversationId = 1;
+            string displayName = "John Doe";
+            string initials = "JD";
+            string lastMessageText = "hi";
+            int unreadCount = 0;
+            string avatarImageName = "avatar.png";
+
             return new ConversationPreviewModel(
-                conversationId: 1,
-                displayName: "John Doe",
-                initials: "JD",
-                lastMessageTextInput: "hi",
-                timestampInput: DateTime.Now,
-                unreadCountInput: 0,
-                avatarUrl: "avatar.png");
+                targetConversationId,
+                displayName,
+                initials,
+                lastMessageText,
+                DateTime.Now,
+                unreadCount,
+                avatarImageName);
         }
 
-        private MessageDTO CreateMessage(int convId = 1)
+        private MessageDataTransferObject CreateMessage(int targetConversationId = 1)
         {
-            return new MessageDTO(
-                id: 1,
-                conversationId: convId,
-                senderId: 1,
-                receiverId: 2,
-                sentAt: DateTime.Now,
-                content: "hello",
-                type: MessageType.MessageText,
-                imageUrl: null,
-                isAccepted: false,
-                isResolved: false,
-                isAcceptedBySeller: false,
-                isAcceptedByBuyer: false,
-                requestId: -1,
-                paymentId: -1);
+            int defaultMessageId = 1;
+            int defaultSenderId = 1;
+            int defaultReceiverId = 2;
+            int missingIdentifier = -1;
+            string textContent = "hello";
+
+            return new MessageDataTransferObject(
+                defaultMessageId,
+                targetConversationId,
+                defaultSenderId,
+                defaultReceiverId,
+                DateTime.Now,
+                textContent,
+                MessageType.MessageText,
+                null,
+                false,
+                false,
+                false,
+                false,
+                missingIdentifier,
+                missingIdentifier);
         }
 
         [Fact]
-        public void LoadConversation_SetHeaderAndMessages()
+        public void LoadConversation_ValidData_SetsHeaderAndMessages()
         {
             var viewModel = CreateViewModel();
             var conversation = CreateConversation();
+            int testUnreadCount = 1;
+            int expectedTotalMessages = 2;
 
-            var messages = new List<MessageDTO>
+            var messages = new List<MessageDataTransferObject>
             {
                 CreateMessage(),
                 CreateMessage()
             };
 
-            viewModel.LoadConversation(conversation, messages, theirUnreadCount: 1);
-            Assert.Equal(2, viewModel.Messages.Count);
+            viewModel.LoadConversation(conversation, messages, testUnreadCount);
+
+            Assert.Equal(expectedTotalMessages, viewModel.Messages.Count);
         }
 
         [Fact]
-        public void SendMessage_AddMessageAndClearInput()
+        public void SendMessage_ValidInput_AddsMessageAndClearsInput()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
-            bool invoked = false;
-            viewModel.MessageSent += _ => invoked = true;
+            bool eventInvoked = false;
+            viewModel.MessageSent += (messageData) => eventInvoked = true;
 
             viewModel.InputText = "hello world";
             viewModel.SendMessage();
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void SendMessage_InputEmpty_DoNothing()
+        public void SendMessage_EmptyInput_DoesNotAddMessage()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
             viewModel.InputText = "";
-
             viewModel.SendMessage();
 
             Assert.Empty(viewModel.Messages);
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenSameConversation_AddMessage()
+        public void HandleIncomingMessage_MatchingConversation_AddsMessage()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            int targetConversationId = 1;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
-            var message = CreateMessage(1);
+            var message = CreateMessage(targetConversationId);
 
             viewModel.HandleIncomingMessage(message);
 
@@ -105,12 +125,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenDifferentConversation_Ignore()
+        public void HandleIncomingMessage_DifferentConversation_IgnoresMessage()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            int invalidConversationId = 99;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
-            var message = CreateMessage(99);
+            var message = CreateMessage(invalidConversationId);
 
             viewModel.HandleIncomingMessage(message);
 
@@ -118,12 +140,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void HandleIncomingMessage_DuplicateMessage_DoNotInsertDuplicate()
+        public void HandleIncomingMessage_DuplicateMessage_DoesNotInsertDuplicate()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            int targetConversationId = 1;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
-            var message = CreateMessage(1);
+            var message = CreateMessage(targetConversationId);
 
             viewModel.HandleIncomingMessage(message);
             viewModel.HandleIncomingMessage(message);
@@ -132,149 +156,179 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void ResolveBookingRequest_InvokeEvent()
+        public void ResolveBookingRequest_ValidRequest_InvokesEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            int testUnreadCount = 0;
+            int targetMessageId = 1;
+            bool isAccepted = true;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject> { CreateMessage() }, testUnreadCount);
 
-            bool invoked = false;
-            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
+            bool eventInvoked = false;
+            viewModel.BookingRequestUpdate += (messageIdentifier, conversationIdentifier, acceptStatus, resolveStatus) => eventInvoked = true;
 
-            viewModel.ResolveBookingRequest(1, true);
+            viewModel.ResolveBookingRequest(targetMessageId, isAccepted);
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void ResolveBookingRequest_WhenMessageMissing_NotThrow()
+        public void ResolveBookingRequest_MissingMessage_ExecutesWithoutError()
         {
             var viewModel = CreateViewModel();
-            viewModel.ResolveBookingRequest(999, true);
+            int missingMessageId = 999;
+            bool isAccepted = true;
+
+            Exception executionException = Record.Exception(() => viewModel.ResolveBookingRequest(missingMessageId, isAccepted));
+
+            Assert.Null(executionException);
         }
 
         [Fact]
-        public void UpdateCashAgreement_InvokeEvent()
+        public void UpdateCashAgreement_ValidAgreement_InvokesEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO> { CreateMessage() }, 0);
+            int testUnreadCount = 0;
+            int targetMessageId = 1;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject> { CreateMessage() }, testUnreadCount);
 
-            bool invoked = false;
-            viewModel.CashAgreementAccept += (_, __) => invoked = true;
+            bool eventInvoked = false;
+            viewModel.CashAgreementAccept += (messageIdentifier, conversationIdentifier) => eventInvoked = true;
 
-            viewModel.UpdateCashAgreement(1);
+            viewModel.UpdateCashAgreement(targetMessageId);
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void UpdateCashAgreement_WhenMissing_NotThrow()
+        public void UpdateCashAgreement_MissingMessage_ExecutesWithoutError()
         {
             var viewModel = CreateViewModel();
+            int missingMessageId = 999;
 
-            viewModel.UpdateCashAgreement(999);
+            Exception executionException = Record.Exception(() => viewModel.UpdateCashAgreement(missingMessageId));
+
+            Assert.Null(executionException);
         }
 
         [Fact]
-        public void SendImage_InvokeEvent()
+        public void SendImage_ValidFile_InvokesEvent()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            string testFileName = "file.png";
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
-            bool invoked = false;
-            viewModel.MessageSent += _ => invoked = true;
+            bool eventInvoked = false;
+            viewModel.MessageSent += (messageData) => eventInvoked = true;
 
-            viewModel.SendImage("file.png");
+            viewModel.SendImage(testFileName);
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void RaiseBookingRequestUpdate_InvokeEvent()
+        public void RaiseBookingRequestUpdate_ValidTrigger_InvokesEvent()
         {
             var viewModel = CreateViewModel();
+            int targetMessageId = 1;
+            int targetConversationId = 1;
+            bool isAccepted = true;
+            bool isResolved = false;
 
-            bool invoked = false;
-            viewModel.BookingRequestUpdate += (_, __, ___, ____) => invoked = true;
+            bool eventInvoked = false;
+            viewModel.BookingRequestUpdate += (messageIdentifier, conversationIdentifier, acceptStatus, resolveStatus) => eventInvoked = true;
 
-            viewModel.RaiseBookingRequestUpdate(1, 1, true, false);
+            viewModel.RaiseBookingRequestUpdate(targetMessageId, targetConversationId, isAccepted, isResolved);
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void RaiseCashAgreementAccept_InvokeEvent()
+        public void RaiseCashAgreementAccept_ValidTrigger_InvokesEvent()
         {
             var viewModel = CreateViewModel();
+            int targetMessageId = 1;
+            int targetConversationId = 1;
 
-            bool invoked = false;
-            viewModel.CashAgreementAccept += (_, __) => invoked = true;
+            bool eventInvoked = false;
+            viewModel.CashAgreementAccept += (messageIdentifier, conversationIdentifier) => eventInvoked = true;
 
-            viewModel.RaiseCashAgreementAccept(1, 1);
+            viewModel.RaiseCashAgreementAccept(targetMessageId, targetConversationId);
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void RaiseMessageSent_InvokeEvent()
+        public void RaiseMessageSent_ValidTrigger_InvokesEvent()
         {
             var viewModel = CreateViewModel();
 
-            bool invoked = false;
-            viewModel.MessageSent += _ => invoked = true;
+            bool eventInvoked = false;
+            viewModel.MessageSent += (messageData) => eventInvoked = true;
 
             viewModel.RaiseMessageSent(CreateMessage());
 
-            Assert.True(invoked);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void LoadConversation_SetReadStatusCorrectly()
+        public void LoadConversation_ValidUnreadCount_SetsReadStatusCorrectly()
         {
             var viewModel = CreateViewModel();
             var conversation = CreateConversation();
+            int testUnreadCount = 1;
+            int firstMessageIndex = 0;
+            int secondMessageIndex = 1;
 
-            var messages = new List<MessageDTO>
+            var messages = new List<MessageDataTransferObject>
             {
                 CreateMessage(),
                 CreateMessage()
             };
 
-            viewModel.LoadConversation(conversation, messages, theirUnreadCount: 1);
+            viewModel.LoadConversation(conversation, messages, testUnreadCount);
 
-            Assert.True(viewModel.Messages[0].IsRead);
-            Assert.False(viewModel.Messages[1].IsRead);
+            Assert.True(viewModel.Messages[firstMessageIndex].IsRead);
+            Assert.False(viewModel.Messages[secondMessageIndex].IsRead);
         }
 
         [Fact]
-        public void CanSend_InputIsWhiteSpace_IsFalse()
+        public void CanSend_WhiteSpaceInput_ReturnsFalse()
         {
             var viewModel = CreateViewModel();
+            string whitespaceString = "   ";
 
-            viewModel.InputText = "   ";
+            viewModel.InputText = whitespaceString;
 
             Assert.False(viewModel.CanSend);
         }
 
         [Fact]
-        public void ProceedToPayment_NotThrow()
+        public void ProceedToPayment_ValidCall_ExecutesWithoutError()
         {
             var viewModel = CreateViewModel();
+            int targetMessageId = 1;
 
-            viewModel.ProceedToPayment(1);
+            Exception executionException = Record.Exception(() => viewModel.ProceedToPayment(targetMessageId));
+
+            Assert.Null(executionException);
         }
 
         [Fact]
-        public void HandleIncomingMessage_DuplicateMessage_NotInsertDuplicate()
+        public void HandleIncomingMessage_DelayedDuplicate_DoesNotInsertDuplicate()
         {
             var viewModel = CreateViewModel();
-            viewModel.LoadConversation(CreateConversation(), new List<MessageDTO>(), 0);
+            int testUnreadCount = 0;
+            int timeDelayMilliseconds = 500;
+            viewModel.LoadConversation(CreateConversation(), new List<MessageDataTransferObject>(), testUnreadCount);
 
-            var message1 = CreateMessage();
-            var message2 = CreateMessage();
-            message2 = message2 with { sentAt = message1.sentAt.AddMilliseconds(500) };
+            var originalMessage = CreateMessage();
+            var duplicateMessage = CreateMessage();
+            duplicateMessage = duplicateMessage with { sentAt = originalMessage.sentAt.AddMilliseconds(timeDelayMilliseconds) };
 
-            viewModel.HandleIncomingMessage(message1);
-            viewModel.HandleIncomingMessage(message2);
+            viewModel.HandleIncomingMessage(originalMessage);
+            viewModel.HandleIncomingMessage(duplicateMessage);
 
             Assert.Single(viewModel.Messages);
         }
