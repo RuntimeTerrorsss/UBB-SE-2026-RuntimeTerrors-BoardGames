@@ -4,6 +4,7 @@ using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.PaymentCommon.Model;
+using BookingBoardgamesILoveBan.Src.Receipt.Constants;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 
@@ -13,7 +14,7 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 	{
 		private static string baseFolderPath = Path.Combine(
 			Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-			"BookingBoardgames");
+			ReceiptServiceConstants.BaseFolderName);
 
 		private readonly IUserRepository userRepository;
 		private readonly IRequestService requestService;
@@ -47,39 +48,39 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 		/// If pdf for receipt does not exist at source, it is created and full path to it returned.
 		/// Otherwise, full path to existing pdf is returned.
 		/// </summary>
-		/// <param name="payment">transaction for getting relative path to receipt</param>
+		/// <param name="selectedPayment">transaction for getting relative path to receipt</param>
 		/// <returns>full path to existing or newly created pdf</returns>
 		/// <exception cref="InvalidOperationException">receipt path of transaction is missing</exception>
-		public string GetReceiptDocument(PaymentCommon.Model.Payment payment)
+		public string GetReceiptDocument(PaymentCommon.Model.Payment selectedPayment)
 		{
-			if (payment.FilePath == null || payment.FilePath == string.Empty)
+			if (selectedPayment.FilePath == null || selectedPayment.FilePath == string.Empty)
 			{
 				throw new InvalidOperationException("Receipt path is missing.");
 			}
 
-			string fullReceiptPath = this.GetFullPath(payment.FilePath);
+			string fullReceiptPath = this.GetFullPath(selectedPayment.FilePath);
 
 			if (!File.Exists(fullReceiptPath))
 			{
-				return this.CreateReceipt(payment);
+				return this.CreateReceipt(selectedPayment);
 			}
 
 			return fullReceiptPath;
 		}
 
-        private string PrepareDocumentPath(PaymentCommon.Model.Payment payment)
+        private string PrepareDocumentPath(PaymentCommon.Model.Payment selectedPayment)
         {
-            if (string.IsNullOrWhiteSpace(payment.FilePath))
+            if (string.IsNullOrWhiteSpace(selectedPayment.FilePath))
             {
                 throw new InvalidOperationException("Receipt path is missing.");
             }
 
-            string documentPath = GetFullPath(payment.FilePath);
+            string documentPath = GetFullPath(selectedPayment.FilePath);
 
-            string? directory = Path.GetDirectoryName(documentPath);
-            if (!string.IsNullOrEmpty(directory))
+            string? directoryName = Path.GetDirectoryName(documentPath);
+            if (!string.IsNullOrEmpty(directoryName))
             {
-                Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(directoryName);
             }
 
             return documentPath;
@@ -87,55 +88,104 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private PdfDocument CreateDocument()
         {
-            var document = new PdfDocument
+            var createdDocument = new PdfDocument
             {
                 PageLayout = PdfPageLayout.SinglePage
             };
 
-            document.Info.Title = "Receipt";
+            createdDocument.Info.Title = ReceiptServiceConstants.DocumentTitle;
 
-            return document;
+            return createdDocument;
         }
 
-        private double DrawLine(XGraphics gfx, PdfPage page, XFont font, string line, double positionX, double positionY)
+        private double DrawLine(
+            XGraphics graphicsContext,
+            PdfPage pdfPage,
+            XFont font,
+            string textLine,
+            double positionX,
+            double positionY)
         {
-            gfx.DrawString(line, font, XBrushes.Black, new XRect(positionX, positionY, page.Width - 80, page.Height), XStringFormats.TopLeft);
-            var size = gfx.MeasureString(line, font);
+            graphicsContext.DrawString(
+                textLine,
+                font,
+                XBrushes.Black,
+                new XRect(positionX, positionY, pdfPage.Width - ReceiptServiceConstants.ContentWidthPadding, pdfPage.Height),
+                XStringFormats.TopLeft);
 
-            return positionY + size.Height;
+            var textSize = graphicsContext.MeasureString(textLine, font);
+
+            return positionY + textSize.Height;
         }
 
-        private double DrawSection(XGraphics gfx, PdfPage page, XFont font, string section, double positionX, double positionY)
+        private double DrawTextSection(
+            XGraphics graphicsContext,
+            PdfPage pdfPage,
+            XFont font,
+            string textSection,
+            double currentXPosition,
+            double currentYPosition)
         {
-            foreach (string line in section.Split("\n"))
+            foreach (string textLine in textSection.Split("\n"))
             {
-                positionY = DrawLine(gfx, page, font, line, positionX, positionY);
+                currentYPosition = DrawLine(
+                    graphicsContext,
+                    pdfPage,
+                    font,
+                    textLine,
+                    currentXPosition,
+                    currentYPosition);
             }
-            return positionY;
+
+            return currentYPosition;
         }
 
-        private double DrawSections(XGraphics gfx, PdfPage page, XFont font, PaymentCommon.Model.Payment payment, double positionX, double positionY)
+        private double DrawAllSections(
+            XGraphics graphicsContext,
+            PdfPage pdfPage,
+            XFont font,
+            PaymentCommon.Model.Payment payment,
+            double currentXPosition,
+            double currentYPosition)
         {
-            const int sectionSpacing = 10;
-
-            foreach (string section in GetReceiptContent(payment))
+            foreach (string textSection in GetReceiptContent(payment))
             {
-                positionY = DrawSection(gfx, page, font, section, positionX, positionY);
-                positionY += sectionSpacing;
+                currentYPosition = DrawTextSection(
+                    graphicsContext,
+                    pdfPage,
+                    font,
+                    textSection,
+                    currentXPosition,
+                    currentYPosition);
+
+                currentYPosition += ReceiptServiceConstants.SectionSpacing;
             }
 
-            return positionY;
+            return currentYPosition;
         }
 
-        private void DrawReceiptContent(PdfDocument document, PdfPage page, PaymentCommon.Model.Payment payment)
+        private void DrawReceiptContent(
+            PdfDocument pdfDocument,
+            PdfPage pdfPage,
+            PaymentCommon.Model.Payment payment)
         {
-            var gfx = XGraphics.FromPdfPage(page);
-            var font = new XFont("Arial", 12, XFontStyle.Regular);
+            var graphicsContext = XGraphics.FromPdfPage(pdfPage);
 
-            double positionX = 40;
-            double positionY = 40;
+            var font = new XFont(
+                ReceiptServiceConstants.DefaultFontFamily,
+                ReceiptServiceConstants.DefaultFontSize,
+                XFontStyle.Regular);
 
-            positionY = DrawSections(gfx, page, font, payment, positionX, positionY);
+            double currentXPosition = ReceiptServiceConstants.HorizontalMargin;
+            double currentYPosition = ReceiptServiceConstants.VerticalStart;
+
+            currentYPosition = DrawAllSections(
+                graphicsContext,
+                pdfPage,
+                font,
+                payment,
+                currentXPosition,
+                currentYPosition);
         }
 
         /// <summary>
@@ -171,7 +221,7 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private string BuildHeader(PaymentCommon.Model.Payment payment)
         {
-            string issuedDate = GetIssuedDateFromFilename(payment.FilePath.Split("\\")[1]);
+            string issuedDate = GetIssuedDateFromFilename(payment.FilePath.Split("\\")[ReceiptServiceConstants.FileNameIndexInPath]);
 
             return $"Receipt - Boardgame Rental\n" +
                    $"Rental ID: {payment.RequestId}\n" +
@@ -180,16 +230,16 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private string BuildRequestInfo(PaymentCommon.Model.Payment payment, Request request)
         {
-            var game = gameRepository.GetById(request.GameId);
+            var requestedGame = gameRepository.GetById(request.GameId);
             var client = userRepository.GetById(payment.ClientId);
             var owner = userRepository.GetById(payment.OwnerId);
 
             string requestInfo = $"Rental Information\n" +
                 $"- Rental ID: {payment.RequestId}\n" +
-                $"- Boardgame: {this.gameRepository.GetById(request.GameId).Name}\n" +
+                $"- Boardgame: {requestedGame.Name}\n" +
                 $"- Rental Period: {request.StartDate:dd/MM/yyyy} - {request.EndDate:dd/MM/yyyy}\n" +
-                $"- Client: {this.userRepository.GetById(payment.ClientId).Username}\n" +
-                $"- Owner: {this.userRepository.GetById(payment.OwnerId).Username}";
+                $"- Client: {client.Username}\n" +
+                $"- Owner: {owner.Username}";
             return requestInfo;
         }
 
@@ -202,19 +252,19 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private string BuildConfirmation(PaymentCommon.Model.Payment payment)
         {
-            string confirmation = "Confirmation\n";
+            string confirmationText = "Confirmation\n";
 
             if (string.Equals(payment.PaymentMethod, "cash", StringComparison.OrdinalIgnoreCase))
             {
-                confirmation += $"- Owner Confirmed Payment Received: {payment.DateConfirmedSeller}\n" +
+                confirmationText += $"- Owner Confirmed Payment Received: {payment.DateConfirmedSeller}\n" +
                                 $"- Client Confirmed Game Received: {payment.DateConfirmedBuyer}";
             }
             else
             {
-                confirmation += $"- Payment Confirmed On: {payment.DateOfTransaction}";
+                confirmationText += $"- Payment Confirmed On: {payment.DateOfTransaction}";
             }
 
-            return confirmation;
+            return confirmationText;
         }
 
         private string BuildSummary()
@@ -253,12 +303,12 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 		{
 			try
 			{
-				DateTime exactDate = DateTime.ParseExact(fileName.Split("_")[2], "yyMMdd", null);
-				return exactDate.ToString("dd/MM/yyyy");
+				DateTime exactDate = DateTime.ParseExact(fileName.Split(ReceiptServiceConstants.FileNameSeparator)[ReceiptServiceConstants.DatePartIndex], ReceiptServiceConstants.FileDateFormat, null);
+				return exactDate.ToString(ReceiptServiceConstants.DisplayDateFormat);
 			}
 			catch (Exception)
 			{
-				return DateTime.Now.ToString("dd/MM/yyyy");
+				return DateTime.Now.ToString(ReceiptServiceConstants.DisplayDateFormat);
 			}
 		}
 	}

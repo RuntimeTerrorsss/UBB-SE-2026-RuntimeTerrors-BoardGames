@@ -6,6 +6,7 @@ using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Model;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Repository;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Constants;
 using BookingBoardgamesILoveBan.Src.Receipt.Service;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
@@ -35,8 +36,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <returns>A list of all mapped TransactionDto objects.</returns>
         public List<PaymentDto> GetAllPaymentsForUI()
         {
-            var payments = paymentRepository.GetAllPayments();
-            return MapToDto(payments);
+            var allPayments = paymentRepository.GetAllPayments();
+            return MapToDto(allPayments);
         }
 
         private bool IsPaymentMethodFilterApplied(PaymentMethod paymentMethod)
@@ -172,7 +173,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         {
             if (displayedPayments == null)
             {
-                return 0;
+                return PaymentHistoryConstants.NullAmountDefaultValue;
             }
             return displayedPayments.Sum(transaction => transaction.Amount);
         }
@@ -184,18 +185,18 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <returns>The string file path to the Receipt PDF.</returns>
         public string GetReceiptDocumentPath(int paymentId)
         {
-            PaymentCommon.Model.Payment payment = paymentRepository.GetPaymentById(paymentId);
+            PaymentCommon.Model.Payment foundPayment = paymentRepository.GetPaymentById(paymentId);
 
-            if (string.IsNullOrEmpty(payment.FilePath))
+            if (string.IsNullOrEmpty(foundPayment.FilePath))
             {
-                payment.FilePath = receiptService.GenerateReceiptRelativePath(payment.RequestId);
+                foundPayment.FilePath = receiptService.GenerateReceiptRelativePath(foundPayment.RequestId);
             }
-            else if (!payment.FilePath.Contains("\\"))
+            else if (!foundPayment.FilePath.Contains("\\"))
             {
-                payment.FilePath = "receipts\\" + payment.FilePath;
+                foundPayment.FilePath = "receipts\\" + foundPayment.FilePath;
             }
 
-            return receiptService.GetReceiptDocument(payment);
+            return receiptService.GetReceiptDocument(foundPayment);
         }
 
         /// <summary>
@@ -210,9 +211,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
                 return new PaymentDto
                 {
                     Id = transaction.Tid,
-                    DateText = transaction.DateOfTransaction?.ToString("d") ?? "Pending",
-                    ProductName = !string.IsNullOrWhiteSpace(transaction.GameName) ? transaction.GameName : "Unknown Game",
-                    ReceiverName = !string.IsNullOrWhiteSpace(transaction.OwnerName) ? transaction.OwnerName : "Unknown Owner",
+                    DateText = transaction.DateOfTransaction?.ToString("d") ?? PaymentHistoryConstants.NullDateOfTransactionDefaultValue,
+                    ProductName = !string.IsNullOrWhiteSpace(transaction.GameName) ? transaction.GameName : PaymentHistoryConstants.NullGameNameDefaultValue,
+                    ReceiverName = !string.IsNullOrWhiteSpace(transaction.OwnerName) ? transaction.OwnerName : PaymentHistoryConstants.NullOwnerNameDefaultValue,
                     Amount = transaction.Amount,
                     PaymentMethod = transaction.PaymentMethod,
                     FilePath = transaction.FilePath

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.DTO;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Enums;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Service;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Constants;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 {
@@ -25,11 +26,11 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
         private CancellationTokenSource searchCancellationTokenSource;
         private decimal totalAmount;
 
-        private int currentPage = 1;
-        private int pageSize = 10;
-        private int totalPages = 1;
+        private int currentPage = PaymentHistoryViewModelConstants.FirstPage;
+        private int pageSize = PaymentHistoryViewModelConstants.DefaultPageSize;
+        private int totalPages = PaymentHistoryViewModelConstants.StartupTotalPagesCount;
 
-        private const int MinimumPageCount = 1;
+        private const int MinimumPageCount = PaymentHistoryViewModelConstants.MinimumPagesCount;
 
         public ObservableCollection<PaymentDto> Payments { get; set; }
 
@@ -84,7 +85,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
         {
             try
             {
-                await Task.Delay(500, searchCancellationToken);
+                await Task.Delay(PaymentHistoryViewModelConstants.TaskDelayTime, searchCancellationToken);
                 if (!searchCancellationToken.IsCancellationRequested)
                 {
                     ApplyFilter(resetPage: true);
@@ -144,7 +145,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 
             OpenReceiptCommand = new RelayCommand<PaymentDto>(OpenReceipt);
             NextPageCommand = new RelayCommandNoParam(OnNextPage, () => CurrentPage < TotalPages);
-            PreviousPageCommand = new RelayCommandNoParam(OnPreviousPage, () => CurrentPage > 1);
+            PreviousPageCommand = new RelayCommandNoParam(OnPreviousPage, () => CurrentPage > PaymentHistoryViewModelConstants.FirstPage);
 
             // Default to display all
             SelectedFilterOption = FilterOptions.First(filter => filter.Type == FilterType.AllTime);
@@ -167,7 +168,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 
         private bool OnFirstPage()
         {
-            return CurrentPage == 1;
+            return CurrentPage == PaymentHistoryViewModelConstants.FirstPage;
         }
 
         private void OnPreviousPage()
@@ -179,13 +180,13 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
             }
         }
 
-        private async void OpenReceipt(PaymentDto paymentDto)
+        private async void OpenReceipt(PaymentDto selectedPayment)
         {
-            if (paymentDto == null)
+            if (selectedPayment == null)
             {
                 return;
             }
-            string receiptFilePath = paymentService.GetReceiptDocumentPath(paymentDto.Id);
+            string receiptFilePath = paymentService.GetReceiptDocumentPath(selectedPayment.Id);
 
             try
             {
@@ -211,18 +212,18 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 
             if (resetPage)
             {
-                CurrentPage = 1;
+                CurrentPage = PaymentHistoryViewModelConstants.FirstPage;
             }
 
             var pagedResult = paymentService.GetFilteredPayments(selectedFilterOption.Type, selectedPaymentMethod, searchText, CurrentPage, pageSize);
 
             Payments.Clear();
-            foreach (var paymentDto in pagedResult.Items)
+            foreach (var payment in pagedResult.Items)
             {
-                Payments.Add(paymentDto);
+                Payments.Add(payment);
             }
 
-            TotalPages = pagedResult.TotalPages == 0 ? MinimumPageCount : pagedResult.TotalPages;
+            TotalPages = pagedResult.TotalPages == PaymentHistoryViewModelConstants.NoPages ? MinimumPageCount : pagedResult.TotalPages;
 
             TotalAmount = paymentService.CalculateTotalAmount(pagedResult.Items);
         }

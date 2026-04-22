@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using BookingBoardgamesILoveBan.Src.PaymentHistory.Model;
+using BookingBoardgamesILoveBan.Src.PaymentHistory.Constants;
 
 namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
 {
@@ -12,6 +13,21 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
         public RepositoryPayment()
         {
             connectionString = DatabaseBootstrap.GetAppConnection();
+        }
+
+        private int GetIntOrDefaultValue(SqlDataReader reader, int index, int defaultValue)
+        {
+            return reader.IsDBNull(index) ? defaultValue : reader.GetInt32(index);
+        }
+
+        private string GetStringOrDefaultValue(SqlDataReader reader, int index, string defaultValue)
+        {
+            return reader.IsDBNull(index) ? defaultValue : reader.GetString(index);
+        }
+
+        private decimal GetDecimalOrDefaultValue(SqlDataReader reader, int index, decimal defaultValue)
+        {
+            return reader.IsDBNull(index) ? defaultValue : reader.GetDecimal(index);
         }
 
         private HistoryPayment GetPaymentFromReader(SqlDataReader reader)
@@ -31,11 +47,11 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
 
             var returnedPayment = new HistoryPayment(
                 id: reader.GetInt32(tidIndex),
-                requestId: reader.IsDBNull(requestIdIndex) ? 0 : reader.GetInt32(requestIdIndex),
-                renterId: reader.IsDBNull(renterIdIndex) ? 0 : reader.GetInt32(renterIdIndex),
-                ownerId: reader.IsDBNull(ownerIdIndex) ? 0 : reader.GetInt32(ownerIdIndex),
-                method: reader.IsDBNull(methodIndex) ? "UNKNOWN" : reader.GetString(methodIndex),
-                amount: reader.IsDBNull(amountIndex) ? 0m : reader.GetDecimal(amountIndex));
+                requestId: GetIntOrDefaultValue(reader, requestIdIndex, PaymentHistoryConstants.NullIdDefaultValue),
+                renterId: GetIntOrDefaultValue(reader, renterIdIndex, PaymentHistoryConstants.NullIdDefaultValue),
+                ownerId: GetIntOrDefaultValue(reader, ownerIdIndex, PaymentHistoryConstants.NullIdDefaultValue),
+                method: GetStringOrDefaultValue(reader, methodIndex, PaymentHistoryConstants.NullMethodDefaultValue),
+                amount: GetDecimalOrDefaultValue(reader, amountIndex, PaymentHistoryConstants.NullAmountDefaultValue));
 
             if (!reader.IsDBNull(dateOfTransactionIndex))
             {
@@ -57,15 +73,15 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
                 returnedPayment.FilePath = reader.GetString(filePathIndex);
             }
 
-            returnedPayment.GameName = reader.IsDBNull(gameNameIndex) ? "Unknown Game" : reader.GetString(gameNameIndex);
-            returnedPayment.OwnerName = reader.IsDBNull(ownerNameIndex) ? "Unknown Owner" : reader.GetString(ownerNameIndex);
+            returnedPayment.GameName = GetStringOrDefaultValue(reader, gameNameIndex, PaymentHistoryConstants.NullGameNameDefaultValue);
+            returnedPayment.OwnerName = GetStringOrDefaultValue(reader, ownerNameIndex, PaymentHistoryConstants.NullOwnerNameDefaultValue);
 
             return returnedPayment;
         }
 
         public IReadOnlyList<HistoryPayment> GetAllPayments()
     {
-            List<HistoryPayment> payments = new List<HistoryPayment>();
+            List<HistoryPayment> allPayments = new List<HistoryPayment>();
 
             using (var connection = new SqlConnection(connectionString))
             {
@@ -88,12 +104,12 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
                     while (reader.Read())
                     {
                         var returnedPayment = GetPaymentFromReader(reader);
-                        payments.Add(returnedPayment);
+                        allPayments.Add(returnedPayment);
                     }
                 }
             }
 
-            return payments;
+            return allPayments;
         }
 
         public HistoryPayment GetPaymentById(int searchedPaymentId)
