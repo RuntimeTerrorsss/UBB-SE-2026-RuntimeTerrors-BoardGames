@@ -32,11 +32,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
             repositoryPaymentMock
                 .Setup(repository => repository.GetPaymentById(It.IsAny<int>()))
-                .Returns((int id) => payments.FirstOrDefault(p => p.Tid == id));
+                .Returns((int searchedId) => payments.FirstOrDefault(payment => payment.Tid == searchedId));
 
             receiptServiceMock
                 .Setup(service => service.GenerateReceiptRelativePath(It.IsAny<int>()))
-                .Returns((int id) => $"receipts\\receipt_{id}_test.pdf");
+                .Returns((int paymentId) => $"receipts\\receipt_{paymentId}_test.pdf");
 
             receiptServiceMock
                 .Setup(service => service.GetReceiptDocument(It.IsAny<Payment>()))
@@ -48,9 +48,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             );
         }
 
-        private HistoryPayment MakePayment(int id, string gameName, string ownerName, string method, decimal amount, DateTime? date = null)
+        private HistoryPayment MakePayment(int paymentId, string gameName, string ownerName, string method, decimal amount, DateTime? date = null)
         {
-            var createdPayment = new HistoryPayment(id, 1, 1, 2, method, amount)
+            var createdPayment = new HistoryPayment(paymentId, 1, 1, 2, method, amount)
             {
                 GameName = gameName,
                 OwnerName = ownerName,
@@ -116,7 +116,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void CalculateTotalAmount_EmptyList_ReturnsZero()
         {
             InitializeService(new List<HistoryPayment>());
-            var totalAmount = servicePayment.CalculateTotalAmount(new List<PaymentDto>());
+            var totalAmount = servicePayment.CalculateTotalAmount(new List<PaymentDataTransferObject>());
 
             Assert.Equal(0, totalAmount);
         }
@@ -125,11 +125,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         public void CalculateTotalAmount_NonEmptyList_SumsAmountsCorrectly()
         {
             InitializeService(new List<HistoryPayment>());
-            var payments = new List<PaymentDto>
+            var payments = new List<PaymentDataTransferObject>
                 {
-                    new PaymentDto { Amount = 10.50m },
-                    new PaymentDto { Amount = 20.00m },
-                    new PaymentDto { Amount = 5.25m }
+                    new PaymentDataTransferObject { Amount = 10.50m },
+                    new PaymentDataTransferObject { Amount = 20.00m },
+                    new PaymentDataTransferObject { Amount = 5.25m }
                 };
             var totalAmount = servicePayment.CalculateTotalAmount(payments);
 

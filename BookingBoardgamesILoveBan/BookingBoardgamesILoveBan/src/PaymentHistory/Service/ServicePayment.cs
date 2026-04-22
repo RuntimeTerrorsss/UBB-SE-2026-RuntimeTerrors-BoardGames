@@ -34,10 +34,10 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// Retrieves all transactions without any filtering, mapped to DTOs for UI display.
         /// </summary>
         /// <returns>A list of all mapped TransactionDto objects.</returns>
-        public List<PaymentDto> GetAllPaymentsForUI()
+        public List<PaymentDataTransferObject> GetAllPaymentsForUI()
         {
             var allPayments = paymentRepository.GetAllPayments();
-            return MapToDto(allPayments);
+            return MapToDataTransferObject(allPayments);
         }
 
         private bool IsPaymentMethodFilterApplied(PaymentMethod paymentMethod)
@@ -130,7 +130,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
             return payments;
         }
 
-        private PagedResult<PaymentDto> GetPagedResult(IEnumerable<HistoryPayment> payments, int pageSize, int pageNumber)
+        private PagedResult<PaymentDataTransferObject> GetPagedResult(IEnumerable<HistoryPayment> payments, int pageSize, int pageNumber)
         {
             int totalCount = payments.Count();
 
@@ -138,9 +138,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize);
 
-            return new PagedResult<PaymentDto>
+            return new PagedResult<PaymentDataTransferObject>
             {
-                Items = MapToDto(pagedSource),
+                Items = MapToDataTransferObject(pagedSource),
                 TotalCount = totalCount,
                 PageNumber = pageNumber,
                 PageSize = pageSize
@@ -154,7 +154,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// <param name="paymentMethod">The chosen payment method filter.</param>
         /// <param name="searchQuery">Text used to search by Product Name.</param>
         /// <returns>A filtered/sorted list of mapped TransactionDto objects.</returns>
-        public PagedResult<PaymentDto> GetFilteredPayments(FilterType filter, PaymentMethod paymentMethod = PaymentMethod.ALL, string searchQuery = "", int pageNumber = 1, int pageSize = 10)
+        public PagedResult<PaymentDataTransferObject> GetFilteredPayments(FilterType filter, PaymentMethod paymentMethod = PaymentMethod.ALL, string searchQuery = "", int pageNumber = 1, int pageSize = 10)
         {
             var payments = paymentRepository.GetAllPayments().AsEnumerable();
 
@@ -169,7 +169,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// </summary>
         /// <param name="displayedPayments">The sequence to sum.</param>
         /// <returns>The total raw sum.</returns>
-        public decimal CalculateTotalAmount(IEnumerable<PaymentDto> displayedPayments)
+        public decimal CalculateTotalAmount(IEnumerable<PaymentDataTransferObject> displayedPayments)
         {
             if (displayedPayments == null)
             {
@@ -204,13 +204,13 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         /// </summary>
         /// <param name="payments">The collection of transactions to map.</param>
         /// <returns>A mapped list of TransactionDto objects.</returns>
-        private List<PaymentDto> MapToDto(IEnumerable<HistoryPayment> payments)
+        private List<PaymentDataTransferObject> MapToDataTransferObject(IEnumerable<HistoryPayment> payments)
         {
             return payments.Select(transaction =>
             {
-                return new PaymentDto
+                return new PaymentDataTransferObject
                 {
-                    Id = transaction.Tid,
+                    PaymentId = transaction.Tid,
                     DateText = transaction.DateOfTransaction?.ToString("d") ?? PaymentHistoryConstants.NullDateOfTransactionDefaultValue,
                     ProductName = !string.IsNullOrWhiteSpace(transaction.GameName) ? transaction.GameName : PaymentHistoryConstants.NullGameNameDefaultValue,
                     ReceiverName = !string.IsNullOrWhiteSpace(transaction.OwnerName) ? transaction.OwnerName : PaymentHistoryConstants.NullOwnerNameDefaultValue,

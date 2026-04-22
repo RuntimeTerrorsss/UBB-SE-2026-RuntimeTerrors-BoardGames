@@ -23,7 +23,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.View
 
         private void OnReceiptButtonClicked(object sender, RoutedEventArgs e)
         {
-            if (sender is Button clickedButton && clickedButton.DataContext is PaymentDto selectedPayment)
+            if (sender is Button clickedButton && clickedButton.DataContext is PaymentDataTransferObject selectedPayment)
             {
                 if (ViewModel.OpenReceiptCommand != null && ViewModel.OpenReceiptCommand.CanExecute(selectedPayment))
                 {
@@ -31,7 +31,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.View
                 }
             }
             // fallback for null
-            else if (sender is Button fallbackButton && fallbackButton.Tag is PaymentDto fallbackPayment)
+            else if (sender is Button fallbackButton && fallbackButton.Tag is PaymentDataTransferObject fallbackPayment)
             {
                 if (ViewModel.OpenReceiptCommand != null && ViewModel.OpenReceiptCommand.CanExecute(fallbackPayment))
                 {

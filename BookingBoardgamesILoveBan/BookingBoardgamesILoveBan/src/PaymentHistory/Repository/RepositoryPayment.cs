@@ -46,7 +46,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
             int ownerNameIndex = reader.GetOrdinal("OwnerName");
 
             var returnedPayment = new HistoryPayment(
-                id: reader.GetInt32(tidIndex),
+                paymentId: reader.GetInt32(tidIndex),
                 requestId: GetIntOrDefaultValue(reader, requestIdIndex, PaymentHistoryConstants.NullIdDefaultValue),
                 renterId: GetIntOrDefaultValue(reader, renterIdIndex, PaymentHistoryConstants.NullIdDefaultValue),
                 ownerId: GetIntOrDefaultValue(reader, ownerIdIndex, PaymentHistoryConstants.NullIdDefaultValue),

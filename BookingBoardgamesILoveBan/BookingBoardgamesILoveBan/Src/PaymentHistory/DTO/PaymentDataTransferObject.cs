@@ -2,9 +2,9 @@
 
 namespace BookingBoardgamesILoveBan.Src.PaymentHistory.DTO
 {
-    public class PaymentDto
+    public class PaymentDataTransferObject
     {
-        public int Id { get; set; }
+        public int PaymentId { get; set; }
         public string DateText { get; set; }
         public string ProductName { get; set; }
         public string ReceiverName { get; set; }

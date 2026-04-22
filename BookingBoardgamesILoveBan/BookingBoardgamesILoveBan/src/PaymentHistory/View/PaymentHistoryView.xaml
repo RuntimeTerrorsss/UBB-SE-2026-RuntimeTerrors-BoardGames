@@ -99,7 +99,7 @@
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="dto:PaymentDto">
+                    <DataTemplate x:DataType="dto:PaymentDataTransferObject">
                         <!-- Individual Card Row -->
                         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" 
@@ -115,7 +115,7 @@
 
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <TextBlock Text="{x:Bind DateText}" FontSize="14" FontWeight="Medium"/>
-                                    <TextBlock Text="{x:Bind Id}" FontSize="12" Foreground="Gray" Margin="0,2,0,0"/> 
+                                    <TextBlock Text="{x:Bind PaymentId}" FontSize="12" Foreground="Gray" Margin="0,2,0,0"/> 
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">

@@ -32,9 +32,9 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
 
         private const int MinimumPageCount = PaymentHistoryViewModelConstants.MinimumPagesCount;
 
-        public ObservableCollection<PaymentDto> Payments { get; set; }
+        public ObservableCollection<PaymentDataTransferObject> Payments { get; set; }
 
-        public RelayCommand<PaymentDto> OpenReceiptCommand { get; }
+        public RelayCommand<PaymentDataTransferObject> OpenReceiptCommand { get; }
         public RelayCommandNoParam NextPageCommand { get; }
         public RelayCommandNoParam PreviousPageCommand { get; }
 
@@ -129,7 +129,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
         public PaymentHistoryViewModel(IServicePayment paymentService)
         {
             this.paymentService = paymentService;
-            Payments = new ObservableCollection<PaymentDto>();
+            Payments = new ObservableCollection<PaymentDataTransferObject>();
 
             FilterOptions = new ObservableCollection<FilterOption>
             {
@@ -143,7 +143,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
                 new FilterOption { Type = FilterType.AlphabeticalDesc, DisplayName = "Alphabetical (Z-A)" }
             };
 
-            OpenReceiptCommand = new RelayCommand<PaymentDto>(OpenReceipt);
+            OpenReceiptCommand = new RelayCommand<PaymentDataTransferObject>(OpenReceipt);
             NextPageCommand = new RelayCommandNoParam(OnNextPage, () => CurrentPage < TotalPages);
             PreviousPageCommand = new RelayCommandNoParam(OnPreviousPage, () => CurrentPage > PaymentHistoryViewModelConstants.FirstPage);
 
@@ -180,13 +180,13 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.ViewModel
             }
         }
 
-        private async void OpenReceipt(PaymentDto selectedPayment)
+        private async void OpenReceipt(PaymentDataTransferObject selectedPayment)
         {
             if (selectedPayment == null)
             {
                 return;
             }
-            string receiptFilePath = paymentService.GetReceiptDocumentPath(selectedPayment.Id);
+            string receiptFilePath = paymentService.GetReceiptDocumentPath(selectedPayment.PaymentId);
 
             try
             {

@@ -32,13 +32,13 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                           int pageNumber,
                           int pageSize) =>
                 {
-                    var payments = new List<PaymentDto>
+                    var payments = new List<PaymentDataTransferObject>
                     {
-                        CreatePaymentDto(1, "Chess", 10),
-                        CreatePaymentDto(2, "Risk", 20)
+                        CreatePaymentDataTransferObject(1, "Chess", 10),
+                        CreatePaymentDataTransferObject(2, "Risk", 20)
                     };
 
-                    return new PagedResult<PaymentDto>
+                    return new PagedResult<PaymentDataTransferObject>
                     {
                         Items = payments,
                         TotalCount = payments.Count,
@@ -48,8 +48,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                 });
 
             mockPaymentService
-                .Setup(service => service.CalculateTotalAmount(It.IsAny<IEnumerable<PaymentDto>>()))
-                .Returns((IEnumerable<PaymentDto> payments) => payments.Sum(payment => payment.Amount));
+                .Setup(service => service.CalculateTotalAmount(It.IsAny<IEnumerable<PaymentDataTransferObject>>()))
+                .Returns((IEnumerable<PaymentDataTransferObject> payments) => payments.Sum(payment => payment.Amount));
 
             mockPaymentService
                 .Setup(service => service.GetReceiptDocumentPath(It.IsAny<int>()))
@@ -61,11 +61,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             return new PaymentHistoryViewModel(mockPaymentService.Object);
         }
 
-        private PaymentDto CreatePaymentDto(int paymentIdentifier, string productName, decimal amount)
+        private PaymentDataTransferObject CreatePaymentDataTransferObject(int paymentIdentifier, string productName, decimal amount)
         {
-            return new PaymentDto
+            return new PaymentDataTransferObject
             {
-                Id = paymentIdentifier,
+                PaymentId = paymentIdentifier,
                 ProductName = productName,
                 Amount = amount,
                 PaymentMethod = "Card"
@@ -286,7 +286,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
             try
             {
                 var viewModel = InitializeViewModel();
-                var payment = new PaymentDto { Id = 999 };
+                var payment = new PaymentDataTransferObject { PaymentId = 999 };
                 viewModel.OpenReceiptCommand.Execute(payment);
             }
             catch
@@ -320,11 +320,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
                     It.IsAny<string>(),
                     It.IsAny<int>(),
                     It.IsAny<int>()))
-                .Returns(new PagedResult<PaymentDto>
+                .Returns(new PagedResult<PaymentDataTransferObject>
                 {
-                    Items = new List<PaymentDto>
+                    Items = new List<PaymentDataTransferObject>
                     {
-                        CreatePaymentDto(3, "Catan", 50)
+                        CreatePaymentDataTransferObject(3, "Catan", 50)
                     },
                     TotalCount = 1,
                     PageNumber = 1,
