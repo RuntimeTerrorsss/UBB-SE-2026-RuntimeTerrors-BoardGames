@@ -3,7 +3,6 @@ using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
 using BookingBoardgamesILoveBan.Src.Chat.Service;
-using BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 using BookingBoardgamesILoveBan.Src.Enum;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using BookingBoardgamesILoveBan.Src.Model;
@@ -23,6 +22,17 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 
         private ConversationService CreateConversationService()
         {
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+            int messageIdentifier = 1;
+            string initialContent = "initial";
+            string testUserName = "name";
+            string testCountry = "country";
+            string testCity = "city";
+            string testStreet = "street";
+            string testStreetNumber = "streetNumber";
+
             conversationRepositoryMock = new Mock<IConversationRepository>();
 
             conversationRepositoryMock
@@ -30,16 +40,16 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 .Returns(new List<Conversation>
                 {
                     new Conversation(
-                        1,
-                        new[] { 1, 2 },
+                        targetConversationId,
+                        new[] { firstParticipantId, secondParticipantId },
                         new List<Message>
                         {
-                            new TextMessage(1, 1, 2, 1, DateTime.Now, "initial")
+                            new TextMessage(messageIdentifier, targetConversationId, secondParticipantId, firstParticipantId, DateTime.Now, initialContent)
                         },
                         new Dictionary<int, DateTime>
                         {
-                            { 1, DateTime.MinValue },
-                            { 2, DateTime.MinValue }
+                            { firstParticipantId, DateTime.MinValue },
+                            { secondParticipantId, DateTime.MinValue }
                         }
                     )
                 });
@@ -47,7 +57,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             userServiceMock = new Mock<IUserRepository>();
             userServiceMock
                 .Setup(service => service.GetById(It.IsAny<int>()))
-                .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
+                .Returns(new User(currentUserId, testUserName, testCountry, testCity, testStreet, testStreetNumber));
 
             return new ConversationService(
                 conversationRepositoryMock.Object,
@@ -66,7 +76,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void Constructor_LoadsConversations()
+        public void Constructor_ValidInitialization_LoadsConversations()
         {
             var chatPageViewModel = CreateChatPageViewModel();
 
@@ -74,8 +84,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void MessageSent_SetsCorrectReceiver()
+        public void MessageSent_ValidMessage_SetsCorrectReceiver()
         {
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int expectedReceiverIdentifier = 2;
+            int missingIdentifier = -1;
+            string textContent = "hello";
+
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -84,27 +100,37 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
-            var messageDto = new MessageDTO(1, "hello", MessageType.MessageText)
-            {
-                conversationId = 1,
-                senderId = 1
-            };
+            // FIX: Using the proper 14-parameter instantiation instead of the deleted "junk" constructor
+            var messageDataTransferObject = new MessageDataTransferObject(
+                id: missingIdentifier,
+                conversationId: targetConversationId,
+                senderId: senderIdentifier,
+                receiverId: expectedReceiverIdentifier,
+                sentAt: DateTime.Now,
+                content: textContent,
+                type: MessageType.MessageText,
+                imageUrl: string.Empty,
+                isResolved: false,
+                isAccepted: false,
+                isAcceptedByBuyer: false,
+                isAcceptedBySeller: false,
+                requestId: missingIdentifier,
+                paymentId: missingIdentifier);
 
-            chatPageViewModel.ChatModelView.RaiseMessageSent(messageDto);
+            chatPageViewModel.ChatModelView.RaiseMessageSent(messageDataTransferObject);
 
             conversationRepositoryMock.Verify(repository =>
-                repository.HandleNewMessage(It.Is<Message>(message =>
-                    message.MessageSenderId == 1 &&
-                    message.MessageReceiverId == 2
+                repository.HandleNewMessage(It.Is<Message>(messageItem =>
+                    messageItem.MessageSenderId == senderIdentifier &&
+                    messageItem.MessageReceiverId == expectedReceiverIdentifier
                 )),
                 Times.Once);
         }
 
         [Fact]
-        public void SelectingConversation_LoadsChat()
+        public void SelectedConversation_ValidSelection_LoadsChat()
         {
             var chatPageViewModel = CreateChatPageViewModel();
-
             var selectedConversation = chatPageViewModel.LeftPanelModelView.Conversations.First();
 
             chatPageViewModel.LeftPanelModelView.SelectedConversation = selectedConversation;
@@ -116,8 +142,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void OnMessageReceived_MessageAddedToLeftPanel()
+        public void OnMessageReceived_ValidMessage_AddsMessageToLeftPanel()
         {
+            int messageIdentifier = 5;
+            int targetConversationId = 1;
+            int senderIdentifier = 2;
+            int receiverIdentifier = 1;
+            string newContent = "new message";
+
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -126,18 +158,23 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
-            var newMessage = new TextMessage(5, 1, 2, 1, DateTime.Now, "new message");
+            var newMessage = new TextMessage(messageIdentifier, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, newContent);
 
             conversationService.OnMessageReceived(newMessage);
 
             var conversationPreview = chatPageViewModel.LeftPanelModelView.Conversations.First();
 
-            Assert.Contains("new message", conversationPreview.LastMessageText);
+            Assert.Contains(newContent, conversationPreview.LastMessageText);
         }
 
         [Fact]
-        public void ReadReceipt_UpdatesLastRead()
+        public void OnReadReceiptReceived_ValidReceipt_UpdatesLastReadTime()
         {
+            int targetConversationId = 1;
+            int readerIdentifier = 2;
+            int receiverIdentifier = 1;
+            DateTime timestamp = DateTime.Now;
+
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -145,22 +182,24 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 conversationService,
                 userServiceMock.Object
             );
-
-            var timestamp = DateTime.Now;
 
             conversationService.OnReadReceiptReceived(
-                new ReadReceipt(1, 2, 1, timestamp)
+                new ReadReceipt(targetConversationId, readerIdentifier, receiverIdentifier, timestamp)
             );
 
-            var updatedConversation =
-                chatPageViewModel.ConversationService.FetchConversations().First();
+            var updatedConversation = chatPageViewModel.ConversationService.FetchConversations().First();
 
-            Assert.True(updatedConversation.LastRead[2] >= timestamp);
+            Assert.True(updatedConversation.LastRead[readerIdentifier] >= timestamp);
         }
 
         [Fact]
-        public void BookingRequest_TriggersMessageUpdate()
+        public void RaiseBookingRequestUpdate_ValidRequest_TriggersMessageUpdate()
         {
+            int messageIdentifier = 1;
+            int targetConversationId = 1;
+            bool isAccepted = true;
+            bool isResolved = true;
+
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -169,7 +208,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
-            chatPageViewModel.ChatModelView.RaiseBookingRequestUpdate(1, 1, true, true);
+            chatPageViewModel.ChatModelView.RaiseBookingRequestUpdate(messageIdentifier, targetConversationId, isAccepted, isResolved);
 
             conversationRepositoryMock.Verify(
                 repository => repository.HandleMessageUpdate(It.IsAny<Message>()),
@@ -178,8 +217,11 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void CashAgreement_TriggersMessageUpdate()
+        public void RaiseCashAgreementAccept_ValidAgreement_TriggersMessageUpdate()
         {
+            int messageIdentifier = 1;
+            int targetConversationId = 1;
+
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -188,7 +230,7 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
                 userServiceMock.Object
             );
 
-            chatPageViewModel.ChatModelView.RaiseCashAgreementAccept(1, 1);
+            chatPageViewModel.ChatModelView.RaiseCashAgreementAccept(messageIdentifier, targetConversationId);
 
             conversationRepositoryMock.Verify(
                 repository => repository.HandleMessageUpdate(It.IsAny<Message>()),
@@ -197,8 +239,14 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void MessageUpdate_ReplacesMessageContent()
+        public void OnMessageUpdateReceived_ValidUpdate_ReplacesMessageContent()
         {
+            int messageIdentifier = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 2;
+            int receiverIdentifier = 1;
+            string updatedContent = "updated";
+
             var conversationService = CreateConversationService();
 
             var chatPageViewModel = new ChatPageViewModel(
@@ -210,24 +258,29 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
             var selectedConversation = chatPageViewModel.LeftPanelModelView.Conversations.First();
             chatPageViewModel.LeftPanelModelView.SelectedConversation = selectedConversation;
 
-            var updatedMessage = new TextMessage(1, 1, 2, 1, DateTime.Now, "updated");
+            var updatedMessage = new TextMessage(messageIdentifier, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, updatedContent);
 
             conversationService.OnMessageUpdateReceived(updatedMessage);
 
             Assert.Contains(
                 chatPageViewModel.ChatModelView.Messages,
-                message => message.Content == "updated"
+                messageItem => messageItem.Content == updatedContent
             );
         }
 
         [Fact]
-        public void RaiseBookingRequestUpdate_InvalidConversation_DoesNotCrash()
+        public void RaiseBookingRequestUpdate_InvalidConversation_ExecutesWithoutError()
         {
+            int invalidMessageIdentifier = 999;
+            int invalidConversationIdentifier = 999;
+            bool isAccepted = true;
+            bool isResolved = true;
+
             var chatPageViewModel = CreateChatPageViewModel();
 
-            chatPageViewModel.ChatModelView.RaiseBookingRequestUpdate(999, 999, true, true);
+            Exception executionException = Record.Exception(() => chatPageViewModel.ChatModelView.RaiseBookingRequestUpdate(invalidMessageIdentifier, invalidConversationIdentifier, isAccepted, isResolved));
 
-            Assert.NotNull(chatPageViewModel);
+            Assert.Null(executionException);
         }
     }
 }

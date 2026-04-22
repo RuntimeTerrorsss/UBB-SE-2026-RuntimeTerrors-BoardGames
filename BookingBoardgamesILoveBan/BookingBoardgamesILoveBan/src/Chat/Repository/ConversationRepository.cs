@@ -17,6 +17,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
     {
         private Dictionary<int, IConversationService> Subscribers { get; set; }
         private static string appConnectionString;
+
         public ConversationRepository()
         {
             Subscribers = new Dictionary<int, IConversationService>();
@@ -24,35 +25,17 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
         }
 
         #region Public Methods
-        // GETTERS
 
-        /// <summary>
-        /// Gets all conversations for a user, including messages and last read info.
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
         public List<Conversation> GetConversationsForUser(int userId)
         {
             return LoadConversationsForUserFromDB(userId);
         }
 
-        /// <summary>
-        /// Gets a single conversation by id, including messages and last read info.
-        /// </summary>
-        /// <param name="convId"></param>
-        /// <returns></returns>
-        public Conversation GetConversationById(int convId)
+        public Conversation GetConversationById(int conversationId)
         {
-            return LoadConversationFromDB(convId);
+            return LoadConversationFromDB(conversationId);
         }
 
-        // CRUD HANDLERS
-
-        /// <summary>
-        /// Handles the creation of a new message, including database insertion and notifying subscribers.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <exception cref="InvalidOperationException"></exception>
         public void HandleNewMessage(Message message)
         {
             Debug.WriteLine(message.MessageId);
@@ -69,21 +52,12 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Handles a read receipt, updating the last read timestamp in the database and notifying subscribers.
-        /// </summary>
-        /// <param name="readReceipt"></param>
         public void HandleReadReceipt(ReadReceipt readReceipt)
         {
             UpdateLastReadInDB(readReceipt);
             NotifySubscribersAboutReadReceipt(readReceipt);
         }
 
-        /// <summary>
-        /// Handles updates to a message, such as accepting a cash agreement or finalizing a rental request.
-        /// Updates the database and notifies subscribers.
-        /// </summary>
-        /// <param name="message"></param>
         public void HandleMessageUpdate(Message message)
         {
             if (message is CashAgreementMessage cashAgreementMessage)
@@ -98,30 +72,19 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             NotifySubscribersAboutMessageUpdate(message);
         }
 
-        /// <summary>
-        /// Handles the creation of a new conversation between two users. If a conversation already exists, it returns the existing conversation's id.
-        /// If not, it creates a new conversation in the database, adds a welcome system message, and notifies subscribers.
-        /// </summary>
-        /// <param name="senderId"></param>
-        /// <param name="receiverId"></param>
-        /// <returns></returns>
         public int CreateConversation(int senderId, int receiverId)
         {
             Conversation newConversation = CreateConversationInDB(senderId, receiverId);
             if (newConversation.ConversationMessageList.Count == 0)
             {
-                // Create welcome system message
+                int unassignedMessageIdentifier = -1;
                 NotifySubscribersAboutNewConversation(newConversation);
-                HandleNewMessage(new SystemMessage(-1, newConversation.ConversationId, DateTime.Now, "New conversation"));
+                HandleNewMessage(new SystemMessage(unassignedMessageIdentifier, newConversation.ConversationId, DateTime.Now, "New conversation"));
                 NotifySubscribersAboutNewConversation(newConversation);
             }
             return newConversation.ConversationId;
         }
 
-        /// <summary>
-        /// Handles the finalization of a rental request, marking it as resolved in the database and notifying subscribers.
-        /// </summary>
-        /// <param name="messageId"></param>
         public void HandleRentalRequestFinalization(int messageId)
         {
             try
@@ -129,12 +92,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 RentalRequestMessage message = (RentalRequestMessage)GetMessageById(messageId);
                 message.IsRequestResolved = true;
                 message.RequestContent += "\n\nThis request has been finalized!";
-                // message.Content = "This request has been finalized!";
                 HandleMessageUpdate(message);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"You tried to accept a message that wasnt a rental request... how?");
+                Debug.WriteLine($"You tried to accept a message that wasnt a rental request... how? {ex.Message}");
             }
         }
 
@@ -142,14 +104,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
 
         #region Database Communication
 
-        // GETTERS
-
-        /// <summary>
-        /// Gets a single message by id, including all relevant info for that message type
-        /// (e.g. cash agreement details, rental request details).
-        /// </summary>
-        /// <param name="messageId"></param>
-        /// <returns></returns>
         private Message GetMessageById(int messageId)
         {
             using (var connection = new SqlConnection(appConnectionString))
@@ -179,45 +133,67 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                         return null;
                     }
 
-                    int senderId = reader.GetInt32(1);
-                    int receiverId = reader.GetInt32(2);
-                    DateTime timestamp = reader.GetDateTime(3);
-                    string messageType = reader.GetString(4);
-                    int conversationId = reader.GetInt32(5);
+                    int senderIdColumnIndex = 1;
+                    int receiverIdColumnIndex = 2;
+                    int timestampColumnIndex = 3;
+                    int messageTypeColumnIndex = 4;
+                    int conversationIdColumnIndex = 5;
+                    int textContentColumnIndex = 6;
+                    int imageContentColumnIndex = 7;
+                    int cashContentColumnIndex = 8;
+                    int rentalContentColumnIndex = 9;
+                    int sellerIdColumnIndex = 10;
+                    int buyerIdColumnIndex = 11;
+                    int acceptedBySellerColumnIndex = 12;
+                    int acceptedByBuyerColumnIndex = 13;
+                    int requestIdColumnIndex = 14;
+                    int isResolvedColumnIndex = 15;
+                    int isAcceptedColumnIndex = 16;
+                    int systemContentColumnIndex = 17;
+                    int paymentIdColumnIndex = 18;
+
+                    int unassignedIdentifier = -1;
+
+                    int senderId = reader.GetInt32(senderIdColumnIndex);
+                    int receiverId = reader.GetInt32(receiverIdColumnIndex);
+                    DateTime timestamp = reader.GetDateTime(timestampColumnIndex);
+                    string messageType = reader.GetString(messageTypeColumnIndex);
+                    int conversationId = reader.GetInt32(conversationIdColumnIndex);
 
                     switch (messageType)
                     {
                         case "TEXT":
-                            return new TextMessage(messageId, conversationId, senderId, receiverId, timestamp, reader.GetString(6));
+                            return new TextMessage(messageId, conversationId, senderId, receiverId, timestamp, reader.GetString(textContentColumnIndex));
 
                         case "IMAGE":
-                            return new ImageMessage(messageId, conversationId, senderId, receiverId, timestamp, reader.GetString(7));
+                            return new ImageMessage(messageId, conversationId, senderId, receiverId, timestamp, reader.GetString(imageContentColumnIndex));
 
                         case "CASH_AGREEMENT":
-                            bool isAcceptedByBuyer = reader.IsDBNull(13) ? false : reader.GetBoolean(13);
-                            bool isAcceptedBySeller = reader.IsDBNull(12) ? false : reader.GetBoolean(12);
-                            int paymentId = reader.IsDBNull(18) ? -1 : reader.GetInt32(18);
+                            bool isAcceptedByBuyer = reader.IsDBNull(acceptedByBuyerColumnIndex) ? false : reader.GetBoolean(acceptedByBuyerColumnIndex);
+                            bool isAcceptedBySeller = reader.IsDBNull(acceptedBySellerColumnIndex) ? false : reader.GetBoolean(acceptedBySellerColumnIndex);
+                            int paymentId = reader.IsDBNull(paymentIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(paymentIdColumnIndex);
+
                             return new CashAgreementMessage(
                                 messageId, conversationId,
-                                reader.IsDBNull(10) ? -1 : reader.GetInt32(10),
-                                reader.IsDBNull(11) ? -1 : reader.GetInt32(11),
+                                reader.IsDBNull(sellerIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(sellerIdColumnIndex),
+                                reader.IsDBNull(buyerIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(buyerIdColumnIndex),
                                 paymentId,
                                 timestamp,
-                                (string)reader[8],
-                                isAcceptedByBuyer && isAcceptedBySeller, // this is useless!
+                                (string)reader[cashContentColumnIndex],
+                                isAcceptedByBuyer && isAcceptedBySeller,
                                 isAcceptedByBuyer,
                                 isAcceptedBySeller);
 
                         case "RENTAL_REQUEST":
                             return new RentalRequestMessage(
                                 messageId, conversationId, senderId, receiverId, timestamp,
-                                (string)reader[9],
-                                reader.IsDBNull(14) ? -1 : reader.GetInt32(14),
-                                reader.IsDBNull(15) ? false : reader.GetBoolean(15),
-                                reader.IsDBNull(16) ? false : reader.GetBoolean(16));
+                                (string)reader[rentalContentColumnIndex],
+                                reader.IsDBNull(requestIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(requestIdColumnIndex),
+                                reader.IsDBNull(isResolvedColumnIndex) ? false : reader.GetBoolean(isResolvedColumnIndex),
+                                reader.IsDBNull(isAcceptedColumnIndex) ? false : reader.GetBoolean(isAcceptedColumnIndex));
 
                         case "SYSTEM":
-                            return new SystemMessage(messageId, conversationId, timestamp, reader.GetString(17));
+                            return new SystemMessage(messageId, conversationId, timestamp, reader.GetString(systemContentColumnIndex));
 
                         default:
                             return null;
@@ -226,16 +202,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Gets the participant user ids for a given conversation id. This is used for notifying the
-        /// correct subscribers when a system message is sent, since system messages have sender and
-        /// receiver id of 0 and thus we cant get the participants from the message itself.
-        /// </summary>
-        /// <param name="conversationId"></param>
-        /// <returns></returns>
         private int[] GetConversationParticipants(int conversationId)
         {
             var participantIds = new List<int>();
+            int userIdColumnIndex = 0;
+
             using (var connection = new SqlConnection(appConnectionString))
             {
                 string query = "SELECT uid FROM [ConversationUser] WHERE cid = @cid";
@@ -246,7 +217,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 {
                     while (reader.Read())
                     {
-                        participantIds.Add(reader.GetInt32(0));
+                        participantIds.Add(reader.GetInt32(userIdColumnIndex));
                     }
                 }
                 connection.Close();
@@ -254,23 +225,19 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             return participantIds.ToArray();
         }
 
-        /// <summary>
-        /// Gets all conversations for a user, including messages and last read info.
-        /// This is done by first querying the ConversationUser table
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
         private List<Conversation> LoadConversationsForUserFromDB(int userId)
         {
             var userConversations = new List<Conversation>();
+            int conversationIdColumnIndex = 0;
+
             using (var connection = new SqlConnection(appConnectionString))
             {
                 string joinQuery = @"
                 SELECT C.cid 
                 FROM [Conversation] C
                 INNER JOIN [ConversationUser] CU ON C.cid = CU.cid
-                WHERE CU.uid = @uid
-            ";
+                WHERE CU.uid = @uid";
+
                 var command = new SqlCommand(joinQuery, connection);
                 command.Parameters.AddWithValue("@uid", userId);
 
@@ -279,8 +246,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 {
                     while (reader.Read())
                     {
-                        int conversationId = reader.GetInt32(0);
-
+                        int conversationId = reader.GetInt32(conversationIdColumnIndex);
                         var conversation = LoadSingleConversationFromDB(conversationId, connection);
                         userConversations.Add(conversation);
                     }
@@ -291,17 +257,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             return userConversations;
         }
 
-        /// <summary>
-        /// Gets a single conversation by id, including messages and last read info.
-        /// </summary>
-        /// <param name="conversationId"></param>
-        /// <param name="connection"></param>
-        /// <returns></returns>
         private Conversation LoadSingleConversationFromDB(int conversationId, SqlConnection connection)
         {
             List<int> participantIds = new List<int>();
             Dictionary<int, DateTime> lastRead = new Dictionary<int, DateTime>();
             string participantsSql = "SELECT uid, LastRead FROM [ConversationUser] WHERE cid = @cid";
+
+            int userIdColumnIndex = 0;
+            int lastReadColumnIndex = 1;
 
             using (var command = new SqlCommand(participantsSql, connection))
             {
@@ -310,11 +273,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 {
                     while (reader.Read())
                     {
-                        int userId = reader.GetInt32(0);
-
-                        DateTime lastReadByUser = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1);
+                        int userId = reader.GetInt32(userIdColumnIndex);
+                        DateTime lastReadByUser = reader.IsDBNull(lastReadColumnIndex) ? DateTime.MinValue : reader.GetDateTime(lastReadColumnIndex);
                         lastRead.Add(userId, lastReadByUser);
-
                         participantIds.Add(userId);
                     }
                 }
@@ -324,31 +285,20 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             return new Conversation(conversationId, participantIds.ToArray(), messages, lastRead);
         }
 
-        /// <summary>
-        /// Gets all messages for a conversation, including all relevant info for each message type
-        /// </summary>
-        /// <param name="conversationId"></param>
-        /// <returns></returns>
         private Conversation LoadConversationFromDB(int conversationId)
         {
-            Conversation ret = null;
+            Conversation retrievedConversation = null;
             using (var connection = new SqlConnection(appConnectionString))
             {
                 connection.Open();
-                ret = LoadSingleConversationFromDB(conversationId, connection);
+                retrievedConversation = LoadSingleConversationFromDB(conversationId, connection);
                 connection.Close();
             }
-            return ret;
+            return retrievedConversation;
         }
 
-        /// <summary>
-        /// Gets all messages for a conversation, including all relevant info for each message type.
-        /// </summary>
-        /// <param name="conversationId"></param>
-        /// <returns></returns>
         private List<Message> LoadMessagesForConversationFromDB(int conversationId)
         {
-            // now i know why big man said to keep the db simple
             var messages = new List<Message>();
             using (var connection = new SqlConnection(appConnectionString))
             {
@@ -364,33 +314,56 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 var command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@cid", conversationId);
                 connection.Open();
+
                 using (var reader = command.ExecuteReader())
                 {
+                    int messageIdColumnIndex = 0;
+                    int senderIdColumnIndex = 1;
+                    int receiverIdColumnIndex = 2;
+                    int timestampColumnIndex = 3;
+                    int messageTypeColumnIndex = 4;
+                    int textContentColumnIndex = 5;
+                    int imageContentColumnIndex = 6;
+                    int cashContentColumnIndex = 7;
+                    int rentalContentColumnIndex = 8;
+                    int sellerIdColumnIndex = 9;
+                    int buyerIdColumnIndex = 10;
+                    int acceptedBySellerColumnIndex = 11;
+                    int acceptedByBuyerColumnIndex = 12;
+                    int requestIdColumnIndex = 13;
+                    int isResolvedColumnIndex = 14;
+                    int isAcceptedColumnIndex = 15;
+                    int systemContentColumnIndex = 16;
+                    int paymentIdColumnIndex = 17;
+                    int unassignedIdentifier = -1;
+
                     while (reader.Read())
                     {
-                        int messageId = reader.GetInt32(0);
-                        int senderId = reader.GetInt32(1);
-                        int receiverId = reader.GetInt32(2);
-                        DateTime timestamp = reader.GetDateTime(3);
-                        string messageType = reader.GetString(4);
+                        int messageId = reader.GetInt32(messageIdColumnIndex);
+                        int senderId = reader.GetInt32(senderIdColumnIndex);
+                        int receiverId = reader.GetInt32(receiverIdColumnIndex);
+                        DateTime timestamp = reader.GetDateTime(timestampColumnIndex);
+                        string messageType = reader.GetString(messageTypeColumnIndex);
+
                         switch (messageType)
                         {
                             case "TEXT":
-                                string textContent = reader.GetString(5);
+                                string textContent = reader.GetString(textContentColumnIndex);
                                 messages.Add(new TextMessage(messageId, conversationId, senderId, receiverId, timestamp, textContent));
                                 break;
+
                             case "IMAGE":
-                                var imageContent = reader.GetString(6);
+                                var imageContent = reader.GetString(imageContentColumnIndex);
                                 messages.Add(new ImageMessage(messageId, conversationId, senderId, receiverId, timestamp, imageContent));
                                 break;
 
                             case "CASH_AGREEMENT":
-                                string cashContent = reader[7] as string;
-                                int sellerId = reader.IsDBNull(9) ? -1 : reader.GetInt32(9);
-                                int buyerId = reader.IsDBNull(10) ? -1 : reader.GetInt32(10);
-                                bool acceptedBySeller = reader.IsDBNull(11) ? false : reader.GetBoolean(11);
-                                bool acceptedByBuyer = reader.IsDBNull(12) ? false : reader.GetBoolean(12);
-                                int paymentId = reader.IsDBNull(17) ? -1 : reader.GetInt32(17);
+                                string cashContent = reader[cashContentColumnIndex] as string;
+                                int sellerId = reader.IsDBNull(sellerIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(sellerIdColumnIndex);
+                                int buyerId = reader.IsDBNull(buyerIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(buyerIdColumnIndex);
+                                bool acceptedBySeller = reader.IsDBNull(acceptedBySellerColumnIndex) ? false : reader.GetBoolean(acceptedBySellerColumnIndex);
+                                bool acceptedByBuyer = reader.IsDBNull(acceptedByBuyerColumnIndex) ? false : reader.GetBoolean(acceptedByBuyerColumnIndex);
+                                int paymentId = reader.IsDBNull(paymentIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(paymentIdColumnIndex);
                                 messages.Add(new CashAgreementMessage(
                                     messageId,
                                     conversationId,
@@ -399,21 +372,21 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                                     paymentId,
                                     timestamp,
                                     cashContent,
-                                    false, // or the correct isResolved value if you have it
+                                    false,
                                     acceptedByBuyer,
                                     acceptedBySeller));
                                 break;
 
                             case "RENTAL_REQUEST":
-                                string rentalContent = reader[8] as string;
-                                int requestId = reader.IsDBNull(13) ? -1 : reader.GetInt32(13);
-                                bool isResolved = reader.IsDBNull(14) ? false : reader.GetBoolean(14);
-                                bool isAccepted = reader.IsDBNull(15) ? false : reader.GetBoolean(15);
+                                string rentalContent = reader[rentalContentColumnIndex] as string;
+                                int requestId = reader.IsDBNull(requestIdColumnIndex) ? unassignedIdentifier : reader.GetInt32(requestIdColumnIndex);
+                                bool isResolved = reader.IsDBNull(isResolvedColumnIndex) ? false : reader.GetBoolean(isResolvedColumnIndex);
+                                bool isAccepted = reader.IsDBNull(isAcceptedColumnIndex) ? false : reader.GetBoolean(isAcceptedColumnIndex);
                                 messages.Add(new RentalRequestMessage(messageId, conversationId, senderId, receiverId, timestamp, rentalContent, requestId, isResolved, isAccepted));
                                 break;
 
                             case "SYSTEM":
-                                string systemContent = reader.GetString(16);
+                                string systemContent = reader.GetString(systemContentColumnIndex);
                                 messages.Add(new SystemMessage(messageId, conversationId, timestamp, systemContent));
                                 break;
                         }
@@ -423,18 +396,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
             return messages;
         }
-        // CRUD
 
-        /// <summary>
-        /// Handles the insertion of a new message into the database, including inserting into the base Message table and the relevant subtype table.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
         private int AddMessageToDB(Message message)
         {
-            // messages created and not yet added to the database will have a dummy id (-1)
-            // after a message is added to the db, its id will change to whatever the db provides
-            // the id needs to be updated upwards
             using (var connection = new SqlConnection(appConnectionString))
             {
                 string query = @"
@@ -473,8 +437,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                         var cashCommand = new SqlCommand(cashInsert, connection);
                         cashCommand.Parameters.AddWithValue("@mid", newId);
                         cashCommand.Parameters.AddWithValue("@content", ((CashAgreementMessage)message).MessageContentAsString);
-                        cashCommand.Parameters.AddWithValue("@sellerId", ((CashAgreementMessage)message).MessageSenderId); // Assuming sender is the seller
-                        cashCommand.Parameters.AddWithValue("@buyerId", ((CashAgreementMessage)message).MessageReceiverId); // Assuming receiver is the buyer
+                        cashCommand.Parameters.AddWithValue("@sellerId", ((CashAgreementMessage)message).MessageSenderId);
+                        cashCommand.Parameters.AddWithValue("@buyerId", ((CashAgreementMessage)message).MessageReceiverId);
                         cashCommand.Parameters.AddWithValue("@acceptedBySeller", ((CashAgreementMessage)message).IsCashAgreementAcceptedBySeller);
                         cashCommand.Parameters.AddWithValue("@acceptedByBuyer", ((CashAgreementMessage)message).IsCashAgreementAcceptedByBuyer);
                         cashCommand.Parameters.AddWithValue("@paymentId", ((CashAgreementMessage)message).CashPaymentId);
@@ -503,12 +467,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Handles the update of a message in the database.
-        /// This is used for things like accepting a cash agreement or finalizing a rental request, where we
-        /// want to keep the same message but just update some of its fields.
-        /// </summary>
-        /// <param name="message"></param>
         private void UpdateMessageToDB(Message message)
         {
             using (var connection = new SqlConnection(appConnectionString))
@@ -525,6 +483,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 command.Parameters.AddWithValue("@messageType", MessageTypeExtensions.MessageTypeToString(message.TypeOfMessage));
                 connection.Open();
                 command.ExecuteNonQuery();
+
                 if (message.TypeOfMessage == MessageType.MessageCashAgreement)
                 {
                     string cashUpdate = "UPDATE CashAgreementMessage SET acceptedBySeller = @acceptedBySeller, acceptedByBuyer = @acceptedByBuyer, PaymentId = @paymentId WHERE mid = @mid";
@@ -548,12 +507,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Handles the creation of a new conversation between two users. If a conversation already exists, it returns the existing conversation.
-        /// </summary>
-        /// <param name="senderId"></param>
-        /// <param name="receiverId"></param>
-        /// <returns></returns>
         private Conversation CreateConversationInDB(int senderId, int receiverId)
         {
             using (var connection = new SqlConnection(appConnectionString))
@@ -570,7 +523,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
 
                 connection.Open();
                 object result = command.ExecuteScalar();
-                Debug.WriteLine("\n\n\n\n\n\n" + result + "\n\n\n\n\n\n\n");
+
                 if (result != null)
                 {
                     return LoadSingleConversationFromDB((int)result, connection);
@@ -597,12 +550,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
                 return new Conversation(newConversationId, new int[] { senderId, receiverId }, new List<Message>(), new Dictionary<int, DateTime> { { senderId, DateTime.Now }, { receiverId, DateTime.Now } });
             }
         }
-        // READ RECEIPTS
 
-        /// <summary>
-        /// Handles the update of the last read timestamp for a user in a conversation when a read receipt is received.
-        /// </summary>
-        /// <param name="readReceipt"></param>
         private void UpdateLastReadInDB(ReadReceipt readReceipt)
         {
             using (var connection = new SqlConnection(appConnectionString))
@@ -618,54 +566,39 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Handles the creation of a new cash agreement message in response to an accepted rental request.
-        /// This includes creating the message, inserting it into the database, and notifying subscribers.
-        /// </summary>
-        /// <param name="messageIdOfParentRentalRequestMessage"></param>
-        /// <param name="paymentId"></param>
         public void CreateCashAgreementMessage(int messageIdOfParentRentalRequestMessage, int paymentId)
         {
             try
             {
+                int unassignedMessageIdentifier = -1;
                 RentalRequestMessage parentMessage = (RentalRequestMessage)GetMessageById(messageIdOfParentRentalRequestMessage);
                 CashAgreementMessage cashAgreementMessage = new CashAgreementMessage(
-                    -1,
+                    unassignedMessageIdentifier,
                     parentMessage.ConversationId,
-                    parentMessage.MessageReceiverId, // seller is the one who receives the rental request
-                    parentMessage.MessageSenderId,   // buyer is the one who sent the rental request
+                    parentMessage.MessageReceiverId,
+                    parentMessage.MessageSenderId,
                     paymentId,
                     DateTime.Now,
-                    // we might want different content?
                     $"Cash agreement for request: {parentMessage.RentalRequestId}");
                 HandleNewMessage(cashAgreementMessage);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"You tried to create a cash agreement message for a message that wasnt a rental request... how?");
+                Debug.WriteLine($"You tried to create a cash agreement message for a message that wasnt a rental request... how? {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Handles the creation of a new system message announcing the finalization of a cash agreement,
-        /// including inserting it into the database and notifying subscribers.
-        /// </summary>
-        /// <param name="conversationId"></param>
-        /// <param name="legalDocumentFilePath"></param>
         public void CreateSystemMessageForCashAgreementFinalization(int conversationId, string legalDocumentFilePath)
         {
+            int unassignedMessageIdentifier = -1;
             SystemMessage systemMessage = new SystemMessage(
-                -1,
+                unassignedMessageIdentifier,
                 conversationId,
                 DateTime.Now,
                 $"The cash agreement has been finalized! Here is your receipt: {legalDocumentFilePath}");
             HandleNewMessage(systemMessage);
         }
 
-        /// <summary>
-        /// Handles the update of a cash agreement message when either the buyer or seller accepts the agreement.
-        /// </summary>
-        /// <param name="message"></param>
         private void UpdateCashPaymentFromMessageUpdate(CashAgreementMessage message)
         {
             int paymentId = message.CashPaymentId;
@@ -687,13 +620,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
 
         #region ObserverStuff
 
-        /// <summary>
-        /// Subscribes a user to message updates. This means that whenever a new message is sent in a
-        /// conversation that the user is a participant of, or a message that the user sent or received
-        /// is updated, the user's MessageObserver will be notified with the new message info.
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="observer"></param>
         public void Subscribe(int userId, IConversationService observer)
         {
             if (!Subscribers.ContainsKey(userId))
@@ -702,11 +628,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Unsubscribes a user from message updates.
-        /// This is used when a user logs out, so that they no longer receive updates about messages.
-        /// </summary>
-        /// <param name="userId"></param>
         public void Unsubscribe(int userId)
         {
             if (Subscribers.ContainsKey(userId))
@@ -715,15 +636,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Notifies all relevant subscribers about a new message. This includes subscribers for both the sender and receiver of the message,
-        /// </summary>
-        /// <param name="message"></param>
         public void NotifySubscribersAboutMessage(Message message)
         {
             int[] participants;
             if (message.TypeOfMessage == MessageType.MessageSystem)
-            {// because system messages are "sent and received by user 0" we need to hit the db :/
+            {
                 participants = GetConversationParticipants(message.ConversationId);
             }
             else
@@ -739,10 +656,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Notifies all relevant subscribers about an updated message. This includes subscribers for both the sender and receiver of the message,
-        /// </summary>
-        /// <param name="message"></param>
         public void NotifySubscribersAboutMessageUpdate(Message message)
         {
             var participants = new[] { message.MessageSenderId, message.MessageReceiverId };
@@ -755,11 +668,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Notifies all relevant subscribers about a new conversation.
-        /// This is used to trigger the creation of a new chat tab in the UI when a new conversation is created.
-        /// </summary>
-        /// <param name="conversation"></param>
         public void NotifySubscribersAboutNewConversation(Conversation conversation)
         {
             foreach (var participant in conversation.ConversationParticipantIds)
@@ -771,11 +679,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
             }
         }
 
-        /// <summary>
-        /// Notifies all relevant subscribers about a read receipt, so that they can update the UI
-        /// to reflect the new last read timestamp for the user who sent the read receipt.
-        /// </summary>
-        /// <param name="readReceipt"></param>
         public void NotifySubscribersAboutReadReceipt(ReadReceipt readReceipt)
         {
             var participants = new[] { readReceipt.messageReaderId, readReceipt.messageReceiverId };

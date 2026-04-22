@@ -15,460 +15,586 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class ConversationServiceTests
     {
-        private readonly Mock<IConversationRepository> repositoryMock;
-        private readonly Mock<IUserRepository> userServiceMock;
-        private readonly ConversationService service;
+        private readonly Mock<IConversationRepository> conversationRepositoryMock;
+        private readonly Mock<IUserRepository> userRepositoryMock;
+        private readonly ConversationService conversationService;
 
         public ConversationServiceTests()
         {
-            repositoryMock = new Mock<IConversationRepository>();
-            userServiceMock = new Mock<IUserRepository>();
+            int currentUserId = 1;
+            int defaultBalance = 0;
+            string testDisplayName = "display";
+            string testCountry = "RO";
+            string testCity = "Sibiu";
+            string testStreet = "street";
+            string testStreetNumber = "1";
 
-            userServiceMock
-                .Setup(u => u.GetById(It.IsAny<int>()))
-                .Returns((int id) => new User(
-                    id,
-                    "user" + id,
-                    "display",
-                    "RO",
-                    "Sibiu",
-                    "street",
-                    "1",
+            conversationRepositoryMock = new Mock<IConversationRepository>();
+            userRepositoryMock = new Mock<IUserRepository>();
+
+            userRepositoryMock
+                .Setup(userRepository => userRepository.GetById(It.IsAny<int>()))
+                .Returns((int userIdentifier) => new User(
+                    userIdentifier,
+                    "user" + userIdentifier,
+                    testDisplayName,
+                    testCountry,
+                    testCity,
+                    testStreet,
+                    testStreetNumber,
                     string.Empty,
-                    0));
+                    defaultBalance));
 
-            service = new ConversationService(
-                repositoryMock.Object,
-                1,
-                userServiceMock.Object);
+            conversationService = new ConversationService(
+                conversationRepositoryMock.Object,
+                currentUserId,
+                userRepositoryMock.Object);
+        }
+
+        private MessageDataTransferObject CreateTextDTO()
+        {
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            int missingIdentifier = -1;
+            string textContent = "hello";
+
+            return new MessageDataTransferObject(
+                defaultMessageId,
+                targetConversationId,
+                senderIdentifier,
+                receiverIdentifier,
+                DateTime.Now,
+                textContent,
+                MessageType.MessageText,
+                string.Empty,
+                false,
+                false,
+                false,
+                false,
+                missingIdentifier,
+                missingIdentifier);
         }
 
         [Fact]
-        public void FetchConversations_ReturnsEmptyList_WhenRepoEmpty()
+        public void FetchConversations_EmptyRepository_ReturnsEmptyList()
         {
-            repositoryMock.Setup(r => r.GetConversationsForUser(It.IsAny<int>()))
+            conversationRepositoryMock.Setup(repository => repository.GetConversationsForUser(It.IsAny<int>()))
                      .Returns(new List<Conversation>());
 
-            var result = service.FetchConversations();
+            var resultList = conversationService.FetchConversations();
 
-            Assert.Empty(result);
+            Assert.Empty(resultList);
         }
 
         [Fact]
-        public void FetchConversations_ReturnsMappedConversations()
+        public void FetchConversations_ValidRepository_ReturnsMappedConversations()
         {
-            var conversation= new Conversation(
-                1,
-                new int[] { 1, 2 },
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+
+            var testConversation = new Conversation(
+                targetConversationId,
+                new int[] { firstParticipantId, secondParticipantId },
                 new List<Message>(),
                 new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.Now },
-                    { 2, DateTime.Now }
+                    { firstParticipantId, DateTime.Now },
+                    { secondParticipantId, DateTime.Now }
                 });
 
-            repositoryMock.Setup(r => r.GetConversationsForUser(1))
-                     .Returns(new List<Conversation> { conversation });
+            conversationRepositoryMock.Setup(repository => repository.GetConversationsForUser(firstParticipantId))
+                     .Returns(new List<Conversation> { testConversation });
 
-            var result = service.FetchConversations();
+            var resultList = conversationService.FetchConversations();
 
-            Assert.Single(result);
-            Assert.Equal(1, result.First().Id);
+            Assert.Single(resultList);
+            Assert.Equal(targetConversationId, resultList.First().Id);
         }
 
         [Fact]
-        public void SendMessage_CallsRepository()
+        public void SendMessage_ValidInput_CallsRepositoryHandleNewMessage()
         {
-            var dto = new MessageDTO(
-                id: 1,
-                conversationId: 1,
-                senderId: 1,
-                receiverId: 2,
-                sentAt: DateTime.Now,
-                content: "hello",
-                type: MessageType.MessageText,
-                imageUrl: string.Empty,
-                isResolved: false,
-                isAccepted: false,
-                isAcceptedByBuyer: false,
-                isAcceptedBySeller: false,
-                paymentId: -1,
-                requestId: -1);
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            int missingIdentifier = -1;
+            string textContent = "hello";
 
-            repositoryMock.Setup(r => r.HandleNewMessage(It.IsAny<Message>()));
+            var messageDataTransferObject = new MessageDataTransferObject(
+                defaultMessageId,
+                targetConversationId,
+                senderIdentifier,
+                receiverIdentifier,
+                DateTime.Now,
+                textContent,
+                MessageType.MessageText,
+                string.Empty,
+                false,
+                false,
+                false,
+                false,
+                missingIdentifier,
+                missingIdentifier);
 
-            service.SendMessage(dto);
+            conversationRepositoryMock.Setup(repository => repository.HandleNewMessage(It.IsAny<Message>()));
 
-            repositoryMock.Verify(r => r.HandleNewMessage(It.IsAny<Message>()), Times.Once);
+            conversationService.SendMessage(messageDataTransferObject);
+
+            conversationRepositoryMock.Verify(repository => repository.HandleNewMessage(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
-        public void UpdateMessage_CallsRepository()
+        public void UpdateMessage_ValidInput_CallsRepositoryHandleMessageUpdate()
         {
-            var dto = CreateTextDTO();
+            var messageDataTransferObject = CreateTextDTO();
 
-            repositoryMock.Setup(r => r.HandleMessageUpdate(It.IsAny<Message>()));
+            conversationRepositoryMock.Setup(repository => repository.HandleMessageUpdate(It.IsAny<Message>()));
 
-            service.UpdateMessage(dto);
+            conversationService.UpdateMessage(messageDataTransferObject);
 
-            repositoryMock.Verify(r => r.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
+            conversationRepositoryMock.Verify(repository => repository.HandleMessageUpdate(It.IsAny<Message>()), Times.Once);
         }
 
         [Fact]
-        public void SendReadReceipt_CallsRepository()
+        public void SendReadReceipt_ValidConversation_CallsRepositoryHandleReadReceipt()
         {
-            var conversationDto = new ConversationDTO(
-                1,
-                new int[] { 1, 2 },
-                new List<MessageDTO>(),
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+
+            var conversationDataTransferObject = new ConversationDataTransferObject(
+                targetConversationId,
+                new int[] { firstParticipantId, secondParticipantId },
+                new List<MessageDataTransferObject>(),
                 new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.Now },
-                    { 2, DateTime.Now }
+                    { firstParticipantId, DateTime.Now },
+                    { secondParticipantId, DateTime.Now }
                 });
 
-            repositoryMock.Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()));
+            conversationRepositoryMock.Setup(repository => repository.HandleReadReceipt(It.IsAny<ReadReceipt>()));
 
-            service.SendReadReceipt(conversationDto);
+            conversationService.SendReadReceipt(conversationDataTransferObject);
 
-            repositoryMock.Verify(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
+            conversationRepositoryMock.Verify(repository => repository.HandleReadReceipt(It.IsAny<ReadReceipt>()), Times.Once);
         }
 
         [Fact]
-        public void SendReadReceipt_SelectsOtherParticipantCorrectly()
+        public void SendReadReceipt_ValidConversation_SelectsOtherParticipantCorrectly()
         {
-            var conversationDto = new ConversationDTO(
-                1,
-                new int[] { 1, 2 },
-                new List<MessageDTO>(),
+            int targetConversationId = 1;
+            int currentUserId = 1;
+            int externalUserId = 2;
+
+            var conversationDataTransferObject = new ConversationDataTransferObject(
+                targetConversationId,
+                new int[] { currentUserId, externalUserId },
+                new List<MessageDataTransferObject>(),
                 new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.Now },
-                    { 2, DateTime.Now }
+                    { currentUserId, DateTime.Now },
+                    { externalUserId, DateTime.Now }
                 });
 
-            ReadReceipt? captured = null;
+            ReadReceipt capturedReceipt = null;
 
-            repositoryMock
-                .Setup(r => r.HandleReadReceipt(It.IsAny<ReadReceipt>()))
-                .Callback<ReadReceipt>(r => captured = r);
+            conversationRepositoryMock
+                .Setup(repository => repository.HandleReadReceipt(It.IsAny<ReadReceipt>()))
+                .Callback<ReadReceipt>(receiptObject => capturedReceipt = receiptObject);
 
-            service.SendReadReceipt(conversationDto);
+            conversationService.SendReadReceipt(conversationDataTransferObject);
 
-            Assert.Equal(1, captured!.messageReaderId);
-            Assert.Equal(2, captured.messageReceiverId);
+            Assert.Equal(currentUserId, capturedReceipt.messageReaderId);
+            Assert.Equal(externalUserId, capturedReceipt.messageReceiverId);
         }
 
         [Fact]
-        public void MessageToDTO_TextMessage_Works()
+        public void MessageToDTO_TextMessage_MapsCorrectly()
         {
-            var message = new TextMessage(1, 1, 1, 2, DateTime.Now, "hello");
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            string textContent = "hello";
 
-            var dto = service.MessageToMessageDTO(message);
+            var textMessage = new TextMessage(defaultMessageId, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, textContent);
 
-            Assert.Equal(MessageType.MessageText, dto.type);
-            Assert.Equal("hello", dto.content);
+            var messageDataTransferObject = conversationService.MessageToMessageDTO(textMessage);
+
+            Assert.Equal(MessageType.MessageText, messageDataTransferObject.type);
+            Assert.Equal(textContent, messageDataTransferObject.content);
         }
 
         [Fact]
-        public void MessageDTOToMessage_Text_Works()
+        public void MessageDTOToMessage_TextMessage_MapsCorrectly()
         {
-            var dto = CreateTextDTO();
+            var messageDataTransferObject = CreateTextDTO();
 
-            var message = service.MessageDTOToMessage(dto);
+            var domainMessage = conversationService.MessageDTOToMessage(messageDataTransferObject);
 
-            Assert.IsType<TextMessage>(message);
-        }
-
-        private MessageDTO CreateTextDTO()
-        {
-            return new MessageDTO(
-                id: 1,
-                conversationId: 1,
-                senderId: 1,
-                receiverId: 2,
-                sentAt: DateTime.Now,
-                content: "hello",
-                type: MessageType.MessageText,
-                imageUrl: string.Empty,
-                isResolved: false,
-                isAccepted: false,
-                isAcceptedByBuyer: false,
-                isAcceptedBySeller: false,
-                paymentId: -1,
-                requestId: -1);
+            Assert.IsType<TextMessage>(domainMessage);
         }
 
         [Fact]
-        public void OnMessageReceived_TriggersEvent()
+        public void OnMessageReceived_ValidMessage_TriggersActionMessageProcessedEvent()
         {
-            var message = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            string textContent = "hi";
 
-            bool called = false;
+            var newTextMessage = new TextMessage(defaultMessageId, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, textContent);
 
-            service.ActionMessageProcessed += (dto, name) => called = true;
+            bool eventInvoked = false;
 
-            service.OnMessageReceived(message);
+            conversationService.ActionMessageProcessed += (messageDataTransferObject, senderName) => eventInvoked = true;
 
-            Assert.True(called);
+            conversationService.OnMessageReceived(newTextMessage);
+
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void OnConversationReceived_TriggersEvent()
+        public void OnConversationReceived_ValidConversation_TriggersActionConversationProcessedEvent()
         {
-            var conversation= new Conversation(
-                1,
-                new int[] { 1, 2 },
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+
+            var testConversation = new Conversation(
+                targetConversationId,
+                new int[] { firstParticipantId, secondParticipantId },
                 new List<Message>(),
-                new Dictionary<int, DateTime> { { 1, DateTime.Now }, { 2, DateTime.Now } });
+                new Dictionary<int, DateTime> { { firstParticipantId, DateTime.Now }, { secondParticipantId, DateTime.Now } });
 
-            bool called = false;
+            bool eventInvoked = false;
 
-            service.ActionConversationProcessed += (dto, name) => called = true;
+            conversationService.ActionConversationProcessed += (conversationDataTransferObject, senderName) => eventInvoked = true;
 
-            service.OnConversationReceived(conversation);
+            conversationService.OnConversationReceived(testConversation);
 
-            Assert.True(called);
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void OnReadReceiptReceived_TriggersEvent()
+        public void OnReadReceiptReceived_ValidReceipt_TriggersActionReadReceiptProcessedEvent()
         {
-            var readReceipt = new ReadReceipt(1, 1, 2, DateTime.Now);
+            int targetConversationId = 1;
+            int readerIdentifier = 1;
+            int receiverIdentifier = 2;
 
-            bool called = false;
+            var testReadReceipt = new ReadReceipt(targetConversationId, readerIdentifier, receiverIdentifier, DateTime.Now);
 
-            service.ActionReadReceiptProcessed += dto => called = true;
+            bool eventInvoked = false;
 
-            service.OnReadReceiptReceived(readReceipt);
+            conversationService.ActionReadReceiptProcessed += (receiptDataTransferObject) => eventInvoked = true;
 
-            Assert.True(called);
+            conversationService.OnReadReceiptReceived(testReadReceipt);
+
+            Assert.True(eventInvoked);
         }
 
         [Fact]
-        public void OnMessageUpdateReceived_TriggersEvent()
+        public void OnMessageUpdateReceived_ValidUpdate_TriggersActionMessageUpdateProcessedEvent()
         {
-            var message = new TextMessage(1, 1, 1, 2, DateTime.Now, "hi");
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            string textContent = "hi";
 
-            bool called = false;
+            var updatedMessage = new TextMessage(defaultMessageId, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, textContent);
 
-            service.ActionMessageUpdateProcessed += (dto, name) => called = true;
+            bool eventInvoked = false;
 
-            service.OnMessageUpdateReceived(message);
+            conversationService.ActionMessageUpdateProcessed += (messageDataTransferObject, senderName) => eventInvoked = true;
 
-            Assert.True(called);
+            conversationService.OnMessageUpdateReceived(updatedMessage);
+
+            Assert.True(eventInvoked);
         }
+
         [Fact]
-        public void OnCardPaymentSelected_CallsFinalizeOnly()
+        public void OnCardPaymentSelected_ValidCall_CallsHandleRentalRequestFinalizationOnly()
         {
-            repositoryMock
-                .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
+            int testMessageId = 10;
 
-            service.OnCardPaymentSelected(10);
+            conversationRepositoryMock
+                .Setup(repository => repository.HandleRentalRequestFinalization(It.IsAny<int>()));
 
-            repositoryMock.Verify(r =>
-                r.HandleRentalRequestFinalization(10),
+            conversationService.OnCardPaymentSelected(testMessageId);
+
+            conversationRepositoryMock.Verify(repository =>
+                repository.HandleRentalRequestFinalization(testMessageId),
                 Times.Once);
         }
 
         [Fact]
-        public void OnCashPaymentSelected_CallsFinalizeAndCashAgreement()
+        public void OnCashPaymentSelected_ValidCall_CallsHandleRentalRequestFinalizationAndCreateCashAgreement()
         {
-            repositoryMock
-                .Setup(r => r.HandleRentalRequestFinalization(It.IsAny<int>()));
+            int testMessageId = 10;
+            int testPaymentId = 99;
 
-            repositoryMock
-                .Setup(r => r.CreateCashAgreementMessage(It.IsAny<int>(), It.IsAny<int>()));
+            conversationRepositoryMock
+                .Setup(repository => repository.HandleRentalRequestFinalization(It.IsAny<int>()));
 
-            service.OnCashPaymentSelected(10, 99);
+            conversationRepositoryMock
+                .Setup(repository => repository.CreateCashAgreementMessage(It.IsAny<int>(), It.IsAny<int>()));
 
-            repositoryMock.Verify(r =>
-                r.HandleRentalRequestFinalization(10),
+            conversationService.OnCashPaymentSelected(testMessageId, testPaymentId);
+
+            conversationRepositoryMock.Verify(repository =>
+                repository.HandleRentalRequestFinalization(testMessageId),
                 Times.Once);
 
-            repositoryMock.Verify(r =>
-                r.CreateCashAgreementMessage(10, 99),
+            conversationRepositoryMock.Verify(repository =>
+                repository.CreateCashAgreementMessage(testMessageId, testPaymentId),
                 Times.Once);
         }
 
         [Fact]
-        public void GetOtherUserName_ReturnsUnknownUser_WhenNull()
+        public void GetOtherUserName_MissingUser_ReturnsUnknownUser()
         {
-            userServiceMock
-                .Setup(u => u.GetById(It.IsAny<int>()))
+            string expectedUnknownUser = "Unknown User";
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+
+            userRepositoryMock
+                .Setup(userRepository => userRepository.GetById(It.IsAny<int>()))
                 .Returns((User)null);
 
-            var dto = new ConversationDTO(
-                1,
-                new int[] { 1, 2 },
-                new List<MessageDTO>(),
+            var conversationDataTransferObject = new ConversationDataTransferObject(
+                targetConversationId,
+                new int[] { firstParticipantId, secondParticipantId },
+                new List<MessageDataTransferObject>(),
                 new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.Now },
-                    { 2, DateTime.Now }
+                    { firstParticipantId, DateTime.Now },
+                    { secondParticipantId, DateTime.Now }
                 });
 
-            var result = service.GetOtherUserNameByConversationDTO(dto);
+            var resultName = conversationService.GetOtherUserNameByConversationDTO(conversationDataTransferObject);
 
-            Assert.Equal("Unknown User", result);
+            Assert.Equal(expectedUnknownUser, resultName);
         }
 
         [Fact]
-        public void MessageToDTO_ImageMessage_Works()
+        public void MessageToDTO_ImageMessage_MapsCorrectly()
         {
-            var message = new ImageMessage(1, 1, 1, 2, DateTime.Now, "img.png");
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            string testImageName = "img.png";
 
-            var dto = service.MessageToMessageDTO(message);
+            var testImageMessage = new ImageMessage(defaultMessageId, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, testImageName);
 
-            Assert.Equal(MessageType.MessageImage, dto.type);
-            Assert.Equal("img.png", dto.imageUrl);
+            var messageDataTransferObject = conversationService.MessageToMessageDTO(testImageMessage);
+
+            Assert.Equal(MessageType.MessageImage, messageDataTransferObject.type);
+            Assert.Equal(testImageName, messageDataTransferObject.imageUrl);
         }
 
         [Fact]
-        public void MessageToDTO_CashAgreement_Works()
+        public void MessageToDTO_CashAgreement_MapsCorrectly()
         {
-            var message = new CashAgreementMessage(
-                1, 1, 1, 2,
-                55,
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int sellerIdentifier = 1;
+            int buyerIdentifier = 2;
+            int testPaymentId = 55;
+            string textContent = "cash";
+            bool isResolved = false;
+            bool isAcceptedByBuyer = true;
+            bool isAcceptedBySeller = false;
+
+            var testCashAgreement = new CashAgreementMessage(
+                defaultMessageId, targetConversationId, sellerIdentifier, buyerIdentifier,
+                testPaymentId,
                 DateTime.Now,
-                "cash",
-                false,
-                true,
-                false);
+                textContent,
+                isResolved,
+                isAcceptedByBuyer,
+                isAcceptedBySeller);
 
-            var dto = service.MessageToMessageDTO(message);
+            var messageDataTransferObject = conversationService.MessageToMessageDTO(testCashAgreement);
 
-            Assert.Equal(MessageType.MessageCashAgreement, dto.type);
-            Assert.Equal(55, dto.paymentId);
+            Assert.Equal(MessageType.MessageCashAgreement, messageDataTransferObject.type);
+            Assert.Equal(testPaymentId, messageDataTransferObject.paymentId);
         }
 
         [Fact]
-        public void MessageToDTO_RentalRequest_Works()
+        public void MessageToDTO_RentalRequest_MapsCorrectly()
         {
-            var message = new RentalRequestMessage(
-                1, 1, 1, 2,
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            string textContent = "rent";
+            int testRequestId = 99;
+            bool isResolved = false;
+            bool isAccepted = true;
+
+            var testRentalRequest = new RentalRequestMessage(
+                defaultMessageId, targetConversationId, senderIdentifier, receiverIdentifier,
                 DateTime.Now,
-                "rent",
-                99,
-                false,
-                true);
+                textContent,
+                testRequestId,
+                isResolved,
+                isAccepted);
 
-            var dto = service.MessageToMessageDTO(message);
+            var messageDataTransferObject = conversationService.MessageToMessageDTO(testRentalRequest);
 
-            Assert.Equal(MessageType.MessageRentalRequest, dto.type);
-            Assert.Equal(99, dto.requestId);
+            Assert.Equal(MessageType.MessageRentalRequest, messageDataTransferObject.type);
+            Assert.Equal(testRequestId, messageDataTransferObject.requestId);
         }
 
         [Fact]
-        public void MessageToDTO_SystemMessage_Works()
+        public void MessageToDTO_SystemMessage_MapsCorrectly()
         {
-            var message = new SystemMessage(1, 1, DateTime.Now, "system");
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            string systemContent = "system";
 
-            var dto = service.MessageToMessageDTO(message);
+            var testSystemMessage = new SystemMessage(defaultMessageId, targetConversationId, DateTime.Now, systemContent);
 
-            Assert.Equal(MessageType.MessageSystem, dto.type);
-            Assert.Equal("system", dto.content);
+            var messageDataTransferObject = conversationService.MessageToMessageDTO(testSystemMessage);
+
+            Assert.Equal(MessageType.MessageSystem, messageDataTransferObject.type);
+            Assert.Equal(systemContent, messageDataTransferObject.content);
         }
 
         [Fact]
-        public void GetOtherUserNameByMessageDTO_ReturnsCorrectUser()
+        public void GetOtherUserNameByMessageDTO_ValidMessage_ReturnsCorrectUser()
         {
-            var dto = new MessageDTO(
-                1, 1, 1, 2, DateTime.Now, "hi",
-                MessageType.MessageText, "", false, false, false, false, -1, -1
+            int defaultMessageId = 1;
+            int targetConversationId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            string textContent = "hi";
+            int missingIdentifier = -1;
+            string expectedResultName = "user2";
+
+            var messageDataTransferObject = new MessageDataTransferObject(
+                defaultMessageId, targetConversationId, senderIdentifier, receiverIdentifier, DateTime.Now, textContent,
+                MessageType.MessageText, string.Empty, false, false, false, false, missingIdentifier, missingIdentifier
             );
 
-            var result = service.GetOtherUserNameByMessageDTO(dto);
+            var resultName = conversationService.GetOtherUserNameByMessageDTO(messageDataTransferObject);
 
-            Assert.Equal("user2", result);
+            Assert.Equal(expectedResultName, resultName);
         }
 
         [Fact]
-        public void MessageDTOToMessage_Image_Works()
+        public void MessageDTOToMessage_ImageMessage_MapsCorrectly()
         {
-            var dto = CreateTextDTO() with { type = MessageType.MessageImage, imageUrl = "img.png" };
+            string testImageName = "img.png";
+            var messageDataTransferObject = CreateTextDTO() with { type = MessageType.MessageImage, imageUrl = testImageName };
 
-            var message = service.MessageDTOToMessage(dto);
+            var domainMessage = conversationService.MessageDTOToMessage(messageDataTransferObject);
 
-            Assert.IsType<ImageMessage>(message);
+            Assert.IsType<ImageMessage>(domainMessage);
         }
 
         [Fact]
-        public void MessageDTOToMessage_Rental_Works()
+        public void MessageDTOToMessage_RentalRequest_MapsCorrectly()
         {
-            var dto = CreateTextDTO() with { type = MessageType.MessageRentalRequest };
+            var messageDataTransferObject = CreateTextDTO() with { type = MessageType.MessageRentalRequest };
 
-            var message = service.MessageDTOToMessage(dto);
+            var domainMessage = conversationService.MessageDTOToMessage(messageDataTransferObject);
 
-            Assert.IsType<RentalRequestMessage>(message);
+            Assert.IsType<RentalRequestMessage>(domainMessage);
         }
 
         [Fact]
-        public void MessageDTOToMessage_Cash_Works()
+        public void MessageDTOToMessage_CashAgreement_MapsCorrectly()
         {
-            var dto = CreateTextDTO() with { type = MessageType.MessageCashAgreement };
+            var messageDataTransferObject = CreateTextDTO() with { type = MessageType.MessageCashAgreement };
 
-            var message = service.MessageDTOToMessage(dto);
+            var domainMessage = conversationService.MessageDTOToMessage(messageDataTransferObject);
 
-            Assert.IsType<CashAgreementMessage>(message);
+            Assert.IsType<CashAgreementMessage>(domainMessage);
         }
 
         [Fact]
-        public void MessageDTOToMessage_System_Works()
+        public void MessageDTOToMessage_SystemMessage_MapsCorrectly()
         {
-            var dto = CreateTextDTO() with { type = MessageType.MessageSystem };
+            var messageDataTransferObject = CreateTextDTO() with { type = MessageType.MessageSystem };
 
-            var message = service.MessageDTOToMessage(dto);
+            var domainMessage = conversationService.MessageDTOToMessage(messageDataTransferObject);
 
-            Assert.IsType<SystemMessage>(message);
+            Assert.IsType<SystemMessage>(domainMessage);
         }
 
         [Fact]
-        public void ConversationToConversationDTO_MapsCorrectly()
+        public void ConversationToConversationDTO_ValidConversation_MapsCorrectly()
         {
-            var conversation= new Conversation(
-                1,
-                new[] { 1, 2 },
-                new List<Message> { new TextMessage(1, 1, 1, 2, DateTime.Now, "hi") },
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+            int defaultMessageId = 1;
+            string textContent = "hi";
+
+            var testConversation = new Conversation(
+                targetConversationId,
+                new[] { firstParticipantId, secondParticipantId },
+                new List<Message> { new TextMessage(defaultMessageId, targetConversationId, firstParticipantId, secondParticipantId, DateTime.Now, textContent) },
                 new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.Now },
-                    { 2, DateTime.Now }
+                    { firstParticipantId, DateTime.Now },
+                    { secondParticipantId, DateTime.Now }
                 }
             );
 
-            var dto = service.ConversationToConversationDTO(conversation);
+            var conversationDataTransferObject = conversationService.ConversationToConversationDTO(testConversation);
 
-            Assert.Equal(1, dto.Id);
-            Assert.Single(dto.MessageList);
+            Assert.Equal(targetConversationId, conversationDataTransferObject.Id);
+            Assert.Single(conversationDataTransferObject.MessageList);
         }
 
         [Fact]
-        public void ReadReceiptToReadReceiptDTO_MapsCorrectly()
+        public void ReadReceiptToReadReceiptDTO_ValidReceipt_MapsCorrectly()
         {
-            var readReceipt = new ReadReceipt(1, 1, 2, DateTime.Now);
+            int targetConversationId = 1;
+            int readerIdentifier = 1;
+            int receiverIdentifier = 2;
 
-            var dto = service.ReadReceiptToReadReceiptDTO(readReceipt);
+            var testReadReceipt = new ReadReceipt(targetConversationId, readerIdentifier, receiverIdentifier, DateTime.Now);
 
-            Assert.Equal(1, dto.conversationId);
-            Assert.Equal(1, dto.readerId);
-            Assert.Equal(2, dto.receiverId);
+            var receiptDataTransferObject = conversationService.ReadReceiptToReadReceiptDTO(testReadReceipt);
+
+            Assert.Equal(targetConversationId, receiptDataTransferObject.conversationId);
+            Assert.Equal(readerIdentifier, receiptDataTransferObject.readerId);
+            Assert.Equal(receiverIdentifier, receiptDataTransferObject.receiverId);
         }
 
         [Fact]
-        public void FetchConversations_MultipleConversations()
+        public void FetchConversations_ValidRepository_ReturnsMultipleConversations()
         {
-            var conversation = new List<Conversation>
+            int firstConversationId = 1;
+            int secondConversationId = 2;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+            int thirdParticipantId = 3;
+            int expectedConversationCount = 2;
+
+            var testConversationList = new List<Conversation>
             {
-                new Conversation(1, new[] {1,2}, new List<Message>(), new()),
-                new Conversation(2, new[] {1,3}, new List<Message>(), new())
+                new Conversation(firstConversationId, new[] {firstParticipantId, secondParticipantId}, new List<Message>(), new Dictionary<int, DateTime>()),
+                new Conversation(secondConversationId, new[] {firstParticipantId, thirdParticipantId}, new List<Message>(), new Dictionary<int, DateTime>())
             };
 
-            repositoryMock.Setup(r => r.GetConversationsForUser(1)).Returns(conversation);
+            conversationRepositoryMock.Setup(repository => repository.GetConversationsForUser(firstParticipantId)).Returns(testConversationList);
 
-            var result = service.FetchConversations();
+            var resultList = conversationService.FetchConversations();
 
-            Assert.Equal(2, result.Count);
+            Assert.Equal(expectedConversationCount, resultList.Count);
         }
     }
 }

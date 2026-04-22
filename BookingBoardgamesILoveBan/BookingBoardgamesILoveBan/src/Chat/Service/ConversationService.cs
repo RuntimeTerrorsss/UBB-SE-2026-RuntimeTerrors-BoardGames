@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BookingBoardgamesILoveBan.Src.Chat.DTO;
 using BookingBoardgamesILoveBan.Src.Chat.Model;
 using BookingBoardgamesILoveBan.Src.Chat.Repository;
@@ -19,10 +17,10 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
         private IUserRepository userRepository;
         private int UserId { get; set; }
 
-        public event Action<MessageDTO, string> ActionMessageProcessed;
-        public event Action<ConversationDTO, string> ActionConversationProcessed;
-        public event Action<ReadReceiptDTO> ActionReadReceiptProcessed;
-        public event Action<MessageDTO, string> ActionMessageUpdateProcessed;
+        public event Action<MessageDataTransferObject, string> ActionMessageProcessed;
+        public event Action<ConversationDataTransferObject, string> ActionConversationProcessed;
+        public event Action<ReadReceiptDataTransferObject> ActionReadReceiptProcessed;
+        public event Action<MessageDataTransferObject, string> ActionMessageUpdateProcessed;
 
         public ConversationService(IConversationRepository conversationRepo, int userIdInput) : this(conversationRepo, userIdInput, App.UserRepository)
         {
@@ -37,15 +35,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
             ConversationRepository.Subscribe(UserId, this);
         }
 
-        /// <summary>
-        /// Fetches all conversations for the user and translates them to ConversationDTOs.
-        /// Should only be called once on app startup, as after that conversations and messages
-        /// will be pushed by the repository through the OnConversationReceived and OnMessageReceived callbacks.
-        /// </summary>
-        /// <returns></returns>
-        public List<ConversationDTO> FetchConversations()
+        public List<ConversationDataTransferObject> FetchConversations()
         {
-            List<ConversationDTO> conversationList = new List<ConversationDTO>();
+            List<ConversationDataTransferObject> conversationList = new List<ConversationDataTransferObject>();
 
             foreach (var conversation in ConversationRepository.GetConversationsForUser(UserId))
             {
@@ -54,160 +46,86 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
             return conversationList;
         }
 
-        /// <summary>
-        /// Helper method to get the username of the other participant in a conversation, given a ConversationDTO.
-        /// </summary>
-        /// <param name="conversation"></param>
-        /// <returns></returns>
-        public string GetOtherUserNameByConversationDTO(ConversationDTO conversation)
+        public string GetOtherUserNameByConversationDTO(ConversationDataTransferObject conversation)
         {
-            var user = userRepository.GetById(conversation.Participants[0] == UserId ? conversation.Participants[1] : conversation.Participants[0]);
+            int firstParticipantIndex = 0;
+            int secondParticipantIndex = 1;
+            var user = userRepository.GetById(conversation.Participants[firstParticipantIndex] == UserId ? conversation.Participants[secondParticipantIndex] : conversation.Participants[firstParticipantIndex]);
             return user?.Username ?? "Unknown User";
         }
 
-        /// <summary>
-        /// Helper method to get the username of the other participant in a conversation, given a MessageDTO.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public string GetOtherUserNameByMessageDTO(MessageDTO message)
+        public string GetOtherUserNameByMessageDTO(MessageDataTransferObject message)
         {
             return userRepository.GetById(message.senderId == UserId ? message.receiverId : message.senderId).Username ?? "Unknown User";
         }
 
-        /// <summary>
-        /// Sends a message by translating the MessageDTO to a Message and passing it to the repository's HandleNewMessage
-        /// method, which will take care of saving it to the database and pushing it to the other participant.
-        /// </summary>
-        /// <param name="message"></param>
-        public void SendMessage(MessageDTO message)
+        public void SendMessage(MessageDataTransferObject message)
         {
-            Debug.WriteLine("im sedingin a message: " + message.imageUrl);
             ConversationRepository.HandleNewMessage(MessageDTOToMessage(message));
         }
 
-        /// <summary>
-        /// Sends a message update by translating the MessageDTO to a Message and passing it to the repository's HandleMessageUpdate
-        /// </summary>
-        /// <param name="message"></param>
-        public void UpdateMessage(MessageDTO message)
+        public void UpdateMessage(MessageDataTransferObject message)
         {
             ConversationRepository.HandleMessageUpdate(MessageDTOToMessage(message));
         }
 
-        /// <summary>
-        /// Sends a read receipt by creating a new ReadReceipt object and passing it to the repository's HandleReadReceipt method,
-        /// which will update the conversation's last read timestamp for the user and push the update to the other participant.
-        /// </summary>
-        /// <param name="conversation"></param>
-        public void SendReadReceipt(ConversationDTO conversation)
+        public void SendReadReceipt(ConversationDataTransferObject conversation)
         {
             ConversationRepository.HandleReadReceipt(new ReadReceipt(
                 conversation.Id,
                 UserId,
-                conversation.Participants.First(p => p != UserId),
+                conversation.Participants.First(participant => participant != UserId),
                 DateTime.Now));
         }
 
-        /// <summary>
-        /// Handles the selection of the card payment option for a rental request by finalizing the rental request in the
-        /// repository, which will update the corresponding RentalRequestMessage and push the update to the other participant.
-        /// </summary>
-        /// <param name="messageId"></param>
         public void OnCardPaymentSelected(int messageId)
         {
             FinalizeRentalRequest(messageId);
         }
 
-        /// <summary>
-        /// Handles the selection of the cash payment option for a rental request by finalizing the rental request in the
-        /// </summary>
-        /// <param name="messageId"></param>
-        /// <param name="paymentId"></param>
         public void OnCashPaymentSelected(int messageId, int paymentId)
         {
             FinalizeRentalRequest(messageId);
             SendCashAgreementMessage(messageId, paymentId);
         }
 
-        /// <summary>
-        /// Helper method to finalize a rental request by calling the repository's HandleRentalRequestFinalization method,
-        /// which will update the corresponding RentalRequestMessage and push the update to the other participant.
-        /// </summary>
-        /// <param name="messageId"></param>
         private void FinalizeRentalRequest(int messageId)
         {
             ConversationRepository.HandleRentalRequestFinalization(messageId);
         }
 
-        /// <summary>
-        /// Helper method to send a cash agreement message by calling the repository's CreateCashAgreementMessage method,
-        /// which will create a new CashAgreementMessage linked to the original RentalRequestMessage and push it to the other
-        /// participant.
-        /// </summary>
-        /// <param name="messageIdOfParentRentalRequestMessage"></param>
-        /// <param name="paymentId"></param>
         private void SendCashAgreementMessage(int messageIdOfParentRentalRequestMessage, int paymentId)
         {
             ConversationRepository.CreateCashAgreementMessage(messageIdOfParentRentalRequestMessage, paymentId);
         }
 
-        /// <summary>
-        /// Callback method invoked by the repository when a new message is
-        /// received for this user. Translates the Message to a MessageDTO,
-        /// </summary>
-        /// <param name="message"></param>
         public void OnMessageReceived(Message message)
         {
-            MessageDTO messageDTO = MessageToMessageDTO(message);
+            MessageDataTransferObject messageDTO = MessageToMessageDTO(message);
             string userName = GetOtherUserNameByMessageDTO(messageDTO);
             ActionMessageProcessed?.Invoke(messageDTO, userName);
         }
 
-        /// <summary>
-        /// Callback method invoked by the repository when a new conversation is created for this user.
-        /// Translates the Conversation to a ConversationDTO,
-        /// </summary>
-        /// <param name="conversation"></param>
         public void OnConversationReceived(Conversation conversation)
         {
-            ConversationDTO conversationDTO = ConversationToConversationDTO(conversation);
+            ConversationDataTransferObject conversationDTO = ConversationToConversationDTO(conversation);
             string userName = GetOtherUserNameByConversationDTO(conversationDTO);
             ActionConversationProcessed?.Invoke(conversationDTO, userName);
         }
 
-        /// <summary>
-        /// Callback method invoked by the repository when a read receipt is received for this user.
-        /// Translates the ReadReceipt to a ReadReceiptDTO,
-        /// </summary>
-        /// <param name="readReceipt"></param>
         public void OnReadReceiptReceived(ReadReceipt readReceipt)
         {
             ActionReadReceiptProcessed?.Invoke(ReadReceiptToReadReceiptDTO(readReceipt));
         }
 
-        /// <summary>
-        /// Callback method invoked by the repository when a message update is received for this user
-        /// (e.g. rental request finalization, cash agreement acceptance).
-        /// </summary>
-        /// <param name="message"></param>
         public void OnMessageUpdateReceived(Message message)
         {
-            MessageDTO messageDTO = MessageToMessageDTO(message);
+            MessageDataTransferObject messageDTO = MessageToMessageDTO(message);
             string userName = GetOtherUserNameByMessageDTO(messageDTO);
             ActionMessageUpdateProcessed?.Invoke(messageDTO, userName);
         }
 
-        #region domain-to-dto translations
-
-        /// <summary>
-        /// Helper method to translate a Message object to a MessageDTO.
-        /// Uses pattern matching to determine the specific type of the
-        /// message and populate the relevant fields in the DTO accordingly.
-        /// </summary>
-        /// <param name="messageDto"></param>
-        /// <returns></returns>
-        public Message MessageDTOToMessage(MessageDTO messageDto)
+        public Message MessageDTOToMessage(MessageDataTransferObject messageDto)
         {
             Message toReturn = messageDto.type switch
             {
@@ -255,14 +173,11 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
             return toReturn;
         }
 
-        /// <summary>
-        /// Helper method to translate a Message object to a MessageDTO. Uses pattern matching to determine the specific type of the
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public MessageDTO MessageToMessageDTO(Message message)
+        public MessageDataTransferObject MessageToMessageDTO(Message message)
         {
-            MessageDTO toReturn = new MessageDTO(
+            int defaultMissingIdentifier = -1;
+
+            MessageDataTransferObject toReturn = new MessageDataTransferObject(
                 id: message.MessageId,
                 conversationId: message.ConversationId,
                 senderId: message.MessageSenderId,
@@ -270,47 +185,35 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Service
                 sentAt: message.MessageSentTime,
                 content: message.MessageContentAsString,
                 type: message.TypeOfMessage,
-                imageUrl: message is ImageMessage img ? img.MessageImageUrl : string.Empty,
-                isResolved: message is RentalRequestMessage brm ? brm.IsRequestResolved
-                          : message is CashAgreementMessage cam ? cam.IsCashAgreementResolved
+                imageUrl: message is ImageMessage imageMessage ? imageMessage.MessageImageUrl : string.Empty,
+                isResolved: message is RentalRequestMessage rentalResolvedMessage ? rentalResolvedMessage.IsRequestResolved
+                          : message is CashAgreementMessage cashResolvedMessage ? cashResolvedMessage.IsCashAgreementResolved
                           : false,
-                isAccepted: message is RentalRequestMessage brm2 ? brm2.IsRequestAccepted : false,
-                isAcceptedByBuyer: message is CashAgreementMessage cam3 ? cam3.IsCashAgreementAcceptedByBuyer : false,
-                isAcceptedBySeller: message is CashAgreementMessage cam4 ? cam4.IsCashAgreementAcceptedBySeller : false,
-                paymentId: message is CashAgreementMessage cam5 ? cam5.CashPaymentId : -1,
-                requestId: message is RentalRequestMessage brm3 ? brm3.RentalRequestId : -1);
+                isAccepted: message is RentalRequestMessage rentalAcceptedMessage ? rentalAcceptedMessage.IsRequestAccepted : false,
+                isAcceptedByBuyer: message is CashAgreementMessage cashBuyerMessage ? cashBuyerMessage.IsCashAgreementAcceptedByBuyer : false,
+                isAcceptedBySeller: message is CashAgreementMessage cashSellerMessage ? cashSellerMessage.IsCashAgreementAcceptedBySeller : false,
+                paymentId: message is CashAgreementMessage cashPaymentMessage ? cashPaymentMessage.CashPaymentId : defaultMissingIdentifier,
+                requestId: message is RentalRequestMessage rentalRequestMessage ? rentalRequestMessage.RentalRequestId : defaultMissingIdentifier);
             return toReturn;
         }
 
-        /// <summary>
-        /// Helper method to translate a Conversation object to a ConversationDTO.
-        /// Translates the list of Message objects in the conversation
-        /// </summary>
-        /// <param name="conversation"></param>
-        /// <returns></returns>
-        public ConversationDTO ConversationToConversationDTO(Conversation conversation)
+        public ConversationDataTransferObject ConversationToConversationDTO(Conversation conversation)
         {
-            var messageDTOs = conversation.ConversationMessageList.Select(mess => MessageToMessageDTO(mess)).ToList();
-            return new ConversationDTO(
+            var messageDTOs = conversation.ConversationMessageList.Select(messageItem => MessageToMessageDTO(messageItem)).ToList();
+            return new ConversationDataTransferObject(
                 conversationId: conversation.ConversationId,
                 participants: conversation.ConversationParticipantIds,
                 messages: messageDTOs,
                 lastRead: conversation.LastMessageReadTime);
         }
 
-        /// <summary>
-        /// Helper method to translate a ReadReceipt object to a ReadReceiptDTO.
-        /// </summary>
-        /// <param name="readReceipt"></param>
-        /// <returns></returns>
-        public ReadReceiptDTO ReadReceiptToReadReceiptDTO(ReadReceipt readReceipt)
+        public ReadReceiptDataTransferObject ReadReceiptToReadReceiptDTO(ReadReceipt readReceipt)
         {
-            return new ReadReceiptDTO(
+            return new ReadReceiptDataTransferObject(
                 readReceipt.conversationId,
                 readReceipt.messageReaderId,
                 readReceipt.messageReceiverId,
                 readReceipt.timeStamp);
         }
-        #endregion
     }
 }

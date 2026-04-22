@@ -10,6 +10,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
     public sealed partial class ConversationItemView : UserControl
     {
+        private const string DefaultAvatarColorHexCode = "#888888";
+        private const int EmptyUnreadMessagesCount = 0;
+
         public ConversationItemView()
         {
             this.InitializeComponent();
@@ -30,9 +33,9 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private static void OnDisplayNameChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)dependencyObject;
-            view.DisplayNameText.Text = (string)eventArguments.NewValue;
-            view.AvatarPicture.DisplayName = (string)eventArguments.NewValue;
+            var conversationItemView = (ConversationItemView)dependencyObject;
+            conversationItemView.DisplayNameText.Text = (string)eventArguments.NewValue;
+            conversationItemView.AvatarPicture.DisplayName = (string)eventArguments.NewValue;
         }
 
         public static readonly DependencyProperty AvatarUrlProperty =
@@ -50,14 +53,15 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private static void OnAvatarUrlChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)dependencyObject;
-            var url = (string)eventArguments.NewValue;
-            if (!string.IsNullOrEmpty(url))
+            var conversationItemView = (ConversationItemView)dependencyObject;
+            var imageResourceLocator = (string)eventArguments.NewValue;
+
+            if (!string.IsNullOrEmpty(imageResourceLocator))
             {
                 try
                 {
-                    string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", url);
-                    view.AvatarPicture.ProfilePicture = new BitmapImage(new Uri(fullPath));
+                    string fullImagePath = Path.Combine(AppContext.BaseDirectory, "Images", imageResourceLocator);
+                    conversationItemView.AvatarPicture.ProfilePicture = new BitmapImage(new Uri(fullImagePath));
                 }
                 catch (Exception exception)
                 {
@@ -66,7 +70,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             }
             else
             {
-                view.AvatarPicture.ProfilePicture = null;
+                conversationItemView.AvatarPicture.ProfilePicture = null;
             }
         }
 
@@ -75,7 +79,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                 nameof(AvatarColor),
                 typeof(string),
                 typeof(ConversationItemView),
-                new PropertyMetadata("#888888"));
+                new PropertyMetadata(DefaultAvatarColorHexCode));
 
         public string AvatarColor
         {
@@ -98,8 +102,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private static void OnMessagePreviewChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)dependencyObject;
-            view.PreviewText.Text = (string)eventArguments.NewValue;
+            var conversationItemView = (ConversationItemView)dependencyObject;
+            conversationItemView.PreviewText.Text = (string)eventArguments.NewValue;
         }
 
         public static readonly DependencyProperty TimestampProperty =
@@ -117,8 +121,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private static void OnTimestampChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)dependencyObject;
-            view.TimestampText.Text = (string)eventArguments.NewValue;
+            var conversationItemView = (ConversationItemView)dependencyObject;
+            conversationItemView.TimestampText.Text = (string)eventArguments.NewValue;
         }
 
         public static readonly DependencyProperty UnreadCountProperty =
@@ -126,7 +130,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                 nameof(UnreadCount),
                 typeof(int),
                 typeof(ConversationItemView),
-                new PropertyMetadata(0, OnUnreadCountChanged));
+                new PropertyMetadata(EmptyUnreadMessagesCount, OnUnreadCountChanged));
 
         public int UnreadCount
         {
@@ -136,8 +140,8 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private static void OnUnreadCountChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)dependencyObject;
-            view.UnreadCountText.Text = eventArguments.NewValue.ToString();
+            var conversationItemView = (ConversationItemView)dependencyObject;
+            conversationItemView.UnreadCountText.Text = eventArguments.NewValue.ToString();
         }
 
         public static readonly DependencyProperty HasUnreadProperty =
@@ -155,15 +159,15 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private static void OnHasUnreadChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArguments)
         {
-            var view = (ConversationItemView)dependencyObject;
-            view.UnreadBadge.Visibility = (bool)eventArguments.NewValue
+            var conversationItemView = (ConversationItemView)dependencyObject;
+            conversationItemView.UnreadBadge.Visibility = (bool)eventArguments.NewValue
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
 
-        public Visibility GetBadgeVisibility(int count)
+        public Visibility GetBadgeVisibility(int currentUnreadCount)
         {
-            return count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            return currentUnreadCount > EmptyUnreadMessagesCount ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

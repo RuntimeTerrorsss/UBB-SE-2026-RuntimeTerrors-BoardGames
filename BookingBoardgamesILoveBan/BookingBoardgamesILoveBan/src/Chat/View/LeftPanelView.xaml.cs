@@ -19,9 +19,6 @@ using Windows.System;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class LeftPanelView : UserControl
     {
         private LeftPanelViewModel viewModel;
@@ -31,26 +28,28 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             set
             {
                 viewModel = value;
-                viewModel.PropertyChanged += (s, e) => RefreshVisibility();
-                RefreshVisibility(); // catch initial state
-                // Bindings.Update();
+                viewModel.PropertyChanged += (sender, propertyChangedEventArgs) => RefreshVisibility();
+                RefreshVisibility();
             }
         }
+
         private void RefreshVisibility()
         {
             EmptyStatePanel.Visibility = ViewModel.IsEmptyStateVisible ? Visibility.Visible : Visibility.Collapsed;
             NoMatchesPanel.Visibility = ViewModel.IsNoMatchesVisible ? Visibility.Visible : Visibility.Collapsed;
             ConversationList.Visibility = ViewModel.IsListVisible ? Visibility.Visible : Visibility.Collapsed;
         }
+
         public LeftPanelView()
         {
             InitializeComponent();
         }
-        private void ConversationList_SelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
+
+        private void ConversationList_SelectionChanged(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
         {
-            if (ConversationList.SelectedItem is ConversationPreviewModel selected)
+            if (ConversationList.SelectedItem is ConversationPreviewModel selectedConversation)
             {
-                ViewModel.SelectedConversation = selected;
+                ViewModel.SelectedConversation = selectedConversation;
             }
         }
     }

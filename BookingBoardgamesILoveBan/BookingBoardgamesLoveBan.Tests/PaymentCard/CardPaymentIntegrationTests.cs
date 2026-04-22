@@ -35,12 +35,16 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
 
-            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
-
-            Assert.NotNull(resultDataTransferObject);
-
-            userService.UpdateBalance(clientIdentifier, currentClientBalance);
-            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            try
+            {
+                var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+                Assert.NotNull(resultDataTransferObject);
+            }
+            finally
+            {
+                userService.UpdateBalance(clientIdentifier, currentClientBalance);
+                userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            }
         }
 
         [Fact]
@@ -63,12 +67,16 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
 
-            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
-
-            Assert.Equal(expectedPaymentMethod, resultDataTransferObject.PaymentMethod);
-
-            userService.UpdateBalance(clientIdentifier, currentClientBalance);
-            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            try
+            {
+                var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+                Assert.Equal(expectedPaymentMethod, resultDataTransferObject.PaymentMethod);
+            }
+            finally
+            {
+                userService.UpdateBalance(clientIdentifier, currentClientBalance);
+                userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            }
         }
 
         [Fact]
@@ -90,13 +98,17 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
 
-            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
-            var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
-
-            Assert.NotNull(retrievedPayment);
-
-            userService.UpdateBalance(clientIdentifier, currentClientBalance);
-            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            try
+            {
+                var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+                var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
+                Assert.NotNull(retrievedPayment);
+            }
+            finally
+            {
+                userService.UpdateBalance(clientIdentifier, currentClientBalance);
+                userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            }
         }
 
         [Fact]
@@ -118,13 +130,17 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
 
-            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
-            var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
-
-            Assert.Equal(paymentPrice, retrievedPayment.Amount);
-
-            userService.UpdateBalance(clientIdentifier, currentClientBalance);
-            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            try
+            {
+                var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+                var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
+                Assert.Equal(paymentPrice, retrievedPayment.Amount);
+            }
+            finally
+            {
+                userService.UpdateBalance(clientIdentifier, currentClientBalance);
+                userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            }
         }
 
         [Fact]
@@ -146,13 +162,17 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
             decimal currentClientBalance = userService.GetUserBalance(clientIdentifier);
             decimal currentOwnerBalance = userService.GetUserBalance(ownerIdentifier);
 
-            var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
-            var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
-
-            Assert.Equal(clientIdentifier, retrievedPayment.ClientIdentifier);
-
-            userService.UpdateBalance(clientIdentifier, currentClientBalance);
-            userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            try
+            {
+                var resultDataTransferObject = cardPaymentService.AddCardPayment(requestIdentifier, clientIdentifier, ownerIdentifier, paymentPrice);
+                var retrievedPayment = cardPaymentService.GetCardPayment(resultDataTransferObject.TransactionIdentifier);
+                Assert.Equal(clientIdentifier, retrievedPayment.ClientIdentifier);
+            }
+            finally
+            {
+                userService.UpdateBalance(clientIdentifier, currentClientBalance);
+                userService.UpdateBalance(ownerIdentifier, currentOwnerBalance);
+            }
         }
 
         [Fact]

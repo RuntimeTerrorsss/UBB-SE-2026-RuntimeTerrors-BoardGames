@@ -9,108 +9,133 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class MessageViewModelTests
     {
-        private MessageDTO CreateMessage()
+        private MessageDataTransferObject CreateMessage()
         {
-            return new MessageDTO(
-                id: 1,
-                conversationId: 10,
-                senderId: 2,
-                receiverId: 1,
-                sentAt: new DateTime(2026, 1, 1, 14, 30, 0),
-                content: "hello",
-                type: MessageType.MessageText,
-                imageUrl: null,
-                isAccepted: false,
-                isResolved: false,
-                isAcceptedByBuyer: false,
-                isAcceptedBySeller: false,
-                requestId: -1,
-                paymentId: -1);
+            int defaultMessageId = 1;
+            int targetConversationId = 10;
+            int defaultSenderId = 2;
+            int defaultReceiverId = 1;
+            int testYear = 2026;
+            int testMonth = 1;
+            int testDay = 1;
+            int testHour = 14;
+            int testMinute = 30;
+            int testSecond = 0;
+            int missingIdentifier = -1;
+            string textContent = "hello";
+
+            return new MessageDataTransferObject(
+                defaultMessageId,
+                targetConversationId,
+                defaultSenderId,
+                defaultReceiverId,
+                new DateTime(testYear, testMonth, testDay, testHour, testMinute, testSecond),
+                textContent,
+                MessageType.MessageText,
+                null,
+                false,
+                false,
+                false,
+                false,
+                missingIdentifier,
+                missingIdentifier);
         }
 
         [Fact]
-        public void IsMine_SenderIsCurrentUser_IsTrue()
+        public void IsMine_SenderMatchesCurrentUser_ReturnsTrue()
         {
-            var message = CreateMessage() with { senderId = 1 };
+            int currentUserId = 1;
+            var messageData = CreateMessage() with { senderId = currentUserId };
 
-            var viewModel = new MessageViewModel(message, 1);
+            var viewModel = new MessageViewModel(messageData, currentUserId);
 
             Assert.True(viewModel.IsMine);
         }
 
         [Fact]
-        public void IsMine_SenderIsNotCurrentUser_IsFalse()
+        public void IsMine_SenderDiffersFromCurrentUser_ReturnsFalse()
         {
-            var message = CreateMessage() with { senderId = 99 };
+            int currentUserId = 1;
+            int externalUserId = 99;
+            var messageData = CreateMessage() with { senderId = externalUserId };
 
-            var viewModel = new MessageViewModel(message, 1);
+            var viewModel = new MessageViewModel(messageData, currentUserId);
 
             Assert.False(viewModel.IsMine);
         }
 
         [Fact]
-        public void IsRead_Default_False()
+        public void IsRead_DefaultInitialization_ReturnsFalse()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
             Assert.False(viewModel.IsRead);
         }
 
         [Fact]
-        public void SettingIsResolved_RaisePropertyChanged()
+        public void IsResolved_ValueChanged_RaisesPropertyChanged()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
-            bool raised = false;
+            bool eventRaised = false;
 
-            viewModel.PropertyChanged += (_, e) =>
+            viewModel.PropertyChanged += (eventSender, propertyChangedEventArgs) =>
             {
-                if (e.PropertyName == nameof(viewModel.IsResolved))
+                if (propertyChangedEventArgs.PropertyName == nameof(viewModel.IsResolved))
                 {
-                    raised = true;
+                    eventRaised = true;
                 }
             };
 
             viewModel.IsResolved = true;
 
             Assert.True(viewModel.IsResolved);
-            Assert.True(raised);
+            Assert.True(eventRaised);
         }
 
         [Fact]
-        public void SettingAcceptedByUpdate_BothAccepted()
+        public void BothAccepted_TwoParticipantsAccepted_ReturnsTrue()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            int firstUserIdentifier = 1;
+            int secondUserIdentifier = 2;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
-            viewModel.AcceptedBy = new[] { 1, 2 };
+            viewModel.AcceptedBy = new[] { firstUserIdentifier, secondUserIdentifier };
 
             Assert.True(viewModel.BothAccepted);
         }
 
         [Fact]
-        public void ChangingAcceptedBy_RaiseBothAcceptedPropertyChanged()
+        public void AcceptedBy_ValueChanged_RaisesBothAcceptedPropertyChanged()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            int firstUserIdentifier = 1;
+            int secondUserIdentifier = 2;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
-            bool raised = false;
+            bool eventRaised = false;
 
-            viewModel.PropertyChanged += (_, e) =>
+            viewModel.PropertyChanged += (eventSender, propertyChangedEventArgs) =>
             {
-                if (e.PropertyName == nameof(viewModel.BothAccepted))
+                if (propertyChangedEventArgs.PropertyName == nameof(viewModel.BothAccepted))
                 {
-                    raised = true;
+                    eventRaised = true;
                 }
             };
 
-            viewModel.AcceptedBy = new[] { 1, 2 };
+            viewModel.AcceptedBy = new[] { firstUserIdentifier, secondUserIdentifier };
 
-            Assert.True(raised);
+            Assert.True(eventRaised);
         }
 
         [Fact]
-        public void IsRead_CanBeUpdated()
+        public void IsRead_PropertyIsMutable_CanBeUpdated()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
             viewModel.IsRead = true;
 
@@ -118,11 +143,12 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void IsAccepted_BeSetFromDTOAndUpdatable()
+        public void IsAccepted_MappedFromDTO_IsUpdatable()
         {
-            var message = CreateMessage() with { isAccepted = true };
+            int currentUserId = 1;
+            var messageData = CreateMessage() with { isAccepted = true };
 
-            var viewModel = new MessageViewModel(message, 1);
+            var viewModel = new MessageViewModel(messageData, currentUserId);
 
             Assert.True(viewModel.IsAccepted);
 
@@ -132,42 +158,55 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
         }
 
         [Fact]
-        public void BothAccepted_NotTwo_False()
+        public void BothAccepted_LessThenTwoAccepted_ReturnsFalse()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            int singleUserIdentifier = 1;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
-            viewModel.AcceptedBy = new[] { 1 };
+            viewModel.AcceptedBy = new[] { singleUserIdentifier };
 
             Assert.False(viewModel.BothAccepted);
         }
 
         [Fact]
-        public void IsMineToAlignment_ReturnCorrectValue()
+        public void IsMineToAlignment_ValidInput_ReturnsCorrectAlignment()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            bool belongsToCurrentUser = true;
+            bool belongsToExternalUser = false;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
-            Assert.Equal(HorizontalAlignment.Right, viewModel.IsMineToAlignment(true));
-            Assert.Equal(HorizontalAlignment.Left, viewModel.IsMineToAlignment(false));
+            Assert.Equal(HorizontalAlignment.Right, viewModel.IsMineToAlignment(belongsToCurrentUser));
+            Assert.Equal(HorizontalAlignment.Left, viewModel.IsMineToAlignment(belongsToExternalUser));
         }
 
         [Fact]
-        public void IsMineToCornerRadius_ReturnDifferentValues()
+        public void IsMineToCornerRadius_BooleanValues_ReturnDifferentShapes()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            bool belongsToCurrentUser = true;
+            bool belongsToExternalUser = false;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
             Assert.NotEqual(
-                viewModel.IsMineToCornerRadius(true),
-                viewModel.IsMineToCornerRadius(false)
+                viewModel.IsMineToCornerRadius(belongsToCurrentUser),
+                viewModel.IsMineToCornerRadius(belongsToExternalUser)
             );
         }
 
         [Fact]
-        public void IsMineToBorderThickness_ReturnCorrect()
+        public void IsMineToBorderThickness_ValidInput_ReturnsCorrectThickness()
         {
-            var viewModel = new MessageViewModel(CreateMessage(), 1);
+            int currentUserId = 1;
+            bool belongsToCurrentUser = true;
+            bool belongsToExternalUser = false;
+            double noThickness = 0;
+            double defaultThickness = 1;
+            var viewModel = new MessageViewModel(CreateMessage(), currentUserId);
 
-            Assert.Equal(new Thickness(0), viewModel.IsMineToTheirsOnlyBorderThickness(true));
-            Assert.Equal(new Thickness(1), viewModel.IsMineToTheirsOnlyBorderThickness(false));
+            Assert.Equal(new Thickness(noThickness), viewModel.IsMineToTheirsOnlyBorderThickness(belongsToCurrentUser));
+            Assert.Equal(new Thickness(defaultThickness), viewModel.IsMineToTheirsOnlyBorderThickness(belongsToExternalUser));
         }
     }
 }
