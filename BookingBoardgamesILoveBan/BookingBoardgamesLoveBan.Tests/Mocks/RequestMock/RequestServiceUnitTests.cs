@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
 using Moq;
@@ -29,7 +29,7 @@ public class RequestServiceUnitTests
     }
 
     [Fact]
-    public void GetRequestById_ReturnsCorrectRequest_WhenExists()
+    public void GetRequestById_RequestExists_ReturnsCorrectRequest()
     {
         var expected = new Request(TestRequestId, TestGameId, TestClientId, TestOwnerId, TestStartDate, TestEndDate);
         mockRequestRepository.Setup(r => r.GetById(TestRequestId)).Returns(expected);
@@ -43,7 +43,7 @@ public class RequestServiceUnitTests
     }
 
     [Fact]
-    public void GetRequestPrice_ReturnsCorrectPrice_WhenExists()
+    public void GetRequestPrice_RequestExists_ReturnsCorrectPrice()
     {
         var request = new Request(TestRequestId, TestGameId, TestClientId, TestOwnerId, TestStartDate, TestEndDate);
         mockRequestRepository.Setup(r => r.GetById(TestRequestId)).Returns(request);
@@ -55,7 +55,7 @@ public class RequestServiceUnitTests
     }
 
     [Fact]
-    public void GetGameName_ReturnsCorrectName_WhenExists()
+    public void GetGameName_RequestAndGameExist_ReturnsCorrectName()
     {
         var request = new Request(TestRequestId, TestGameId, TestClientId, TestOwnerId, TestStartDate, TestEndDate);
         var game = new Game(TestGameId, TestGameName, TestPricePerDay);
@@ -65,5 +65,50 @@ public class RequestServiceUnitTests
         var result = service.GetGameName(TestRequestId);
 
         Assert.Equal(TestGameName, result);
+    }
+
+    [Fact]
+    public void GetRequestPrice_RequestDoesNotExist_ReturnsZero()
+    {
+        mockRequestRepository.Setup(r => r.GetById(TestRequestId)).Returns((Request)null);
+
+        var result = service.GetRequestPrice(TestRequestId);
+
+        Assert.Equal(0m, result);
+    }
+
+    [Fact]
+    public void GetRequestPrice_ZeroDays_CalculatesAsOneDay()
+    {
+        var sameDay = new DateTime(2023, 10, 1);
+        var request = new Request(TestRequestId, TestGameId, TestClientId, TestOwnerId, sameDay, sameDay);
+        mockRequestRepository.Setup(r => r.GetById(TestRequestId)).Returns(request);
+        mockGameRepository.Setup(g => g.GetPriceGameById(TestGameId)).Returns(TestPricePerDay);
+
+        var result = service.GetRequestPrice(TestRequestId);
+
+        Assert.Equal(TestPricePerDay * 1, result);
+    }
+
+    [Fact]
+    public void GetGameName_RequestDoesNotExist_ReturnsUnknownRequest()
+    {
+        mockRequestRepository.Setup(r => r.GetById(TestRequestId)).Returns((Request)null);
+
+        var result = service.GetGameName(TestRequestId);
+
+        Assert.Equal("Unknown Request", result);
+    }
+
+    [Fact]
+    public void GetGameName_GameDoesNotExist_ReturnsUnknownGame()
+    {
+        var request = new Request(TestRequestId, TestGameId, TestClientId, TestOwnerId, TestStartDate, TestEndDate);
+        mockRequestRepository.Setup(r => r.GetById(TestRequestId)).Returns(request);
+        mockGameRepository.Setup(g => g.GetById(TestGameId)).Returns((Game)null);
+
+        var result = service.GetGameName(TestRequestId);
+
+        Assert.Equal("Unknown Game", result);
     }
 }

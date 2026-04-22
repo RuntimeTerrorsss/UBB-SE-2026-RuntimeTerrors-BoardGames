@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using BookingBoardgamesILoveBan.Src.Mocks.RequestMock;
 using Microsoft.Data.SqlClient;
@@ -17,7 +17,7 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.RequestMock
         }
 
         [Fact]
-        public void GetById_ReturnsRequest_WhenExists()
+        public void GetById_RequestExists_ReturnsRequest()
         {
             int gid = 1334;
             int rid = 1335;
@@ -78,6 +78,15 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.RequestMock
                     new SqlCommand($"DELETE FROM Game WHERE gid = {gid}", conn).ExecuteNonQuery();
                 }
             }
+        }
+
+        [Fact]
+        public void GetById_RequestDoesNotExist_ReturnsNull()
+        {
+            var service = new RequestRepository();
+            var request = service.GetById(-999);
+
+            Assert.Null(request);
         }
     }
 }

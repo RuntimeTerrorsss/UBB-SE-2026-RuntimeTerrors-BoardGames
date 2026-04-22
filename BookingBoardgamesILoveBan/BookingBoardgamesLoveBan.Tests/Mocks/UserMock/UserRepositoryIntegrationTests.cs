@@ -1,4 +1,4 @@
-﻿using BookingBoardgamesILoveBan.Src.Delivery.Model;
+using BookingBoardgamesILoveBan.Src.Delivery.Model;
 using BookingBoardgamesILoveBan.Src.Mocks.UserMock;
 using Microsoft.Data.SqlClient;
 using Xunit;
@@ -16,7 +16,7 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         }
 
         [Fact]
-        public void GetById_ReturnsUser_WhenExists()
+        public void GetById_UserExists_ReturnsUser()
         {
             int testUid = 8881;
             SetupTestUser(testUid, "TestUser1", 100.0m);
@@ -38,7 +38,16 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         }
 
         [Fact]
-        public void SaveAddress_UpdatesUserAddressCorrectly()
+        public void GetById_UserDoesNotExist_ReturnsNull()
+        {
+            var service = new UserRepository();
+            var user = service.GetById(-999);
+
+            Assert.Null(user);
+        }
+
+        [Fact]
+        public void SaveAddress_ValidAddress_UpdatesUserAddress()
         {
             int testUid = 8882;
             SetupTestUser(testUid, "TestUser2", 50.0m);
@@ -61,7 +70,18 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         }
 
         [Fact]
-        public void GetUserBalance_ReturnsCorrectBalance()
+        public void SaveAddress_UserDoesNotExist_DoesNotThrow()
+        {
+            var service = new UserRepository();
+            var newAddress = new Address("Moldova", "Chisinau", "Stefan cel Mare", "10");
+
+            var exception = Record.Exception(() => service.SaveAddress(-999, newAddress));
+
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void GetUserBalance_UserExists_ReturnsCorrectBalance()
         {
             int testUid = 8883;
             decimal initialBalance = 150.75m;
@@ -80,7 +100,16 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         }
 
         [Fact]
-        public void UpdateBalance_ChangesBalanceInDatabase()
+        public void GetUserBalance_UserDoesNotExist_ReturnsZero()
+        {
+            var service = new UserRepository();
+            decimal balance = service.GetUserBalance(-999);
+
+            Assert.Equal(0m, balance);
+        }
+
+        [Fact]
+        public void UpdateBalance_ValidUser_ChangesBalanceInDatabase()
         {
             int testUid = 8884;
             SetupTestUser(testUid, "TestUser4", 0.0m);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BookingBoardgamesILoveBan.Src.Mocks.GameMock;
 using Microsoft.Data.SqlClient;
 using Xunit;
@@ -19,7 +19,7 @@ public class GameRepositoryIntegrationTests
     }
 
     [Fact]
-    public void GetById_ReturnsGame_WhenExists()
+    public void GetById_GameExists_ReturnsGame()
     {
         int testId = 12344;
 
@@ -62,7 +62,16 @@ public class GameRepositoryIntegrationTests
     }
 
     [Fact]
-    public void GetPriceGameById_ReturnsCorrectPrice_WhenGameExists()
+    public void GetById_GameDoesNotExist_ReturnsNull()
+    {
+        var service = new GameRepository();
+        var game = service.GetById(-999);
+
+        Assert.Null(game);
+    }
+
+    [Fact]
+    public void GetPriceGameById_GameExists_ReturnsCorrectPrice()
     {
         int testId = 12345;
         decimal expectedPrice = 25.50m;
@@ -102,5 +111,14 @@ public class GameRepositoryIntegrationTests
                 delete.ExecuteNonQuery();
             }
         }
+    }
+
+    [Fact]
+    public void GetPriceGameById_GameDoesNotExist_ReturnsZero()
+    {
+        var service = new GameRepository();
+        var price = service.GetPriceGameById(-999);
+
+        Assert.Equal(0m, price);
     }
 }
