@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,9 +35,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             await Task.Delay(1500);
             var result = await service.GetAddressFromMapAsync(46.77, 23.59);
 
-            Assert.Equal("România", result.Country);
-            Assert.NotEmpty(result.City);
-            Assert.NotEmpty(result.Street);
+            var expected = new { Country = "România", HasCity = true, HasStreet = true };
+            var actual = new { result.Country, HasCity = !string.IsNullOrEmpty(result.City), HasStreet = !string.IsNullOrEmpty(result.Street) };
+
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
@@ -49,7 +50,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         }
 
         [Fact]
-        public async Task GetAddressFromMapAsync_Town_FillsCityField()
+        public async Task GetAddressFromMapAsync_TownProvided_FillsCityField()
         {
             await Task.Delay(1500);
             var result = await service.GetAddressFromMapAsync(46.80, 23.70);

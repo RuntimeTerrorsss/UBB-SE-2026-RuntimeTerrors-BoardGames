@@ -9,7 +9,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.Repository
     public interface IConversationRepository
     {
         List<Conversation> GetConversationsForUser(int userId);
-        Conversation GetConversationById(int convId);
+        Conversation GetConversationById(int conversationId);
 
         void HandleNewMessage(Message message);
         void HandleMessageUpdate(Message message);

@@ -16,18 +16,17 @@ using Windows.Foundation.Collections;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class RightPanelView : UserControl
     {
         public event EventHandler<(int userId, int requestId, int messageId)>? ProceedToPaymentRequested;
+
         public RightPanelView()
         {
             InitializeComponent();
 
-            ActiveChat.ProceedToPaymentRequested += (s, e) => ProceedToPaymentRequested?.Invoke(s, e);
+            ActiveChat.ProceedToPaymentRequested += (sender, paymentArguments) => ProceedToPaymentRequested?.Invoke(sender, paymentArguments);
         }
+
         public ChatViewModel ChatViewModel
         {
             set
@@ -35,12 +34,14 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
                 ActiveChat.ViewModel = value;
             }
         }
+
         public int CurrentUserId
         {
             set => ActiveChat.CurrentUserId = value;
         }
 
         private bool isConversationSelected = false;
+
         public bool IsConversationSelected
         {
             get => isConversationSelected;

@@ -12,316 +12,384 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
 {
     public class LeftPanelViewModelTests
     {
-        private Mock<IUserRepository> userService = new Mock<IUserRepository>();
+        private Mock<IUserRepository> userServiceMock = new Mock<IUserRepository>();
 
         private LeftPanelViewModel CreateViewModel()
         {
-            userService
-                .Setup(user => user.GetById(It.IsAny<int>()))
-                .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
+            int defaultUserId = 1;
+            string testName = "name";
+            string testCountry = "country";
+            string testCity = "city";
+            string testStreet = "street";
+            string testStreetNumber = "streetNumber";
+
+            userServiceMock
+                .Setup(userRepository => userRepository.GetById(It.IsAny<int>()))
+                .Returns(new User(defaultUserId, testName, testCountry, testCity, testStreet, testStreetNumber));
             return new LeftPanelViewModel();
         }
+
         private IUserRepository CreateUserService()
         {
-            var service = new Moq.Mock<IUserRepository>();
+            var serviceMock = new Mock<IUserRepository>();
+            int defaultUserId = 1;
+            string testName = "name";
+            string testCountry = "country";
+            string testCity = "city";
+            string testStreet = "street";
+            string testStreetNumber = "streetNumber";
 
-            service.Setup(s => s.GetById(It.IsAny<int>()))
-                .Returns(new User(1, "name", "country", "city", "street", "streetNumber"));
+            serviceMock.Setup(userRepository => userRepository.GetById(It.IsAny<int>()))
+                .Returns(new User(defaultUserId, testName, testCountry, testCity, testStreet, testStreetNumber));
 
-            return service.Object;
+            return serviceMock.Object;
         }
-        private ConversationDTO CreateConversation(int id = 1)
+
+        private ConversationDataTransferObject CreateConversation(int targetConversationId = 1)
         {
-            return new ConversationDTO(
-                conversationId: id,
-                participants: new[] { 1, 2 },
-                messages: new List<MessageDTO>(),
-                lastRead: new Dictionary<int, DateTime>
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+
+            return new ConversationDataTransferObject(
+                targetConversationId,
+                new[] { firstParticipantId, secondParticipantId },
+                new List<MessageDataTransferObject>(),
+                new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.MinValue },
-                    { 2, DateTime.MinValue }
+                    { firstParticipantId, DateTime.MinValue },
+                    { secondParticipantId, DateTime.MinValue }
                 });
         }
-        private MessageDTO CreateMessage(int convId = 1)
+
+        private MessageDataTransferObject CreateMessage(int targetConversationId = 1)
         {
-            return new MessageDTO(
-                id: 1,
-                conversationId: convId,
-                senderId: 1,
-                receiverId: 2,
-                sentAt: DateTime.Now,
-                content: "hello",
-                type: MessageType.MessageText,
-                imageUrl: null,
-                isAccepted: false,
-                isResolved: false,
-                isAcceptedBySeller: false,
-                isAcceptedByBuyer: false,
-                requestId: -1,
-                paymentId: -1);
+            int defaultMessageId = 1;
+            int senderIdentifier = 1;
+            int receiverIdentifier = 2;
+            int missingIdentifier = -1;
+            string textContent = "hello";
+
+            return new MessageDataTransferObject(
+                defaultMessageId,
+                targetConversationId,
+                senderIdentifier,
+                receiverIdentifier,
+                DateTime.Now,
+                textContent,
+                MessageType.MessageText,
+                null,
+                false,
+                false,
+                false,
+                false,
+                missingIdentifier,
+                missingIdentifier);
         }
 
         [Fact]
-        public void HandleIncomingMessage_AddNewConversation_IsAdded()
+        public void HandleIncomingMessage_NewConversation_AddsToCollection()
         {
             var viewModel = CreateViewModel();
+            string senderName = "John";
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), senderName, userServiceMock.Object);
 
             Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void HandleIncomingMessage_UpdateExistingConversation()
+        public void HandleIncomingMessage_ExistingConversation_UpdatesPreview()
         {
             var viewModel = CreateViewModel();
+            var originalMessage = CreateMessage();
+            string senderName = "John";
+            string updatedContent = "updated";
 
-            var message = CreateMessage();
-
-            viewModel.HandleIncomingMessage(message, "John", userService.Object);
-            viewModel.HandleIncomingMessage(message with { content = "updated" }, "John", userService.Object);
+            viewModel.HandleIncomingMessage(originalMessage, senderName, userServiceMock.Object);
+            viewModel.HandleIncomingMessage(originalMessage with { content = updatedContent }, senderName, userServiceMock.Object);
 
             Assert.Single(viewModel.Conversations);
-            Assert.Equal("updated", viewModel.Conversations.First().LastMessageText);
+            Assert.Equal(updatedContent, viewModel.Conversations.First().LastMessageText);
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenNotSelected_IncrementUnread()
+        public void HandleIncomingMessage_ConversationNotSelected_IncrementsUnreadCount()
         {
             var viewModel = CreateViewModel();
+            string senderName = "John";
+            int expectedUnreadCount = 1;
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), senderName, userServiceMock.Object);
 
-            var conversation = viewModel.Conversations.First();
-            Assert.Equal(1, conversation.UnreadCount);
+            var targetConversation = viewModel.Conversations.First();
+            Assert.Equal(expectedUnreadCount, targetConversation.UnreadCount);
         }
 
         [Fact]
-        public void SelectingConversation_SetUnreadToZero()
+        public void SelectedConversation_ValidSelection_SetsUnreadCountToZero()
         {
             var viewModel = CreateViewModel();
+            string senderName = "John";
+            int expectedZeroUnreadCount = 0;
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), senderName, userServiceMock.Object);
 
-            var conversation = viewModel.Conversations.First();
+            var targetConversation = viewModel.Conversations.First();
+            viewModel.SelectedConversation = targetConversation;
 
-            viewModel.SelectedConversation = conversation;
-
-            Assert.Equal(0, conversation.UnreadCount);
+            Assert.Equal(expectedZeroUnreadCount, targetConversation.UnreadCount);
         }
 
         [Fact]
-        public void SearchText_FilterConversations()
+        public void SearchText_ValidSearchString_FiltersConversations()
         {
             var viewModel = CreateViewModel();
+            int alternativeConversationId = 2;
+            string firstSenderName = "John";
+            string secondSenderName = "Mike";
+            string searchString = "John";
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
-            viewModel.HandleIncomingMessage(CreateMessage() with { conversationId = 2 }, "Mike", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), firstSenderName, userServiceMock.Object);
+            viewModel.HandleIncomingMessage(CreateMessage() with { conversationId = alternativeConversationId }, secondSenderName, userServiceMock.Object);
 
-            viewModel.SearchText = "John";
-
-            Assert.Single(viewModel.Conversations);
-        }
-
-        [Fact]
-        public void HandleIncomingConversation_AddConversation()
-        {
-            var viewModel = CreateViewModel();
-            var service = CreateUserService();
-
-            var conversation = CreateConversation();
-
-            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
+            viewModel.SearchText = searchString;
 
             Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void HandleIncomingConversation_DuplicateConversation_NotAddDuplicate()
+        public void HandleIncomingConversation_ValidConversation_AddsToCollection()
         {
             var viewModel = CreateViewModel();
-            var service = CreateUserService();
+            var userService = CreateUserService();
+            var newConversation = CreateConversation();
+            string senderName = "John";
+            int currentUserId = 1;
 
-            var conversation = CreateConversation();
-
-            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
-            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
+            viewModel.HandleIncomingConversation(newConversation, senderName, currentUserId, userService);
 
             Assert.Single(viewModel.Conversations);
         }
 
         [Fact]
-        public void SortConversationsByTimestamp_KeepConversations()
+        public void HandleIncomingConversation_DuplicateConversation_DoesNotAddDuplicate()
         {
             var viewModel = CreateViewModel();
-            var service = CreateUserService();
+            var userService = CreateUserService();
+            var newConversation = CreateConversation();
+            string senderName = "John";
+            int currentUserId = 1;
 
-            var conversation1 = CreateConversation(1);
-            var conversation2 = CreateConversation(2);
+            viewModel.HandleIncomingConversation(newConversation, senderName, currentUserId, userService);
+            viewModel.HandleIncomingConversation(newConversation, senderName, currentUserId, userService);
 
-            viewModel.HandleIncomingConversation(conversation1, "A", 1, service);
-            viewModel.HandleIncomingConversation(conversation2, "B", 1, service);
+            Assert.Single(viewModel.Conversations);
+        }
+
+        [Fact]
+        public void SortConversationsByTimestamp_ValidConversations_MaintainsTotalCount()
+        {
+            var viewModel = CreateViewModel();
+            var userService = CreateUserService();
+            int firstConversationId = 1;
+            int secondConversationId = 2;
+            int currentUserId = 1;
+            int expectedTotalConversations = 2;
+
+            var firstConversation = CreateConversation(firstConversationId);
+            var secondConversation = CreateConversation(secondConversationId);
+
+            viewModel.HandleIncomingConversation(firstConversation, "A", currentUserId, userService);
+            viewModel.HandleIncomingConversation(secondConversation, "B", currentUserId, userService);
 
             viewModel.SortConversationsByTimestamp();
 
-            Assert.Equal(2, viewModel.Conversations.Count);
+            Assert.Equal(expectedTotalConversations, viewModel.Conversations.Count);
         }
 
         [Fact]
-        public void UIStates_Update()
+        public void UIStates_ConversationAdded_UpdatesVisibilityFlags()
         {
             var viewModel = CreateViewModel();
+            string senderName = "John";
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), senderName, userServiceMock.Object);
 
             Assert.False(viewModel.IsEmptyStateVisible);
         }
 
         [Fact]
-        public void ApplyFilter_Reorder_ReorderCorrectly()
+        public void ApplyFilter_ValidList_ReordersCorrectly()
         {
             var viewModel = CreateViewModel();
+            int firstConversationId = 1;
+            int secondConversationId = 2;
+            string expectedFirstDisplayName = "A";
 
-            viewModel.HandleIncomingMessage(CreateMessage(1), "B", userService.Object);
-            viewModel.HandleIncomingMessage(CreateMessage(2), "A", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(firstConversationId), "B", userServiceMock.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(secondConversationId), "A", userServiceMock.Object);
 
             viewModel.SearchText = "";
 
-            Assert.Equal("A", viewModel.Conversations[0].DisplayName);
+            Assert.Equal(expectedFirstDisplayName, viewModel.Conversations[0].DisplayName);
         }
 
         [Fact]
-        public void ApplyFilter_Reorder_MoveItemsWhenOrderChanges()
+        public void ApplyFilter_TimestampsChanged_MovesItemsAccordingly()
         {
             var viewModel = CreateViewModel();
+            int firstConversationId = 1;
+            int secondConversationId = 2;
+            int firstIndex = 0;
+            int secondIndex = 1;
+            string expectedFirstDisplayName = "John";
 
-            viewModel.HandleIncomingMessage(CreateMessage(1), "John", userService.Object);
-            viewModel.HandleIncomingMessage(CreateMessage(2), "Mike", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(firstConversationId), "John", userServiceMock.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(secondConversationId), "Mike", userServiceMock.Object);
 
-            viewModel.Conversations[0].Timestamp = DateTime.MinValue;
-            viewModel.Conversations[1].Timestamp = DateTime.Now;
+            viewModel.Conversations[firstIndex].Timestamp = DateTime.MinValue;
+            viewModel.Conversations[secondIndex].Timestamp = DateTime.Now;
 
             viewModel.SortConversationsByTimestamp();
 
-            Assert.Equal("John", viewModel.Conversations.First().DisplayName);
+            Assert.Equal(expectedFirstDisplayName, viewModel.Conversations.First().DisplayName);
         }
 
         [Fact]
-        public void HandleIncomingMessage_WhenSelected_NotIncreaseUnread()
+        public void HandleIncomingMessage_ConversationIsSelected_DoesNotIncreaseUnreadCount()
         {
             var viewModel = CreateViewModel();
             var message = CreateMessage();
+            string senderName = "John";
+            string newContent = "new";
+            int expectedZeroUnreadCount = 0;
 
-            viewModel.HandleIncomingMessage(message, "John", userService.Object);
-            var conversation = viewModel.Conversations.First();
-            viewModel.SelectedConversation = conversation;
-            viewModel.HandleIncomingMessage(message with { content = "new" }, "John", userService.Object);
+            viewModel.HandleIncomingMessage(message, senderName, userServiceMock.Object);
+            var targetConversation = viewModel.Conversations.First();
+            viewModel.SelectedConversation = targetConversation;
+            viewModel.HandleIncomingMessage(message with { content = newContent }, senderName, userServiceMock.Object);
 
-            Assert.Equal(0, conversation.UnreadCount);
+            Assert.Equal(expectedZeroUnreadCount, targetConversation.UnreadCount);
         }
 
         [Fact]
-        public void HandleIncomingConversation_WithMessages_SetPreviewAndTimestamp()
+        public void HandleIncomingConversation_ContainsMessages_SetsPreviewAndTimestamp()
         {
             var viewModel = CreateViewModel();
-            var service = CreateUserService();
-
+            var userService = CreateUserService();
             var message = CreateMessage();
+            int targetConversationId = 1;
+            int firstParticipantId = 1;
+            int secondParticipantId = 2;
+            string senderName = "John";
+            string expectedText = "hello";
 
-            var conversation = new ConversationDTO(
-                conversationId: 1,
-                participants: new[] { 1, 2 },
-                messages: new List<MessageDTO> { message },
-                lastRead: new Dictionary<int, DateTime>
+            var conversation = new ConversationDataTransferObject(
+                targetConversationId,
+                new[] { firstParticipantId, secondParticipantId },
+                new List<MessageDataTransferObject> { message },
+                new Dictionary<int, DateTime>
                 {
-                    { 1, DateTime.MinValue },
-                    { 2, DateTime.MinValue }
+                    { firstParticipantId, DateTime.MinValue },
+                    { secondParticipantId, DateTime.MinValue }
                 }
             );
 
-            viewModel.HandleIncomingConversation(conversation, "John", 1, service);
+            viewModel.HandleIncomingConversation(conversation, senderName, firstParticipantId, userService);
 
-            var result = viewModel.Conversations.First();
+            var previewModel = viewModel.Conversations.First();
 
-            Assert.Equal("hello", result.LastMessageText);
-            Assert.Equal(message.sentAt, result.Timestamp);
+            Assert.Equal(expectedText, previewModel.LastMessageText);
+            Assert.Equal(message.sentAt, previewModel.Timestamp);
         }
 
         [Fact]
-        public void SortConversationsByTimestamp_OrderDescending_Sorted()
+        public void SortConversationsByTimestamp_MultipleTimestamps_SortsDescending()
         {
             var viewModel = CreateViewModel();
-            var service = CreateUserService();
+            var userService = CreateUserService();
+            int secondConversationId = 2;
+            int timeAddedMinutes = 1;
 
-            var message1 = CreateMessage();
-            var message2 = CreateMessage(2) with { sentAt = DateTime.Now.AddMinutes(1) };
+            var firstMessage = CreateMessage();
+            var secondMessage = CreateMessage(secondConversationId) with { sentAt = DateTime.Now.AddMinutes(timeAddedMinutes) };
 
-            viewModel.HandleIncomingMessage(message1, "A", userService.Object);
-            viewModel.HandleIncomingMessage(message2, "B", userService.Object);
+            viewModel.HandleIncomingMessage(firstMessage, "A", userServiceMock.Object);
+            viewModel.HandleIncomingMessage(secondMessage, "B", userServiceMock.Object);
 
             viewModel.SortConversationsByTimestamp();
 
-            var list = viewModel.Conversations.ToList();
+            var orderedList = viewModel.Conversations.ToList();
 
-            Assert.True(list[0].Timestamp >= list[1].Timestamp);
+            Assert.True(orderedList[0].Timestamp >= orderedList[1].Timestamp);
         }
 
         [Fact]
-        public void RaisePropertyChanged_InvokeEvent()
+        public void RaisePropertyChanged_ValidProperty_InvokesEvent()
         {
             var viewModel = CreateViewModel();
+            string testPropertyName = "TestProp";
+            bool eventTriggered = false;
 
-            bool triggered = false;
-
-            viewModel.PropertyChanged += (s, e) =>
+            viewModel.PropertyChanged += (eventSender, propertyChangedEventArgs) =>
             {
-                if (e.PropertyName == "TestProp")
-                    triggered = true;
+                if (propertyChangedEventArgs.PropertyName == testPropertyName)
+                {
+                    eventTriggered = true;
+                }
             };
 
-            viewModel.RaisePropertyChanged("TestProp");
+            viewModel.RaisePropertyChanged(testPropertyName);
 
-            Assert.True(triggered);
+            Assert.True(eventTriggered);
         }
 
         [Fact]
-        public void Search_NoMatches_ShowNoMatchesState()
+        public void SearchText_NoMatchesFound_ShowsNoMatchesState()
         {
             var viewModel = CreateViewModel();
+            string senderName = "John";
+            string invalidSearchString = "ZZZ";
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), senderName, userServiceMock.Object);
 
-            viewModel.SearchText = "ZZZ";
+            viewModel.SearchText = invalidSearchString;
 
             Assert.True(viewModel.IsNoMatchesVisible);
         }
 
         [Fact]
-        public void SelectingConversation_ZeroUnread_NotChange()
+        public void SelectedConversation_ZeroUnreadCount_DoesNotChangeCount()
         {
             var viewModel = CreateViewModel();
+            string senderName = "John";
+            int expectedZeroUnreadCount = 0;
 
-            viewModel.HandleIncomingMessage(CreateMessage(), "John", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(), senderName, userServiceMock.Object);
 
-            var conversation = viewModel.Conversations.First();
-            conversation.UnreadCount = 0;
+            var targetConversation = viewModel.Conversations.First();
+            targetConversation.UnreadCount = expectedZeroUnreadCount;
 
-            viewModel.SelectedConversation = conversation;
+            viewModel.SelectedConversation = targetConversation;
 
-            Assert.Equal(0, conversation.UnreadCount);
+            Assert.Equal(expectedZeroUnreadCount, targetConversation.UnreadCount);
         }
 
         [Fact]
-        public void Search_RemoveNonMatchingItems_ItemsRemoved()
+        public void SearchText_ValidFilter_RemovesNonMatchingItems()
         {
             var viewModel = CreateViewModel();
+            int firstConversationId = 1;
+            int secondConversationId = 2;
+            string firstSenderName = "John";
+            string secondSenderName = "Mike";
 
-            viewModel.HandleIncomingMessage(CreateMessage(1), "John", userService.Object);
-            viewModel.HandleIncomingMessage(CreateMessage(2), "Mike", userService.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(firstConversationId), firstSenderName, userServiceMock.Object);
+            viewModel.HandleIncomingMessage(CreateMessage(secondConversationId), secondSenderName, userServiceMock.Object);
 
-            viewModel.SearchText = "John";
+            viewModel.SearchText = firstSenderName;
 
-            Assert.DoesNotContain(viewModel.Conversations, c => c.DisplayName == "Mike");
+            Assert.DoesNotContain(viewModel.Conversations, conversationItem => conversationItem.DisplayName == secondSenderName);
         }
     }
 }

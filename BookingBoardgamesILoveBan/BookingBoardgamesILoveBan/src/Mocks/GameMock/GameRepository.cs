@@ -6,31 +6,28 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.GameMock
     {
         private readonly string connectionString = DatabaseBootstrap.GetAppConnection();
 
+        private const string GetGameByIdQuery = "SELECT gid, Name, PricePerDay FROM Game WHERE gid = @id";
+        private const string GetPriceByIdQuery = "SELECT PricePerDay FROM Game WHERE gid = @id";
+
         public Game GetById(int id)
         {
-            const string Query = @"SELECT gid, Name, PricePerDay FROM Game WHERE gid = @id";
             Game foundGame = null;
 
             using (var connection = new SqlConnection(connectionString))
+            using (var command = new SqlCommand(GetGameByIdQuery, connection))
             {
-                using (var command = new SqlCommand(Query, connection))
+                command.Parameters.AddWithValue("@id", id);
+                connection.Open();
+
+                using (var reader = command.ExecuteReader())
                 {
-                    command.Parameters.AddWithValue("@id", id);
-
-                    connection.Open();
-
-                    using (var reader = command.ExecuteReader())
+                    if (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            foundGame = new Game(
-                                reader.GetInt32(reader.GetOrdinal("gid")),
-                                reader.GetString(reader.GetOrdinal("Name")),
-                                reader.GetDecimal(reader.GetOrdinal("PricePerDay")));
-                        }
+                        foundGame = new Game(
+                            reader.GetInt32(reader.GetOrdinal("gid")),
+                            reader.GetString(reader.GetOrdinal("Name")),
+                            reader.GetDecimal(reader.GetOrdinal("PricePerDay")));
                     }
-
-                    connection.Close();
                 }
             }
 
@@ -41,15 +38,16 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.GameMock
         {
             using (var connection = new SqlConnection(connectionString))
             {
-                connection.Open();
-                var cmd = new SqlCommand("SELECT PricePerDay FROM [Game] WHERE gid = @gameId", connection);
-                cmd.Parameters.AddWithValue("@gameId", gameId);
+                var command = new SqlCommand("SELECT PricePerDay FROM [Game] WHERE gid = @gameId", connection);
+                command.Parameters.AddWithValue("@gameId", gameId);
 
-                using (var reader = cmd.ExecuteReader())
+                connection.Open();
+
+                using (var reader = command.ExecuteReader())
                 {
                     if (!reader.Read())
                     {
-                        return 0;
+                        return 0m;
                     }
 
                     return (decimal)reader["PricePerDay"];

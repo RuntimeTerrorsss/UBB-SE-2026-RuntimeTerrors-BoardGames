@@ -8,107 +8,143 @@ namespace BookingBoardgamesILoveBan.Tests.Chat
     {
         private ConversationPreviewModel CreateModel()
         {
+            int targetConversationId = 1;
+            string displayName = "John Doe";
+            string initials = "JD";
+            string lastMessageText = "hello";
+            int testYear = 2024;
+            int testMonth = 1;
+            int testDay = 1;
+            int testHour = 10;
+            int testMinute = 30;
+            int testSecond = 0;
+            int unreadCount = 3;
+            string avatarImageName = "avatar.png";
+
             return new ConversationPreviewModel(
-                conversationId: 1,
-                displayName: "John Doe",
-                initials: "JD",
-                lastMessageTextInput: "hello",
-                timestampInput: new DateTime(2024, 1, 1, 10, 30, 0),
-                unreadCountInput: 3,
-                avatarUrl: "avatar.png");
-        } 
-
-        [Fact]
-        public void TimestampString_ReturnCorrectFormat()
-        {
-            var model = CreateModel();
-
-            Assert.Equal("10:30", model.TimestampString);
+                targetConversationId,
+                displayName,
+                initials,
+                lastMessageText,
+                new DateTime(testYear, testMonth, testDay, testHour, testMinute, testSecond),
+                unreadCount,
+                avatarImageName);
         }
 
         [Fact]
-        public void LastMessageText_RaisePropertyChanged()
+        public void TimestampString_ValidTimestamp_ReturnsCorrectFormat()
         {
-            var model = CreateModel();
+            var previewModel = CreateModel();
+            string expectedFormat = "10:30";
 
-            bool raised = false;
-            model.PropertyChanged += (_, e) =>
+            Assert.Equal(expectedFormat, previewModel.TimestampString);
+        }
+
+        [Fact]
+        public void LastMessageText_ValueChanged_RaisesPropertyChanged()
+        {
+            var previewModel = CreateModel();
+            string newMessageText = "new message";
+
+            bool eventRaised = false;
+            previewModel.PropertyChanged += (eventSender, propertyChangedEventArgs) =>
             {
-                if (e.PropertyName == nameof(model.LastMessageText))
+                if (propertyChangedEventArgs.PropertyName == nameof(previewModel.LastMessageText))
                 {
-                    raised = true;
+                    eventRaised = true;
                 }
             };
 
-            model.LastMessageText = "new message";
+            previewModel.LastMessageText = newMessageText;
 
-            Assert.True(raised);
+            Assert.True(eventRaised);
         }
 
         [Fact]
-        public void Timestamp_ChangeProperty_RaisedFlagTrue()
+        public void Timestamp_ValueChanged_RaisesDependentPropertyChanges()
         {
-            var model = CreateModel();
+            var previewModel = CreateModel();
+            int testYear = 2024;
+            int testMonth = 1;
+            int testDay = 1;
+            int testHour = 11;
+            int testMinute = 0;
+            int testSecond = 0;
 
-            bool timestampRaised = false;
-            bool stringRaised = false;
+            bool timestampEventRaised = false;
+            bool stringEventRaised = false;
 
-            model.PropertyChanged += (_, e) =>
+            previewModel.PropertyChanged += (eventSender, propertyChangedEventArgs) =>
             {
-                if (e.PropertyName == nameof(model.Timestamp))
+                if (propertyChangedEventArgs.PropertyName == nameof(previewModel.Timestamp))
                 {
-                    timestampRaised = true;
+                    timestampEventRaised = true;
                 }
 
-                if (e.PropertyName == nameof(model.TimestampString))
+                if (propertyChangedEventArgs.PropertyName == nameof(previewModel.TimestampString))
                 {
-                    stringRaised = true;
+                    stringEventRaised = true;
                 }
             };
 
-            model.Timestamp = new DateTime(2024, 1, 1, 11, 0, 0);
+            previewModel.Timestamp = new DateTime(testYear, testMonth, testDay, testHour, testMinute, testSecond);
 
-            Assert.True(timestampRaised);
-            Assert.True(stringRaised);
+            Assert.True(timestampEventRaised);
+            Assert.True(stringEventRaised);
         }
 
         [Fact]
-        public void UnreadCount_ChangeProperty_RaisedFlagTrue()
+        public void UnreadCount_ValueChanged_RaisesPropertyChanged()
         {
-            var model = CreateModel();
+            var previewModel = CreateModel();
+            int newUnreadCount = 10;
 
-            bool raised = false;
-            model.PropertyChanged += (_, e) =>
+            bool eventRaised = false;
+            previewModel.PropertyChanged += (eventSender, propertyChangedEventArgs) =>
             {
-                if (e.PropertyName == nameof(model.UnreadCount))
+                if (propertyChangedEventArgs.PropertyName == nameof(previewModel.UnreadCount))
                 {
-                    raised = true;
+                    eventRaised = true;
                 }
             };
 
-            model.UnreadCount = 10;
+            previewModel.UnreadCount = newUnreadCount;
 
-            Assert.True(raised);
+            Assert.True(eventRaised);
         }
 
         [Fact]
-        public void Property_SettingSameValue_NotCrash()
+        public void SetProperties_SameValues_ExecutesWithoutError()
         {
-            var model = CreateModel();
+            var previewModel = CreateModel();
+            string testMessage = "hello";
+            int testUnreadCount = 3;
 
-            model.LastMessageText = "hello";
-            model.UnreadCount = 3;
-            model.Timestamp = model.Timestamp;
+            Exception executionException = Record.Exception(() =>
+            {
+                previewModel.LastMessageText = testMessage;
+                previewModel.UnreadCount = testUnreadCount;
+                previewModel.Timestamp = previewModel.Timestamp;
+            });
+
+            Assert.Null(executionException);
         }
 
         [Fact]
-        public void TimestampString_TimestampChanges_Updates()
+        public void TimestampString_TimestampUpdated_ReturnsNewFormattedString()
         {
-            var model = CreateModel();
+            var previewModel = CreateModel();
+            int testYear = 2024;
+            int testMonth = 1;
+            int testDay = 1;
+            int testHour = 15;
+            int testMinute = 45;
+            int testSecond = 0;
+            string expectedFormat = "15:45";
 
-            model.Timestamp = new DateTime(2024, 1, 1, 15, 45, 0);
+            previewModel.Timestamp = new DateTime(testYear, testMonth, testDay, testHour, testMinute, testSecond);
 
-            Assert.Equal("15:45", model.TimestampString);
+            Assert.Equal(expectedFormat, previewModel.TimestampString);
         }
     }
 }

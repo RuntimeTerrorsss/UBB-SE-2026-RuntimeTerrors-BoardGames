@@ -46,8 +46,8 @@ public class GameRepositoryIntegrationTests
 
             Assert.NotNull(game);
             Assert.Equal(
-                new { Gid = testId, Name = "TestGame", PricePerDay = (decimal)15 },
-                new { game.Gid, game.Name, game.PricePerDay });
+                new { Id = testId, Name = "TestGame", PricePerDay = (decimal)15 },
+                new { game.Id, game.Name, game.PricePerDay });
         }
         finally
         {

@@ -17,7 +17,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.ViewModel;
 public class ChatViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler PropertyChanged;
-    public event Action<MessageDTO> MessageSent;
+    public event Action<MessageDataTransferObject> MessageSent;
     public event Action<int, int, bool, bool> BookingRequestUpdate;
     public event Action<int, int> CashAgreementAccept;
 
@@ -29,7 +29,6 @@ public class ChatViewModel : INotifyPropertyChanged
     protected void OnPropertyChanged([CallerMemberName] string name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    // Bound to the banner
     private string displayName;
     public string DisplayName
     {
@@ -68,14 +67,7 @@ public class ChatViewModel : INotifyPropertyChanged
 
     public ObservableCollection<MessageViewModel> Messages { get; } = new ();
 
-    /// <summary>
-    /// Loads a conversation into the chat view model, replacing any existing messages.
-    /// Called when a conversation is selected from the list.
-    /// </summary>
-    /// <param name="conversation"></param>
-    /// <param name="messages"></param>
-    /// <param name="theirUnreadCount"></param>
-    public void LoadConversation(ConversationPreviewModel conversation, List<MessageDTO> messages, int theirUnreadCount)
+    public void LoadConversation(ConversationPreviewModel conversation, List<MessageDataTransferObject> messages, int theirUnreadCount)
     {
         ConversationId = conversation.ConversationId;
         DisplayName = conversation.DisplayName;
@@ -85,8 +77,8 @@ public class ChatViewModel : INotifyPropertyChanged
         Messages.Clear();
         for (int i = 0; i < messages.Count; i++)
         {
-            var message = messages[i];
-            var newMessageViewModel = new MessageViewModel(message, CurrentUserId);
+            var currentMessage = messages[i];
+            var newMessageViewModel = new MessageViewModel(currentMessage, CurrentUserId);
             if (i < messages.Count - theirUnreadCount)
             {
                 newMessageViewModel.IsRead = true;
@@ -95,22 +87,20 @@ public class ChatViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    /// Handles an incoming message for the active conversation.
-    /// This is called by the master view model when a new message received.
-    /// </summary>
-    /// <param name="message"></param>
-    public void HandleIncomingMessage(MessageDTO message)
+    public void HandleIncomingMessage(MessageDataTransferObject message)
     {
+        double oneSecondTolerance = 1;
+
         if (message.conversationId != ConversationId)
         {
             return;
         }
-        bool exists = Messages.Any(m =>
-        m.Content == message.content &&
-        Math.Abs((m.SentAt - message.sentAt).TotalSeconds) < 1);
 
-        if (exists)
+        bool messageExists = Messages.Any(messageItem =>
+            messageItem.Content == message.content &&
+            Math.Abs((messageItem.SentAt - message.sentAt).TotalSeconds) < oneSecondTolerance);
+
+        if (messageExists)
         {
             return;
         }
@@ -131,11 +121,6 @@ public class ChatViewModel : INotifyPropertyChanged
 
     public bool CanSend => !string.IsNullOrWhiteSpace(InputText);
 
-    /// <summary>
-    /// Sends a message typed in the input box.
-    /// This creates a new MessageDTO and raises the MessageSent event, which is handled by the master view model to actually
-    /// send the message to the server.
-    /// </summary>
     public void SendMessage()
     {
         if (!CanSend)
@@ -143,102 +128,92 @@ public class ChatViewModel : INotifyPropertyChanged
             return;
         }
 
-        var dto = new MessageDTO(
-            -1,
+        int unassignedIdentifier = -1;
+
+        var messageDataTransferObject = new MessageDataTransferObject(
+            unassignedIdentifier,
             ConversationId,
             CurrentUserId,
-            -1,
+            unassignedIdentifier,
             DateTime.Now,
             InputText,
             MessageType.MessageText,
             null,
             false,
             false,
-            false, false,
-            -1,
-            -1);
+            false,
+            false,
+            unassignedIdentifier,
+            unassignedIdentifier);
 
-        var viewModel = new MessageViewModel(dto, CurrentUserId);
+        var newViewModel = new MessageViewModel(messageDataTransferObject, CurrentUserId);
 
-        Messages.Add(viewModel);
+        Messages.Add(newViewModel);
         InputText = string.Empty;
-        MessageSent.Invoke(dto); // notify master viewModel
+        MessageSent.Invoke(messageDataTransferObject);
     }
 
-    /// <summary>
-    /// Handles accepting or rejecting a booking request.
-    /// This is called by the booking request message when the accept/reject/cancel buttons are clicked.
-    /// </summary>
-    /// <param name="messageId"></param>
-    /// <param name="accepted"></param>
     public void ResolveBookingRequest(int messageId, bool accepted)
     {
-        var message = Messages.FirstOrDefault(m => m.Id == messageId);
-        if (message == null)
+        var targetMessage = Messages.FirstOrDefault(messageItem => messageItem.Id == messageId);
+        if (targetMessage == null)
         {
             return;
         }
-        BookingRequestUpdate?.Invoke(messageId, message.ConversationId, accepted, accepted ? false : true);
+        BookingRequestUpdate?.Invoke(messageId, targetMessage.ConversationId, accepted, !accepted);
     }
 
-    /// <summary>
-    /// Handles accepting a cash agreement. This is called by the cash agreement message when the accept button is clicked.
-    /// </summary>
-    /// <param name="messageId"></param>
     public void UpdateCashAgreement(int messageId)
     {
-        var message = Messages.FirstOrDefault(m => m.Id == messageId);
-        if (message == null)
+        var targetMessage = Messages.FirstOrDefault(messageItem => messageItem.Id == messageId);
+        if (targetMessage == null)
         {
             return;
         }
-        CashAgreementAccept?.Invoke(messageId, message.ConversationId);
+        CashAgreementAccept?.Invoke(messageId, targetMessage.ConversationId);
     }
 
-    /// <summary>
-    /// Handles proceeding to payment after a cash agreement is accepted.
-    /// This is called by the cash agreement message when the proceed to payment button is clicked.
-    /// </summary>
-    /// <param name="messageId"></param>
     public void ProceedToPayment(int messageId)
     {
-        var message = Messages.FirstOrDefault(m => m.Id == messageId);
+        var targetMessage = Messages.FirstOrDefault(messageItem => messageItem.Id == messageId);
     }
 
-    /// <summary>
-    /// Handles sending an image message.
-    /// </summary>
-    /// <param name="fileName"></param>
     public void SendImage(string fileName)
     {
-        var dto = new MessageDTO(
-            -1,
+        int unassignedIdentifier = -1;
+
+        var messageDataTransferObject = new MessageDataTransferObject(
+            unassignedIdentifier,
             ConversationId,
             CurrentUserId,
-            -1,
+            unassignedIdentifier,
             DateTime.Now,
             string.Empty,
             MessageType.MessageImage,
             fileName,
             false,
             false,
-            false, false,
-            -1,
-            -1);
-        var viewModel = new MessageViewModel(dto, CurrentUserId);
-        // Messages.Add(viewModel);
+            false,
+            false,
+            unassignedIdentifier,
+            unassignedIdentifier);
+
+        var newViewModel = new MessageViewModel(messageDataTransferObject, CurrentUserId);
         InputText = string.Empty;
-        MessageSent.Invoke(dto);
+        MessageSent.Invoke(messageDataTransferObject);
     }
+
     public void RaiseBookingRequestUpdate(int messageId, int conversationId, bool accepted, bool resolved)
     {
         BookingRequestUpdate?.Invoke(messageId, conversationId, accepted, resolved);
     }
+
     public void RaiseCashAgreementAccept(int messageId, int conversationId)
     {
         CashAgreementAccept?.Invoke(messageId, conversationId);
     }
-    public void RaiseMessageSent(MessageDTO message)
+
+    public void RaiseMessageSent(MessageDataTransferObject message)
     {
         MessageSent?.Invoke(message);
     }

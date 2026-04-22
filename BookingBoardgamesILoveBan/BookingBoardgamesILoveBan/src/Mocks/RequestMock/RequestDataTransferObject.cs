@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
 {
-    public class RequestDto
+    public class RequestDataTransferObject
     {
-        public RequestDto(
+        public RequestDataTransferObject(
             int id,
             string gameName,
             int clientId,

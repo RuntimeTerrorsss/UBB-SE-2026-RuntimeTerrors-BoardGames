@@ -8,31 +8,33 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.Model.Validators
 {
     public class AddressValidator : IValidator<Dictionary<string, string>, Address>
     {
+        private const string RequiredFieldMessage = "is required";
+
         public Dictionary<string, string> Validate(Address address)
         {
-            var errors = new Dictionary<string, string>();
+            var validationErrors = new Dictionary<string, string>();
 
             if (string.IsNullOrWhiteSpace(address.Country))
             {
-                errors["Country"] = "Country is required";
+                validationErrors[nameof(address.Country)] = $"{nameof(address.Country)} {RequiredFieldMessage}";
             }
 
             if (string.IsNullOrWhiteSpace(address.City))
             {
-                errors["City"] = "City is required";
+                validationErrors[nameof(address.City)] = $"{nameof(address.City)} {RequiredFieldMessage}";
             }
 
             if (string.IsNullOrWhiteSpace(address.Street))
             {
-                errors["Street"] = "Street is required";
+                validationErrors[nameof(address.Street)] = $"{nameof(address.Street)} {RequiredFieldMessage}";
             }
 
             if (string.IsNullOrWhiteSpace(address.StreetNumber))
             {
-                errors["StreetNumber"] = "StreetNumber is required";
+                validationErrors[nameof(address.StreetNumber)] = $"{nameof(address.StreetNumber)} {RequiredFieldMessage}";
             }
 
-            return errors;
+            return validationErrors;
         }
     }
 }

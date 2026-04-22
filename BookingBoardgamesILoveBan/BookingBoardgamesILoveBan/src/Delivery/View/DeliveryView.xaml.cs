@@ -38,12 +38,12 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
         {
             base.OnNavigatedTo(navigationEvent);
 
-            var args = ((int userId, int requestId, int messageId, ConversationService conversationService, Window window))navigationEvent.Parameter;
-            currentUserId = args.userId;
-            requestId = args.requestId;
-            incomingMessageId = args.messageId;
-            conversationService = args.conversationService;
-            currentWindow = args.window;
+            var arguments = ((int userId, int requestId, int messageId, ConversationService conversationService, Window window))navigationEvent.Parameter;
+            currentUserId = arguments.userId;
+            requestId = arguments.requestId;
+            incomingMessageId = arguments.messageId;
+            conversationService = arguments.conversationService;
+            currentWindow = arguments.window;
 
             deliveryViewModel = new DeliveryViewModel(
                 currentUserId,
@@ -53,7 +53,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
 
             deliveryViewModel.OnNavigateToPayment = () =>
             {
-                var bookingArgs = new BookingNavigationArguments
+                var bookingArguments = new BookingNavigationArguments
                 {
                     RequestIdentifier = requestId,
                     DeliveryAddress = deliveryViewModel.CurrentAddress.ToString(),
@@ -64,11 +64,11 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
                 // Debug.WriteLine(_conversationService.UserId);
                 if (CashPaymentRadio.IsChecked == true)
                 {
-                    Frame.Navigate(typeof(PaymentCash.View.CashPaymentPage), bookingArgs);
+                    Frame.Navigate(typeof(PaymentCash.View.CashPaymentPage), bookingArguments);
                 }
                 else
                 {
-                    Frame.Navigate(typeof(CardPaymentPage), bookingArgs);
+                    Frame.Navigate(typeof(CardPaymentPage), bookingArguments);
                 }
             };
 
@@ -112,7 +112,7 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
             }
         }
 
-        private void OnFieldChanged(object sender, TextChangedEventArgs e)
+        private void OnFieldChanged(object sender, TextChangedEventArgs textEventArguments)
         {
             if (sender is TextBox tb && tb.Tag is string fieldName)
             {
@@ -120,22 +120,22 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
             }
         }
 
-        private void OnSaveAddressChecked(object sender, RoutedEventArgs e)
+        private void OnSaveAddressChecked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.IsSaveAddress = true;
 
-        private void OnSaveAddressUnchecked(object sender, RoutedEventArgs e)
+        private void OnSaveAddressUnchecked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.IsSaveAddress = false;
 
-        private void OnOpenMapClicked(object sender, RoutedEventArgs e)
+        private void OnOpenMapClicked(object sender, RoutedEventArgs routedEventArguments)
             => _ = InitializeMapAsync();
 
-        private void OnCloseMapClicked(object sender, RoutedEventArgs e)
+        private void OnCloseMapClicked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.CloseMap();
 
-        private void OnSubmitClicked(object sender, RoutedEventArgs e)
+        private void OnSubmitClicked(object sender, RoutedEventArgs routedEventArguments)
             => deliveryViewModel.SubmitDelivery();
 
-        private async void OnConfirmLocationClicked(object sender, RoutedEventArgs e)
+        private async void OnConfirmLocationClicked(object sender, RoutedEventArgs routedEventArguments)
             => await deliveryViewModel.ConfirmMapLocationAsync(pendingLatitude, pendingLongitude);
 
         private async Task InitializeMapAsync()
@@ -183,17 +183,16 @@ namespace BookingBoardgamesILoveBan.Src.Delivery.View
                 """);
         }
 
-        private void OnMapMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+        private void OnMapMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs eventArguments)
         {
             try
             {
-                // Get the raw string sent from Javascript
-                string rawMessage = e.TryGetWebMessageAsString();
+                string rawMessage = eventArguments.TryGetWebMessageAsString();
 
-                using JsonDocument doc = JsonDocument.Parse(rawMessage);
+                using JsonDocument jsonDocument = JsonDocument.Parse(rawMessage);
 
-                pendingLatitude = doc.RootElement.GetProperty("lat").GetDouble();
-                pendingLongitude = doc.RootElement.GetProperty("lng").GetDouble();
+                pendingLatitude = jsonDocument.RootElement.GetProperty("lat").GetDouble();
+                pendingLongitude = jsonDocument.RootElement.GetProperty("lng").GetDouble();
 
                 Debug.WriteLine($"MAP CLICK REGISTERED -> Lat: {pendingLatitude}, Lon: {pendingLongitude}");
             }

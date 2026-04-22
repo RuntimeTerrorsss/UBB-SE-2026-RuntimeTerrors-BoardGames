@@ -22,16 +22,11 @@ using Windows.Foundation.Collections;
 
 namespace BookingBoardgamesILoveBan.Src.Chat.View
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class ChatView : UserControl
     {
         public event EventHandler<(int userId, int requestId, int messageId)>? ProceedToPaymentRequested;
 
         private ChatViewModel chatViewModel;
-
-        // Holds the file name of a pasted image that is staged but not yet sent
         private string? pendingImageFileName = null;
 
         public ChatViewModel ViewModel
@@ -39,7 +34,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             get => chatViewModel;
             set
             {
-                // Unsubscribe from old viewmodel
                 if (chatViewModel != null)
                 {
                     chatViewModel.Messages.CollectionChanged -= OnMessagesChanged;
@@ -71,16 +65,16 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
         private void RefreshMessages()
         {
             MessagesPanel.Children.Clear();
-            foreach (var vm in chatViewModel.Messages)
+            foreach (var messageViewModel in chatViewModel.Messages)
             {
                 var itemView = new MessageItemView();
-                itemView.SetMessage(vm, CurrentUserId);
+                itemView.SetMessage(messageViewModel, CurrentUserId);
 
                 itemView.AcceptRequested += OnAcceptRequested;
                 itemView.DeclineRequested += OnDeclineRequested;
                 itemView.CancelRequested += OnCancelRequested;
                 itemView.AgreementAccepted += OnAcceptCashAgreement;
-                itemView.ProceedToPaymentRequested += (s, e) => ProceedToPaymentRequested.Invoke(s, e);
+                itemView.ProceedToPaymentRequested += (sender, paymentArguments) => ProceedToPaymentRequested?.Invoke(sender, paymentArguments);
 
                 MessagesPanel.Children.Add(itemView);
             }
@@ -88,47 +82,47 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             ScrollToBottom();
         }
 
-        private void OnMessagesChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArguments)
+        private void OnMessagesChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs collectionChangedEventArgs)
         {
-            if (eventArguments.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+            if (collectionChangedEventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
             {
-                foreach (MessageViewModel viewModel in eventArguments.NewItems)
+                foreach (MessageViewModel addedMessageViewModel in collectionChangedEventArgs.NewItems)
                 {
                     var itemView = new MessageItemView();
-                    itemView.SetMessage(viewModel, CurrentUserId);
+                    itemView.SetMessage(addedMessageViewModel, CurrentUserId);
 
                     itemView.AcceptRequested += OnAcceptRequested;
                     itemView.DeclineRequested += OnDeclineRequested;
                     itemView.CancelRequested += OnCancelRequested;
                     itemView.AgreementAccepted += OnAcceptCashAgreement;
-                    itemView.ProceedToPaymentRequested += (s, e) => ProceedToPaymentRequested?.Invoke(s, e);
+                    itemView.ProceedToPaymentRequested += (eventSender, paymentArguments) => ProceedToPaymentRequested?.Invoke(eventSender, paymentArguments);
 
                     MessagesPanel.Children.Add(itemView);
                 }
             }
             else
             {
-                RefreshMessages(); // for Clear() and other operations
+                RefreshMessages();
             }
         }
 
-        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs eventArguments)
+        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
-            if (eventArguments.PropertyName == nameof(ChatViewModel.DisplayName))
+            if (propertyChangedEventArgs.PropertyName == nameof(ChatViewModel.DisplayName))
             {
                 BannerDisplayName.Text = chatViewModel.DisplayName;
             }
-            else if (eventArguments.PropertyName == nameof(ChatViewModel.InputText))
+            else if (propertyChangedEventArgs.PropertyName == nameof(ChatViewModel.InputText))
             {
                 MessageInput.Text = chatViewModel.InputText;
             }
-            else if (eventArguments.PropertyName == nameof(ChatViewModel.AvatarUrl))
+            else if (propertyChangedEventArgs.PropertyName == nameof(ChatViewModel.AvatarUrl))
             {
                 SetupAvatar();
             }
         }
 
-        private void SendButton_Click(object sender, RoutedEventArgs eventArguments)
+        private void SendButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
             if (pendingImageFileName != null)
             {
@@ -165,7 +159,6 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
 
         private void ScrollToBottom()
         {
-            // Use the Dispatcher to wait until the UI has finished drawing the new message
             DispatcherQueue.TryEnqueue(() =>
             {
                 ScrollContainer.UpdateLayout();
@@ -173,34 +166,34 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             });
         }
 
-        private async void MessageInput_Paste(object sender, TextControlPasteEventArgs eventArguments)
+        private async void MessageInput_Paste(object sender, TextControlPasteEventArgs pasteEventArgs)
         {
-            var clipboard = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
-            var formats = clipboard.AvailableFormats;
-            System.Diagnostics.Debug.WriteLine("Clipboard formats: " + string.Join(", ", formats));
+            var clipboardData = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
+            var clipboardFormats = clipboardData.AvailableFormats;
+            System.Diagnostics.Debug.WriteLine("Clipboard formats: " + string.Join(", ", clipboardFormats));
 
-            if (clipboard.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Bitmap))
+            if (clipboardData.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Bitmap))
             {
-                eventArguments.Handled = true; // prevent pasting raw text
+                pasteEventArgs.Handled = true;
 
-                var streamRef = await clipboard.GetBitmapAsync();
-                var stream = await streamRef.OpenReadAsync();
+                var bitmapStreamReference = await clipboardData.GetBitmapAsync();
+                var rawStream = await bitmapStreamReference.OpenReadAsync();
 
                 var bitmapImage = new BitmapImage();
-                await bitmapImage.SetSourceAsync(stream);
+                await bitmapImage.SetSourceAsync(rawStream);
                 ImagePreview.Source = bitmapImage;
                 ImagePreviewPanel.Visibility = Visibility.Visible;
 
-                stream.Seek(0); // rewind before writing
+                rawStream.Seek(0);
 
-                string fileName = $"{Guid.NewGuid()}.jpg";
-                string fullPath = Path.Combine(AppContext.BaseDirectory, "Images", fileName);
-                Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+                string generatedFileName = $"{Guid.NewGuid()}.jpg";
+                string fullImagePath = Path.Combine(AppContext.BaseDirectory, "Images", generatedFileName);
+                Directory.CreateDirectory(Path.GetDirectoryName(fullImagePath));
 
-                using var fileStream = File.Create(fullPath);
-                await stream.AsStreamForRead().CopyToAsync(fileStream);
+                using var fileStream = File.Create(fullImagePath);
+                await rawStream.AsStreamForRead().CopyToAsync(fileStream);
 
-                pendingImageFileName = fileName;
+                pendingImageFileName = generatedFileName;
             }
         }
 
@@ -211,7 +204,7 @@ namespace BookingBoardgamesILoveBan.Src.Chat.View
             ImagePreviewPanel.Visibility = Visibility.Collapsed;
         }
 
-        private void RemoveImageButton_Click(object sender, RoutedEventArgs eventArguments)
+        private void RemoveImageButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
             ClearPendingImage();
         }

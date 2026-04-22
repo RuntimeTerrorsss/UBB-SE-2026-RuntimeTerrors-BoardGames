@@ -26,20 +26,35 @@ namespace BookingBoardgamesILoveBan.Src.Mocks.RequestMock
         public decimal GetRequestPrice(int requestId)
         {
             var request = requestRepository.GetById(requestId);
-            int days = (request.EndDate - request.StartDate).Days;
-            if (days == 0)
-            {
-                days = 1;
-            }
-            var price = gameRepository.GetPriceGameById(request.GameId);
 
-            return price * days;
+            if (request == null)
+            {
+                return 0m;
+            }
+
+            int totalDays = (request.EndDate - request.StartDate).Days;
+            int billedDays = Math.Max(1, totalDays);
+
+            var pricePerDay = gameRepository.GetPriceGameById(request.GameId);
+
+            return pricePerDay * billedDays;
         }
 
         public string GetGameName(int requestId)
         {
             var request = requestRepository.GetById(requestId);
-            return gameRepository.GetById(request.GameId).Name;
+            if (request == null)
+            {
+                return "Unknown Request";
+            }
+
+            var game = gameRepository.GetById(request.GameId);
+            if (game == null)
+            {
+                return "Unknown Game";
+            }
+
+            return game.Name;
         }
     }
 }
