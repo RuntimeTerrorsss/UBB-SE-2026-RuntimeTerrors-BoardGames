@@ -339,7 +339,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
         // ================================ ApplyFilter ======================================
         [Fact]
-        public void ApplyFilter_IfSelectedFilterIsNull_DoesNotCrash()
+        public void ApplyFilter_SelectedFilterIsNull_DoesNotCrash()
         {
             try
             {

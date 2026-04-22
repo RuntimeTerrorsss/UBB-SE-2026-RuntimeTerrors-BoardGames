@@ -29,16 +29,16 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             requestServiceMock = new Mock<IRequestService>();
 
             userRepositoryMock
-                .Setup(repo => repo.GetById(It.IsAny<int>()))
-                .Returns((int id) => new User(id, $"user_{id}", "country", "city", "street", "number"));
+                .Setup(repository => repository.GetById(It.IsAny<int>()))
+                .Returns((int userIdToSearch) => new User(userIdToSearch, $"user_{userIdToSearch}", "country", "city", "street", "number"));
 
             gameRepositoryMock
-                .Setup(repo => repo.GetById(It.IsAny<int>()))
-                .Returns((int id) => new Game(id, $"game_{id}", 100m));
+                .Setup(repository => repository.GetById(It.IsAny<int>()))
+                .Returns((int gameIdToSearch) => new Game(gameIdToSearch, $"game_{gameIdToSearch}", 100m));
 
             requestServiceMock
                 .Setup(service => service.GetRequestById(It.IsAny<int>()))
-                .Returns((int id) => new Request(id, 1, 2, 3, DateTime.Now, DateTime.Now.AddDays(3)));
+                .Returns((int requestIdToSearch) => new Request(requestIdToSearch, 1, 2, 3, DateTime.Now, DateTime.Now.AddDays(3)));
 
             receiptService = new ReceiptService(
                 userRepositoryMock.Object,
