@@ -11,29 +11,29 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
         public void ToEntity_MapsDataTransferObjectToPaymentRowWithCashMethod()
         {
             var cashPaymentMapper = new CashPaymentMapper();
-            var cashPaymentDataTransferObject = new CashPaymentDto(7, 11, 13, 17, 19.5m);
+            var cashPaymentDataTransferObject = new CashPaymentDataTransferObject(7, 11, 13, 17, 19.5m);
 
-            var paymentEntity = cashPaymentMapper.ToEntity(cashPaymentDataTransferObject);
+            var paymentEntity = cashPaymentMapper.TurnDataTransferObjectIntoEntity(cashPaymentDataTransferObject);
 
             var expected = new
             {
-                Tid = 7,
+                TransactionIdentifier = 7,
                 RequestId = 11,
                 ClientId = 13,
                 OwnerId = 17,
-                Amount = 19.5m,
+                PaidAmount = 19.5m,
                 PaymentMethod = "CASH",
-                State = PaymentConstrants.StatePending,
+                PaymentState = PaymentConstrants.StatePending,
             };
             var actual = new
             {
-                paymentEntity.Tid,
+                paymentEntity.TransactionIdentifier,
                 paymentEntity.RequestId,
                 paymentEntity.ClientId,
                 paymentEntity.OwnerId,
-                paymentEntity.Amount,
+                paymentEntity.PaidAmount,
                 paymentEntity.PaymentMethod,
-                paymentEntity.State,
+                paymentEntity.PaymentState,
             };
 
             Assert.Equal(expected, actual);
@@ -45,23 +45,23 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var cashPaymentMapper = new CashPaymentMapper();
             var paymentEntity = new Payment(3, 5, 7, 9, 12.34m, "CASH");
 
-            var cashPaymentDataTransferObject = cashPaymentMapper.ToDto(paymentEntity);
+            var cashPaymentDataTransferObject = cashPaymentMapper.TurnEntityIntoDataTransferObject(paymentEntity);
 
             var expected = new
             {
                 Id = 3,
-                Requestd = 5,
+                RequestId = 5,
                 ClientId = 7,
                 OwnerId = 9,
-                Amount = 12.34m,
+                PaidAmount = 12.34m,
             };
             var actual = new
             {
                 cashPaymentDataTransferObject.Id,
-                cashPaymentDataTransferObject.Requestd,
+                cashPaymentDataTransferObject.RequestId,
                 cashPaymentDataTransferObject.ClientId,
                 cashPaymentDataTransferObject.OwnerId,
-                cashPaymentDataTransferObject.Amount,
+                cashPaymentDataTransferObject.PaidAmount,
             };
 
             Assert.Equal(expected, actual);

@@ -40,18 +40,18 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
                 RequestId = requestIdentifier,
                 ClientId = clientIdentifier,
                 OwnerId = ownerIdentifier,
-                Amount = amount,
+                PaidAmount = amount,
                 PaymentMethod = CardPaymentConstants.CardPaymentMethodName,
                 DateOfTransaction = DateTime.Now,
                 DateConfirmedBuyer = DateTime.Now,
                 DateConfirmedSeller = null,
-                State = CardPaymentConstants.SuccessfulPaymentState,
-                FilePath = null
+                PaymentState = CardPaymentConstants.SuccessfulPaymentState,
+                ReceiptFilePath = null
             };
 
-            payment.Tid = this.paymentRepository.AddPayment(payment);
+            payment.TransactionIdentifier = this.paymentRepository.AddPayment(payment);
             string receiptFilePath = receiptService.GenerateReceiptRelativePath(payment.RequestId);
-            payment.FilePath = receiptFilePath;
+            payment.ReceiptFilePath = receiptFilePath;
             paymentRepository.UpdatePayment(payment);
 
             return this.ConvertToDataTransferObject(payment);
@@ -64,7 +64,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
 
         public CardPaymentDataTransferObject GetCardPayment(int paymentIdentifier)
         {
-            return this.ConvertToDataTransferObject(paymentRepository.GetById(paymentIdentifier));
+            return this.ConvertToDataTransferObject(paymentRepository.GetPaymentByIdentifier(paymentIdentifier));
         }
 
         public decimal GetCurrentBalance(int clientIdentifier)
@@ -91,11 +91,11 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCard.Service
         public CardPaymentDataTransferObject ConvertToDataTransferObject(PaymentCommon.Model.Payment cardPayment)
         {
             return new CardPaymentDataTransferObject(
-                    transactionIdentifier: cardPayment.Tid,
+                    transactionIdentifier: cardPayment.TransactionIdentifier,
                     requestIdentifier: cardPayment.RequestId,
                     clientIdentifier: cardPayment.ClientId,
                     ownerIdentifier: cardPayment.OwnerId,
-                    amount: cardPayment.Amount,
+                    amount: cardPayment.PaidAmount,
                     dateOfTransaction: cardPayment.DateOfTransaction ?? DateTime.Now,
                     paymentMethod: cardPayment.PaymentMethod);
         }

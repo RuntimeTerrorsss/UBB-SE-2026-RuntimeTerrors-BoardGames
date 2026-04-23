@@ -59,12 +59,12 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         {
             return new Payment
             {
-                FilePath = relativePath,
+                ReceiptFilePath = relativePath,
                 RequestId = 1,
                 ClientId = 1,
                 OwnerId = 2,
                 PaymentMethod = paymentMethod,
-                Amount = 100,
+                PaidAmount = 100,
                 DateOfTransaction = DateTime.Now
             };
         }
@@ -111,7 +111,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         public void GetReceiptDocument_NullFilePath_ThrowsException()
         {
             InitializeService();
-            var payment = new Payment { FilePath = null };
+            var payment = new Payment { ReceiptFilePath = null };
             Assert.Throws<InvalidOperationException>(() => receiptService.GetReceiptDocument(payment));
         }
 
@@ -119,7 +119,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
         public void GetReceiptDocument_EmptyFilePath_ThrowsException()
         {
             InitializeService();
-            var payment = new Payment { FilePath = string.Empty };
+            var payment = new Payment { ReceiptFilePath = string.Empty };
             Assert.Throws<InvalidOperationException>(() => receiptService.GetReceiptDocument(payment));
         }
 
@@ -133,7 +133,7 @@ namespace BookingBoardgamesLoveBan.Tests.Receipt
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(fullPath));
             System.IO.File.WriteAllBytes(fullPath, new byte[] { 0x25, 0x50, 0x44, 0x46 });
 
-            var payment = new Payment { FilePath = relativePath };
+            var payment = new Payment { ReceiptFilePath = relativePath };
             var returnedPath = receiptService.GetReceiptDocument(payment);
 
             Assert.Equal(fullPath, returnedPath);

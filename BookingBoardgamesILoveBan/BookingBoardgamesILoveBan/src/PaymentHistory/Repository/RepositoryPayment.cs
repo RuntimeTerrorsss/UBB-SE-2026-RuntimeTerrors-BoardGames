@@ -70,7 +70,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Repository
 
             if (!reader.IsDBNull(filePathIndex))
             {
-                returnedPayment.FilePath = reader.GetString(filePathIndex);
+                returnedPayment.ReceiptFilePath = reader.GetString(filePathIndex);
             }
 
             returnedPayment.GameName = GetStringOrDefaultValue(reader, gameNameIndex, PaymentHistoryConstants.NullGameNameDefaultValue);

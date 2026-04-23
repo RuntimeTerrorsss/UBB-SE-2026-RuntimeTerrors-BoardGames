@@ -53,12 +53,12 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 		/// <exception cref="InvalidOperationException">receipt path of transaction is missing</exception>
 		public string GetReceiptDocument(PaymentCommon.Model.Payment selectedPayment)
 		{
-			if (selectedPayment.FilePath == null || selectedPayment.FilePath == string.Empty)
+			if (selectedPayment.ReceiptFilePath == null || selectedPayment.ReceiptFilePath == string.Empty)
 			{
 				throw new InvalidOperationException("Receipt path is missing.");
 			}
 
-			string fullReceiptPath = this.GetFullPath(selectedPayment.FilePath);
+			string fullReceiptPath = this.GetFullPath(selectedPayment.ReceiptFilePath);
 
 			if (!File.Exists(fullReceiptPath))
 			{
@@ -70,12 +70,12 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private string PrepareDocumentPath(PaymentCommon.Model.Payment selectedPayment)
         {
-            if (string.IsNullOrWhiteSpace(selectedPayment.FilePath))
+            if (string.IsNullOrWhiteSpace(selectedPayment.ReceiptFilePath))
             {
                 throw new InvalidOperationException("Receipt path is missing.");
             }
 
-            string documentPath = GetFullPath(selectedPayment.FilePath);
+            string documentPath = GetFullPath(selectedPayment.ReceiptFilePath);
 
             string? directoryName = Path.GetDirectoryName(documentPath);
             if (!string.IsNullOrEmpty(directoryName))
@@ -221,7 +221,7 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
 
         private string BuildHeader(PaymentCommon.Model.Payment payment)
         {
-            string issuedDate = GetIssuedDateFromFilename(payment.FilePath.Split("\\")[ReceiptServiceConstants.FileNameIndexInPath]);
+            string issuedDate = GetIssuedDateFromFilename(payment.ReceiptFilePath.Split("\\")[ReceiptServiceConstants.FileNameIndexInPath]);
 
             return $"Receipt - Boardgame Rental\n" +
                    $"Rental ID: {payment.RequestId}\n" +
@@ -247,7 +247,7 @@ namespace BookingBoardgamesILoveBan.Src.Receipt.Service
         {
             return $"Payment Details\n" +
                    $"- Payment Method: {payment.PaymentMethod}\n" +
-                   $"- Amount Paid: {payment.Amount} RON";
+                   $"- Amount Paid: {payment.PaidAmount} RON";
         }
 
         private string BuildConfirmation(PaymentCommon.Model.Payment payment)

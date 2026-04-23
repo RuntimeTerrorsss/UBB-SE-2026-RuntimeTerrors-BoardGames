@@ -187,13 +187,13 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
         {
             PaymentCommon.Model.Payment foundPayment = paymentRepository.GetPaymentById(paymentId);
 
-            if (string.IsNullOrEmpty(foundPayment.FilePath))
+            if (string.IsNullOrEmpty(foundPayment.ReceiptFilePath))
             {
-                foundPayment.FilePath = receiptService.GenerateReceiptRelativePath(foundPayment.RequestId);
+                foundPayment.ReceiptFilePath = receiptService.GenerateReceiptRelativePath(foundPayment.RequestId);
             }
-            else if (!foundPayment.FilePath.Contains("\\"))
+            else if (!foundPayment.ReceiptFilePath.Contains("\\"))
             {
-                foundPayment.FilePath = "receipts\\" + foundPayment.FilePath;
+                foundPayment.ReceiptFilePath = "receipts\\" + foundPayment.ReceiptFilePath;
             }
 
             return receiptService.GetReceiptDocument(foundPayment);
@@ -210,13 +210,13 @@ namespace BookingBoardgamesILoveBan.Src.PaymentHistory.Service
             {
                 return new PaymentDataTransferObject
                 {
-                    PaymentId = transaction.Tid,
+                    PaymentId = transaction.TransactionIdentifier,
                     DateText = transaction.DateOfTransaction?.ToString("d") ?? PaymentHistoryConstants.NullDateOfTransactionDefaultValue,
                     ProductName = !string.IsNullOrWhiteSpace(transaction.GameName) ? transaction.GameName : PaymentHistoryConstants.NullGameNameDefaultValue,
                     ReceiverName = !string.IsNullOrWhiteSpace(transaction.OwnerName) ? transaction.OwnerName : PaymentHistoryConstants.NullOwnerNameDefaultValue,
-                    Amount = transaction.Amount,
+                    Amount = transaction.PaidAmount,
                     PaymentMethod = transaction.PaymentMethod,
-                    FilePath = transaction.FilePath
+                    FilePath = transaction.ReceiptFilePath
                 };
             }).ToList();
         }

@@ -7,20 +7,20 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.Mapper
 	{
         private const string CashPaymentMethod = "CASH";
 
-		public Payment ToEntity(CashPaymentDto paymentDto)
+		public Payment TurnDataTransferObjectIntoEntity(CashPaymentDataTransferObject paymentDto)
 		{
 			return new Payment(
                 paymentDto.Id,
                 paymentDto.RequestId,
                 paymentDto.ClientId,
                 paymentDto.OwnerId,
-                paymentDto.Amount,
+                paymentDto.PaidAmount,
                 CashPaymentMethod);
 		}
 
-		public CashPaymentDto ToDto(Payment payment)
+		public CashPaymentDataTransferObject TurnEntityIntoDataTransferObject(Payment payment)
 		{
-			return new CashPaymentDto(payment.Tid, payment.RequestId, payment.ClientId, payment.OwnerId, payment.Amount);
+			return new CashPaymentDataTransferObject(payment.TransactionIdentifier, payment.RequestId, payment.ClientId, payment.OwnerId, payment.PaidAmount);
 		}
 	}
 }

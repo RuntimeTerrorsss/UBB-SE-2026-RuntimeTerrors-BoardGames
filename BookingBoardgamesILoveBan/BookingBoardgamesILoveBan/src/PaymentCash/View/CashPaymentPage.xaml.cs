@@ -9,7 +9,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
 {
     public sealed partial class CashPaymentPage : Page
     {
-        public CashPaymentViewModel ViewModel { get; set; }
+        public CashPaymentViewModel PaymentViewModel { get; set; }
         private Window currentApplicationWindow;
 
         public CashPaymentPage()
@@ -23,7 +23,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
 
             if (e.Parameter is BookingNavigationArguments booking)
             {
-                ViewModel = new CashPaymentViewModel(
+                PaymentViewModel = new CashPaymentViewModel(
                     App.CashPaymentService,
                     App.UserRepository,
                     App.RequestService,
@@ -33,7 +33,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.View
                     booking.BookingMessageIdentifier,
                     booking.ConversationService);
 
-                DataContext = ViewModel;
+                DataContext = PaymentViewModel;
                 currentApplicationWindow = booking.CurrentWindow;
             }
         }

@@ -292,15 +292,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
 
             Payment fakePayment = new Payment
             {
-                Tid = expectedTransactionIdentifier,
-                Amount = paymentAmount,
+                TransactionIdentifier = expectedTransactionIdentifier,
+                PaidAmount = paymentAmount,
                 PaymentMethod = paymentMethod,
                 RequestId = requestIdentifier,
                 ClientId = clientIdentifier,
                 OwnerId = ownerIdentifier
             };
 
-            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.GetById(expectedTransactionIdentifier)).Returns(fakePayment);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.GetPaymentByIdentifier(expectedTransactionIdentifier)).Returns(fakePayment);
 
             var fetchedPayment = cardPaymentService.GetCardPayment(expectedTransactionIdentifier);
 
@@ -319,15 +319,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
 
             Payment fakePayment = new Payment
             {
-                Tid = expectedTransactionIdentifier,
-                Amount = paymentAmount,
+                TransactionIdentifier = expectedTransactionIdentifier,
+                PaidAmount = paymentAmount,
                 PaymentMethod = paymentMethod,
                 RequestId = requestIdentifier,
                 ClientId = clientIdentifier,
                 OwnerId = ownerIdentifier
             };
 
-            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.GetById(expectedTransactionIdentifier)).Returns(fakePayment);
+            mockPaymentRepository.Setup(paymentRepositoryMock => paymentRepositoryMock.GetPaymentByIdentifier(expectedTransactionIdentifier)).Returns(fakePayment);
 
             var fetchedPayment = cardPaymentService.GetCardPayment(expectedTransactionIdentifier);
 
@@ -379,11 +379,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
 
             Payment fakePayment = new Payment
             {
-                Tid = transactionIdentifier,
+                TransactionIdentifier = transactionIdentifier,
                 RequestId = requestIdentifier,
                 ClientId = clientIdentifier,
                 OwnerId = ownerIdentifier,
-                Amount = paymentAmount,
+                PaidAmount = paymentAmount,
                 PaymentMethod = paymentMethod,
                 DateOfTransaction = null
             };
@@ -405,11 +405,11 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCard
 
             Payment fakePayment = new Payment
             {
-                Tid = transactionIdentifier,
+                TransactionIdentifier = transactionIdentifier,
                 RequestId = requestIdentifier,
                 ClientId = clientIdentifier,
                 OwnerId = ownerIdentifier,
-                Amount = paymentAmount,
+                PaidAmount = paymentAmount,
                 PaymentMethod = paymentMethod,
                 DateOfTransaction = null
             };

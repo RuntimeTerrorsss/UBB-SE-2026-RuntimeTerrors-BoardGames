@@ -16,13 +16,13 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
             paymentRepositoryMock
-                .Setup(paymentRepository => paymentRepository.GetById(25))
+                .Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(25))
                 .Returns(new Payment(25, 9, 2, 3, 10m, "CARD"));
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
             cashPaymentService.GenerateReceipt(25);
 
-            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.GetById(25), Times.Once);
+            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.GetPaymentByIdentifier(25), Times.Once);
         }
 
         [Fact]
@@ -31,14 +31,14 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var paymentRepositoryMock = new Mock<IPaymentRepository>();
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
-            var paymentEntity = new Payment(1, 42, 2, 3, 10m, "CARD") { FilePath = null };
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(paymentEntity);
+            var paymentEntity = new Payment(1, 42, 2, 3, 10m, "CARD") { ReceiptFilePath = null };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(1)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(42)).Returns("receipts/42.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
             cashPaymentService.GenerateReceipt(1);
 
-            Assert.Equal("receipts/42.pdf", paymentEntity.FilePath);
+            Assert.Equal("receipts/42.pdf", paymentEntity.ReceiptFilePath);
         }
 
         [Fact]
@@ -48,7 +48,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
             var paymentEntity = new Payment(1, 42, 2, 3, 10m, "CARD");
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(1)).Returns(paymentEntity);
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(1)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(42)).Returns("receipts/42.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
@@ -63,8 +63,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var paymentRepositoryMock = new Mock<IPaymentRepository>();
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
-            var paymentEntity = new Payment(2, 50, 2, 3, 10m, "CARD") { FilePath = "receipts/existing.pdf" };
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(2)).Returns(paymentEntity);
+            var paymentEntity = new Payment(2, 50, 2, 3, 10m, "CARD") { ReceiptFilePath = "receipts/existing.pdf" };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(2)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/existing.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
@@ -79,8 +79,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var paymentRepositoryMock = new Mock<IPaymentRepository>();
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
-            var paymentEntity = new Payment(2, 50, 2, 3, 10m, "CARD") { FilePath = "receipts/existing.pdf" };
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(2)).Returns(paymentEntity);
+            var paymentEntity = new Payment(2, 50, 2, 3, 10m, "CARD") { ReceiptFilePath = "receipts/existing.pdf" };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(2)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/existing.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
@@ -95,8 +95,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var paymentRepositoryMock = new Mock<IPaymentRepository>();
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
-            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { FilePath = string.Empty };
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(paymentEntity);
+            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { ReceiptFilePath = string.Empty };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(3)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(70)).Returns("receipts/70.pdf");
             receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/70.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
@@ -112,15 +112,15 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var paymentRepositoryMock = new Mock<IPaymentRepository>();
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
-            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { FilePath = null };
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(paymentEntity);
+            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { ReceiptFilePath = null };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(3)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(70)).Returns("receipts/70.pdf");
             receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/70.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);
 
             cashPaymentService.GetReceipt(3);
 
-            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.GetById(3), Times.Exactly(3));
+            paymentRepositoryMock.Verify(paymentRepository => paymentRepository.GetPaymentByIdentifier(3), Times.Exactly(3));
         }
 
         [Fact]
@@ -129,8 +129,8 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCommon
             var paymentRepositoryMock = new Mock<IPaymentRepository>();
             var receiptServiceMock = new Mock<IReceiptService>();
             var cashPaymentMapperMock = new Mock<ICashPaymentMapper>();
-            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { FilePath = null };
-            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetById(3)).Returns(paymentEntity);
+            var paymentEntity = new Payment(3, 70, 2, 3, 10m, "CARD") { ReceiptFilePath = null };
+            paymentRepositoryMock.Setup(paymentRepository => paymentRepository.GetPaymentByIdentifier(3)).Returns(paymentEntity);
             receiptServiceMock.Setup(receiptService => receiptService.GenerateReceiptRelativePath(70)).Returns("receipts/70.pdf");
             receiptServiceMock.Setup(receiptService => receiptService.GetReceiptDocument(paymentEntity)).Returns("C:/docs/70.pdf");
             var cashPaymentService = new CashPaymentService(paymentRepositoryMock.Object, cashPaymentMapperMock.Object, receiptServiceMock.Object);

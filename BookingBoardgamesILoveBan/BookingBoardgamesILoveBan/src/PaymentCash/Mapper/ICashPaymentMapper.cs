@@ -5,7 +5,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.Mapper
 {
 	public interface ICashPaymentMapper
 	{
-		public Payment ToEntity(CashPaymentDto paymentDto);
-		public CashPaymentDto ToDto(Payment payment);
+		public Payment TurnDataTransferObjectIntoEntity(CashPaymentDataTransferObject paymentDto);
+		public CashPaymentDataTransferObject TurnEntityIntoDataTransferObject(Payment payment);
 	}
 }

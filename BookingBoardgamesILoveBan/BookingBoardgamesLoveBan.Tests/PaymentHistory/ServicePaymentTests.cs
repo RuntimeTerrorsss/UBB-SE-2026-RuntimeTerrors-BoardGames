@@ -32,7 +32,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
 
             repositoryPaymentMock
                 .Setup(repository => repository.GetPaymentById(It.IsAny<int>()))
-                .Returns((int searchedId) => payments.FirstOrDefault(payment => payment.Tid == searchedId));
+                .Returns((int searchedId) => payments.FirstOrDefault(payment => payment.TransactionIdentifier == searchedId));
 
             receiptServiceMock
                 .Setup(service => service.GenerateReceiptRelativePath(It.IsAny<int>()))
@@ -347,7 +347,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void GetReceiptDocumentPath_NullFilePath_GeneratesNewPath()
         {
-            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = null };
+            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { ReceiptFilePath = null };
             var payments = new List<HistoryPayment> { payment };
             InitializeService(payments);
 
@@ -359,7 +359,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void GetReceiptDocumentPath_FilePathWithoutBackslashes_AddsBackslashes()
         {
-            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipt_1_test.pdf" };
+            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { ReceiptFilePath = "receipt_1_test.pdf" };
             var payments = new List<HistoryPayment> { payment };
             InitializeService(payments);
 
@@ -370,7 +370,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentHistory
         [Fact]
         public void GetReceiptDocumentPath_FilePathWithBackslashes_ReturnsDocument()
         {
-            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { FilePath = "receipts\\receipt_1_test.pdf" };
+            var payment = new HistoryPayment(1, 1, 1, 2, "Card", 50) { ReceiptFilePath = "receipts\\receipt_1_test.pdf" };
             var payments = new List<HistoryPayment> { payment };
             InitializeService(payments);
 

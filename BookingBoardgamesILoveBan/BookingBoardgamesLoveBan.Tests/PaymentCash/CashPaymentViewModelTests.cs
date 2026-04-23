@@ -34,7 +34,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             userRepository.Setup(userRepositoryDependency => userRepositoryDependency.GetById(301)).Returns(client);
             userRepository.Setup(userRepositoryDependency => userRepositoryDependency.GetById(302)).Returns(owner);
             var cashPaymentService = new Mock<ICashPaymentService>();
-            cashPaymentService.Setup(cashPaymentServiceDependency => cashPaymentServiceDependency.AddCashPayment(It.IsAny<CashPaymentDto>())).Returns(999);
+            cashPaymentService.Setup(cashPaymentServiceDependency => cashPaymentServiceDependency.AddCashPayment(It.IsAny<CashPaymentDataTransferObject>())).Returns(999);
             var conversationRepository = new Mock<IConversationRepository>();
             conversationRepository.Setup(conversationRepositoryService => conversationRepositoryService.Subscribe(It.IsAny<int>(), It.IsAny<IConversationService>()));
             var conversationUserRepository = new Mock<IUserRepository>();
@@ -84,9 +84,9 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             userRepository.Setup(userRepositoryDependency => userRepositoryDependency.GetById(10)).Returns(new User(10, "a", "b", "c", "d", "e", "f", string.Empty, 0m));
             userRepository.Setup(userRepositoryDependency => userRepositoryDependency.GetById(20)).Returns(new User(20, "b", "b", "c", "d", "e", "f", string.Empty, 0m));
             var cashPaymentService = new Mock<ICashPaymentService>();
-            CashPaymentDto? addedCashPaymentDataTransferObject = null;
-            cashPaymentService.Setup(cashPaymentServiceDependency => cashPaymentServiceDependency.AddCashPayment(It.IsAny<CashPaymentDto>()))
-                .Callback<CashPaymentDto>(cashPaymentDataTransferObject => addedCashPaymentDataTransferObject = cashPaymentDataTransferObject)
+            CashPaymentDataTransferObject? addedCashPaymentDataTransferObject = null;
+            cashPaymentService.Setup(cashPaymentServiceDependency => cashPaymentServiceDependency.AddCashPayment(It.IsAny<CashPaymentDataTransferObject>()))
+                .Callback<CashPaymentDataTransferObject>(cashPaymentDataTransferObject => addedCashPaymentDataTransferObject = cashPaymentDataTransferObject)
                 .Returns(1);
             var conversationRepository = new Mock<IConversationRepository>();
             conversationRepository.Setup(conversationRepositoryService => conversationRepositoryService.Subscribe(It.IsAny<int>(), It.IsAny<IConversationService>()));
@@ -110,18 +110,18 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             var expected = new
             {
                 Id = -1,
-                Requestd = requestId,
+                RequestId = requestId,
                 ClientId = 10,
                 OwnerId = 20,
-                Amount = 40m,
+                PaidAmount = 40m,
             };
             var actual = new
             {
                 addedCashPaymentDataTransferObject!.Id,
-                addedCashPaymentDataTransferObject.Requestd,
+                addedCashPaymentDataTransferObject.RequestId,
                 addedCashPaymentDataTransferObject.ClientId,
                 addedCashPaymentDataTransferObject.OwnerId,
-                addedCashPaymentDataTransferObject.Amount,
+                addedCashPaymentDataTransferObject.PaidAmount,
             };
 
             Assert.Equal(expected, actual);
@@ -144,7 +144,7 @@ namespace BookingBoardgamesLoveBan.Tests.PaymentCash
             userRepository.Setup(userRepositoryDependency => userRepositoryDependency.GetById(40)).Returns(new User(40, "a", "b", "c", "d", "e", "f", string.Empty, 0m));
             userRepository.Setup(userRepositoryDependency => userRepositoryDependency.GetById(50)).Returns(new User(50, "b", "b", "c", "d", "e", "f", string.Empty, 0m));
             var cashPaymentService = new Mock<ICashPaymentService>();
-            cashPaymentService.Setup(cashPaymentServiceDependency => cashPaymentServiceDependency.AddCashPayment(It.IsAny<CashPaymentDto>())).Returns(returnedPaymentId);
+            cashPaymentService.Setup(cashPaymentServiceDependency => cashPaymentServiceDependency.AddCashPayment(It.IsAny<CashPaymentDataTransferObject>())).Returns(returnedPaymentId);
             var conversationRepository = new Mock<IConversationRepository>();
             conversationRepository.Setup(conversationRepositoryService => conversationRepositoryService.Subscribe(It.IsAny<int>(), It.IsAny<IConversationService>()));
             var conversationUserRepository = new Mock<IUserRepository>();

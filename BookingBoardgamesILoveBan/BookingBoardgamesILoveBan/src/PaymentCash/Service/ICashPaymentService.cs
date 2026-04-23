@@ -4,8 +4,8 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.Service
 {
 	public interface ICashPaymentService
 	{
-		public int AddCashPayment(CashPaymentDto paymentDto);
-		public CashPaymentDto GetCashPayment(int paymentId);
+		public int AddCashPayment(CashPaymentDataTransferObject paymentDto);
+		public CashPaymentDataTransferObject GetCashPayment(int paymentId);
 		public void ConfirmDelivery(int paymentId);
 		public void ConfirmPayment(int paymentId);
 		public bool IsAllConfirmed(int paymentId);

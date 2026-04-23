@@ -22,7 +22,7 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 		public string GameName { get; set; }
 		public string DeliveryAddress { get; set; }
 		public string RequestDates { get; set; }
-		public string Amount { get; set; }
+		public string PaidAmount { get; set; }
 
 		private readonly int rentalRequestMessageIdentifier;
 
@@ -54,10 +54,10 @@ namespace BookingBoardgamesILoveBan.Src.PaymentCash.ViewModel
 			this.RequestDates = rentalRequest.StartDate.ToShortDateString() + DateRangeSeparator + rentalRequest.EndDate.ToShortDateString();
 
 			decimal rentalPrice = this.rentalRequestService.GetRequestPrice(rentalRequestId);
-			this.Amount = rentalPrice.ToString();
+			this.PaidAmount = rentalPrice.ToString();
 
 			int createdPaymentIdentifier = this.cashPaymentService.AddCashPayment(
-                new CashPaymentDto(NewPaymentPlaceholderId, rentalRequestId, clientUser.Id, ownerUser.Id, rentalPrice));
+                new CashPaymentDataTransferObject(NewPaymentPlaceholderId, rentalRequestId, clientUser.Id, ownerUser.Id, rentalPrice));
 			this.conversationService.OnCashPaymentSelected(this.rentalRequestMessageIdentifier, createdPaymentIdentifier);
 		}
 	}
