@@ -10,10 +10,10 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         {
             var user = new User(1, "testuser", "Romania", "Cluj", "Street", "5");
 
-            var expected = new { Id = 1, Username = "testuser", Country = "Romania", City = "Cluj", Street = "Street", StreetNumber = "5", DisplayName = "testuser", AvatarUrl = "", Balance = 0m };
-            var actual = new { user.Id, user.Username, user.Country, user.City, user.Street, user.StreetNumber, user.DisplayName, user.AvatarUrl, user.Balance };
+            var expectedUser = new { Id = 1, Username = "testuser", Country = "Romania", City = "Cluj", Street = "Street", StreetNumber = "5", DisplayName = "testuser", AvatarUrl = "", Balance = 0m };
+            var actualUser = new { user.Id, user.Username, user.Country, user.City, user.Street, user.StreetNumber, user.DisplayName, user.AvatarUrl, user.Balance };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedUser, actualUser);
         }
 
         [Fact]
@@ -21,10 +21,10 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         {
             var user = new User(2, "fulluser", "Display", "Moldova", "Chisinau", "Main", "10", "http://avatar", 50.5m);
 
-            var expected = new { Id = 2, Username = "fulluser", Country = "Moldova", City = "Chisinau", Street = "Main", StreetNumber = "10", DisplayName = "Display", AvatarUrl = "http://avatar", Balance = 50.5m };
-            var actual = new { user.Id, user.Username, user.Country, user.City, user.Street, user.StreetNumber, user.DisplayName, user.AvatarUrl, user.Balance };
+            var expectedUser = new { Id = 2, Username = "fulluser", Country = "Moldova", City = "Chisinau", Street = "Main", StreetNumber = "10", DisplayName = "Display", AvatarUrl = "http://avatar", Balance = 50.5m };
+            var actualUser = new { user.Id, user.Username, user.Country, user.City, user.Street, user.StreetNumber, user.DisplayName, user.AvatarUrl, user.Balance };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedUser, actualUser);
         }
 
         [Fact]
@@ -41,10 +41,10 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
             user.AvatarUrl = "newUrl";
             user.Balance = 99m;
 
-            var expected = new { Id = 3, Username = "new", Country = "newCountry", City = "newCity", Street = "newStreet", StreetNumber = "newNumber", DisplayName = "newDisplay", AvatarUrl = "newUrl", Balance = 99m };
-            var actual = new { user.Id, user.Username, user.Country, user.City, user.Street, user.StreetNumber, user.DisplayName, user.AvatarUrl, user.Balance };
+            var expectedUser = new { Id = 3, Username = "new", Country = "newCountry", City = "newCity", Street = "newStreet", StreetNumber = "newNumber", DisplayName = "newDisplay", AvatarUrl = "newUrl", Balance = 99m };
+            var actualUser = new { user.Id, user.Username, user.Country, user.City, user.Street, user.StreetNumber, user.DisplayName, user.AvatarUrl, user.Balance };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedUser, actualUser);
         }
     }
 }

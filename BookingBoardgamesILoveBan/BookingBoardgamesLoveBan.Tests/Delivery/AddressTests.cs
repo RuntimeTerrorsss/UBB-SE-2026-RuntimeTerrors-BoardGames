@@ -11,10 +11,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             var address = new Address("Country", "City", "Street", "Number");
 
-            var expected = new { Country = "Country", City = "City", Street = "Street", StreetNumber = "Number" };
-            var actual = new { address.Country, address.City, address.Street, address.StreetNumber };
+            var expectedAddress = new { Country = "Country", City = "City", Street = "Street", StreetNumber = "Number" };
+            var actualAddress = new { address.Country, address.City, address.Street, address.StreetNumber };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedAddress, actualAddress);
         }
 
         [Fact]
@@ -22,10 +22,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             var address = new Address();
 
-            var expected = new { Country = string.Empty, City = string.Empty, Street = string.Empty, StreetNumber = string.Empty };
-            var actual = new { address.Country, address.City, address.Street, address.StreetNumber };
+            var expectedAddress = new { Country = string.Empty, City = string.Empty, Street = string.Empty, StreetNumber = string.Empty };
+            var actualAddress = new { address.Country, address.City, address.Street, address.StreetNumber };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedAddress, actualAddress);
         }
 
         [Fact]
@@ -33,9 +33,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             var address = new Address("Country", "City", "Street", "Number");
 
-            var result = address.ToString();
+            var resultedAddress = address.ToString();
 
-            Assert.Equal("Street Number, City, Country", result);
+            Assert.Equal("Street Number, City, Country", resultedAddress);
         }
     }
 }

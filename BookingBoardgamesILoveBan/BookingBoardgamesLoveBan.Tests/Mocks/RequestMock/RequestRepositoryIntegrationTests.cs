@@ -27,55 +27,55 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.RequestMock
             try
             {
                 // Setup Game
-                using (var conn = new SqlConnection(connectionString))
+                using (var connection = new SqlConnection(connectionString))
                 {
-                    conn.Open();
-                    new SqlCommand($"DELETE FROM Request WHERE GameId = {gid}", conn).ExecuteNonQuery();
-                    new SqlCommand($"DELETE FROM Game WHERE gid = {gid}", conn).ExecuteNonQuery();
-                    new SqlCommand("SET IDENTITY_INSERT Game ON", conn).ExecuteNonQuery();
+                    connection.Open();
+                    new SqlCommand($"DELETE FROM Request WHERE GameId = {gid}", connection).ExecuteNonQuery();
+                    new SqlCommand($"DELETE FROM Game WHERE gid = {gid}", connection).ExecuteNonQuery();
+                    new SqlCommand("SET IDENTITY_INSERT Game ON", connection).ExecuteNonQuery();
 
-                    var cmd = new SqlCommand("INSERT INTO Game (gid, Name, PricePerDay) VALUES (@id, 'Test Game', @price)", conn);
-                    cmd.Parameters.AddWithValue("@id", gid);
-                    cmd.Parameters.AddWithValue("@price", 25.50m);
-                    cmd.ExecuteNonQuery();
+                    var sqlCommand = new SqlCommand("INSERT INTO Game (gid, Name, PricePerDay) VALUES (@id, 'Test Game', @price)", connection);
+                    sqlCommand.Parameters.AddWithValue("@id", gid);
+                    sqlCommand.Parameters.AddWithValue("@price", 25.50m);
+                    sqlCommand.ExecuteNonQuery();
 
-                    new SqlCommand("SET IDENTITY_INSERT Game OFF", conn).ExecuteNonQuery();
+                    new SqlCommand("SET IDENTITY_INSERT Game OFF", connection).ExecuteNonQuery();
                 }
 
                 // Setup Request
-                using (var conn = new SqlConnection(connectionString))
+                using (var connection = new SqlConnection(connectionString))
                 {
-                    conn.Open();
-                    new SqlCommand($"DELETE FROM Request WHERE rid = {rid}", conn).ExecuteNonQuery();
-                    new SqlCommand("SET IDENTITY_INSERT Request ON", conn).ExecuteNonQuery();
+                    connection.Open();
+                    new SqlCommand($"DELETE FROM Request WHERE rid = {rid}", connection).ExecuteNonQuery();
+                    new SqlCommand("SET IDENTITY_INSERT Request ON", connection).ExecuteNonQuery();
 
-                    var cmd = new SqlCommand(
+                    var sqlCommand = new SqlCommand(
                         @"INSERT INTO Request (rid, GameId, ClientId, OwnerId, StartDate, EndDate) 
                         VALUES (@rid, @gid, 0, 0, @start, @end)",
-                        conn);
-                    cmd.Parameters.AddWithValue("@rid", rid);
-                    cmd.Parameters.AddWithValue("@gid", gid);
-                    cmd.Parameters.AddWithValue("@start", start);
-                    cmd.Parameters.AddWithValue("@end", end);
-                    cmd.ExecuteNonQuery();
+                        connection);
+                    sqlCommand.Parameters.AddWithValue("@rid", rid);
+                    sqlCommand.Parameters.AddWithValue("@gid", gid);
+                    sqlCommand.Parameters.AddWithValue("@start", start);
+                    sqlCommand.Parameters.AddWithValue("@end", end);
+                    sqlCommand.ExecuteNonQuery();
 
-                    new SqlCommand("SET IDENTITY_INSERT Request OFF", conn).ExecuteNonQuery();
+                    new SqlCommand("SET IDENTITY_INSERT Request OFF", connection).ExecuteNonQuery();
                 }
 
-                var request = new RequestRepository().GetById(rid);
+                var requestRepository = new RequestRepository().GetById(rid);
 
-                Assert.NotNull(request);
+                Assert.NotNull(requestRepository);
                 Assert.Equal(
                     new { Id = rid, GameId = gid, StartDate = start, EndDate = end },
-                    new { request.Id, request.GameId, request.StartDate, request.EndDate });
+                    new { requestRepository.Id, requestRepository.GameId, requestRepository.StartDate, requestRepository.EndDate });
             }
             finally
             {
-                using (var conn = new SqlConnection(connectionString))
+                using (var connection = new SqlConnection(connectionString))
                 {
-                    conn.Open();
-                    new SqlCommand($"DELETE FROM Request WHERE rid = {rid}", conn).ExecuteNonQuery();
-                    new SqlCommand($"DELETE FROM Game WHERE gid = {gid}", conn).ExecuteNonQuery();
+                    connection.Open();
+                    new SqlCommand($"DELETE FROM Request WHERE rid = {rid}", connection).ExecuteNonQuery();
+                    new SqlCommand($"DELETE FROM Game WHERE gid = {gid}", connection).ExecuteNonQuery();
                 }
             }
         }
@@ -83,8 +83,8 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.RequestMock
         [Fact]
         public void GetById_RequestDoesNotExist_ReturnsNull()
         {
-            var service = new RequestRepository();
-            var request = service.GetById(-999);
+            var requestRepository = new RequestRepository();
+            var request = requestRepository.GetById(-999);
 
             Assert.Null(request);
         }

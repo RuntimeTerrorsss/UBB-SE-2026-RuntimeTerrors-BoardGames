@@ -10,53 +10,53 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
 {
     public class MapServiceTests
     {
-        private readonly MapService service = new MapService();
+        private readonly MapService mapService = new MapService();
 
         [Fact]
         public async Task GetAddressFromMapAsync_ZeroCoordinates_ReturnsNull()
         {
-            var result = await service.GetAddressFromMapAsync(0, 0);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(0, 0);
 
-            Assert.Null(result);
+            Assert.Null(resultedMapAddress);
         }
 
         [Fact]
         public async Task GetAddressFromMapAsync_ValidCoordinates_ReturnsNonNull()
         {
             await Task.Delay(1500);
-            var result = await service.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            Assert.NotNull(result);
+            Assert.NotNull(resultedMapAddress);
         }
 
         [Fact]
         public async Task GetAddressFromMapAsync_ValidCoordinates_ReturnsCorrectCountry()
         {
             await Task.Delay(1500);
-            var result = await service.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            var expected = new { Country = "România", HasCity = true, HasStreet = true };
-            var actual = new { result.Country, HasCity = !string.IsNullOrEmpty(result.City), HasStreet = !string.IsNullOrEmpty(result.Street) };
+            var expectedMapAddress = new { Country = "România", HasCity = true, HasStreet = true };
+            var actualMapAddress = new { resultedMapAddress.Country, HasCity = !string.IsNullOrEmpty(resultedMapAddress.City), HasStreet = !string.IsNullOrEmpty(resultedMapAddress.Street) };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedMapAddress, actualMapAddress);
         }
 
         [Fact]
         public async Task GetAddressFromMapAsync_InvalidCoordinates_ReturnsNull()
         {
-            var result = await service.GetAddressFromMapAsync(0.1, 0.1);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(0.1, 0.1);
 
-            Assert.Null(result);
+            Assert.Null(resultedMapAddress);
         }
 
         [Fact]
         public async Task GetAddressFromMapAsync_TownProvided_FillsCityField()
         {
             await Task.Delay(1500);
-            var result = await service.GetAddressFromMapAsync(46.80, 23.70);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.80, 23.70);
 
-            Assert.NotNull(result);
-            Assert.NotEmpty(result.City);
+            Assert.NotNull(resultedMapAddress);
+            Assert.NotEmpty(resultedMapAddress.City);
         }
     }
 }

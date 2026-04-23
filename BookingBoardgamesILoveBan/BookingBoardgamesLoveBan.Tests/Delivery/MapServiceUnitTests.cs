@@ -31,9 +31,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var client = new HttpClient(mockHandler.Object);
             var mapService = new MapService(client);
 
-            var result = await mapService.GetAddressFromMapAsync(0.1, 0.1);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(0.1, 0.1);
 
-            Assert.Null(result);
+            Assert.Null(resultedMapAddress);
         }
 
         [Fact]
@@ -65,13 +65,13 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var client = new HttpClient(mockHandler.Object);
             var mapService = new MapService(client);
 
-            var result = await mapService.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            var expected = new { Country = "Romania", City = "Cluj-Napoca", Street = "Teodor Mihali", StreetNumber = "58" };
-            var actual = new { result?.Country, result?.City, result?.Street, result?.StreetNumber };
+            var expectedMapAddress = new { Country = "Romania", City = "Cluj-Napoca", Street = "Teodor Mihali", StreetNumber = "58" };
+            var actualMapAddress = new { resultedMapAddress?.Country, resultedMapAddress?.City, resultedMapAddress?.Street, resultedMapAddress?.StreetNumber };
 
-            Assert.NotNull(result);
-            Assert.Equal(expected, actual);
+            Assert.NotNull(resultedMapAddress);
+            Assert.Equal(expectedMapAddress, actualMapAddress);
         }
 
         [Fact]
@@ -100,10 +100,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var client = new HttpClient(mockHandler.Object);
             var mapService = new MapService(client);
 
-            var result = await mapService.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            Assert.NotNull(result);
-            Assert.Equal("Some Town", result.City);
+            Assert.NotNull(resultedMapAddress);
+            Assert.Equal("Some Town", resultedMapAddress.City);
         }
 
         [Fact]
@@ -132,10 +132,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var client = new HttpClient(mockHandler.Object);
             var mapService = new MapService(client);
 
-            var result = await mapService.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            Assert.NotNull(result);
-            Assert.Equal("Some Village", result.City);
+            Assert.NotNull(resultedMapAddress);
+            Assert.Equal("Some Village", resultedMapAddress.City);
         }
 
         [Fact]
@@ -160,13 +160,13 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var client = new HttpClient(mockHandler.Object);
             var mapService = new MapService(client);
 
-            var result = await mapService.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            var expected = new { Country = string.Empty, City = string.Empty, Street = string.Empty, StreetNumber = string.Empty };
-            var actual = new { result?.Country, result?.City, result?.Street, result?.StreetNumber };
+            var expectedMapAddress = new { Country = string.Empty, City = string.Empty, Street = string.Empty, StreetNumber = string.Empty };
+            var actualMapAddress = new { resultedMapAddress?.Country, resultedMapAddress?.City, resultedMapAddress?.Street, resultedMapAddress?.StreetNumber };
 
-            Assert.NotNull(result);
-            Assert.Equal(expected, actual);
+            Assert.NotNull(resultedMapAddress);
+            Assert.Equal(expectedMapAddress, actualMapAddress);
         }
 
         [Fact]
@@ -185,9 +185,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             var client = new HttpClient(mockHandler.Object);
             var mapService = new MapService(client);
 
-            var result = await mapService.GetAddressFromMapAsync(46.77, 23.59);
+            var resultedMapAddress = await mapService.GetAddressFromMapAsync(46.77, 23.59);
 
-            Assert.Null(result);
+            Assert.Null(resultedMapAddress);
         }
     }
 }

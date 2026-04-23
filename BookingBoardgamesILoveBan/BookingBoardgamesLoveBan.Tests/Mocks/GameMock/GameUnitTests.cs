@@ -11,9 +11,9 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.GameMock
             var expected = new { Id = 1, Name = "Catan", PricePerDay = 10.5m };
             
             var game = new Game(expected.Id, expected.Name, expected.PricePerDay);
-            var actual = new { game.Id, game.Name, game.PricePerDay };
+            var actualGame = new { game.Id, game.Name, game.PricePerDay };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expected, actualGame);
         }
 
         [Fact]
@@ -25,9 +25,9 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.GameMock
             game.PricePerDay = 15.0m;
 
             var expected = new { Id = 2, Name = "NewName", PricePerDay = 15.0m };
-            var actual = new { game.Id, game.Name, game.PricePerDay };
+            var actualGame = new { game.Id, game.Name, game.PricePerDay };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expected, actualGame);
         }
     }
 }

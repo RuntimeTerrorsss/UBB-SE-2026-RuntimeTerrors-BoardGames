@@ -40,8 +40,8 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         [Fact]
         public void GetById_UserDoesNotExist_ReturnsNull()
         {
-            var service = new UserRepository();
-            var user = service.GetById(-999);
+            var userRepository = new UserRepository();
+            var user = userRepository.GetById(-999);
 
             Assert.Null(user);
         }
@@ -51,13 +51,13 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         {
             int testUid = 8882;
             SetupTestUser(testUid, "TestUser2", 50.0m);
-            var service = new UserRepository();
+            var userRepository = new UserRepository();
             var newAddress = new Address("Moldova", "Chisinau", "Stefan cel Mare", "10");
 
             try
             {
-                service.SaveAddress(testUid, newAddress);
-                var updatedUser = service.GetById(testUid);
+                userRepository.SaveAddress(testUid, newAddress);
+                var updatedUser = userRepository.GetById(testUid);
 
                 Assert.Equal(
                     new { newAddress.Country, newAddress.City, newAddress.Street, newAddress.StreetNumber },
@@ -72,10 +72,10 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         [Fact]
         public void SaveAddress_UserDoesNotExist_DoesNotThrow()
         {
-            var service = new UserRepository();
+            var userRepository = new UserRepository();
             var newAddress = new Address("Moldova", "Chisinau", "Stefan cel Mare", "10");
 
-            var exception = Record.Exception(() => service.SaveAddress(-999, newAddress));
+            var exception = Record.Exception(() => userRepository.SaveAddress(-999, newAddress));
 
             Assert.Null(exception);
         }
@@ -86,11 +86,11 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
             int testUid = 8883;
             decimal initialBalance = 150.75m;
             SetupTestUser(testUid, "TestUser3", initialBalance);
-            var service = new UserRepository();
+            var userRepository = new UserRepository();
 
             try
             {
-                decimal balance = service.GetUserBalance(testUid);
+                decimal balance = userRepository.GetUserBalance(testUid);
                 Assert.Equal(initialBalance, balance);
             }
             finally
@@ -102,8 +102,8 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         [Fact]
         public void GetUserBalance_UserDoesNotExist_ReturnsZero()
         {
-            var service = new UserRepository();
-            decimal balance = service.GetUserBalance(-999);
+            var userRepository = new UserRepository();
+            decimal balance = userRepository.GetUserBalance(-999);
 
             Assert.Equal(0m, balance);
         }
@@ -113,13 +113,13 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
         {
             int testUid = 8884;
             SetupTestUser(testUid, "TestUser4", 0.0m);
-            var service = new UserRepository();
+            var userRepository = new UserRepository();
             decimal updatedBalance = 99.99m;
 
             try
             {
-                service.UpdateBalance(testUid, updatedBalance);
-                decimal actualBalance = service.GetUserBalance(testUid);
+                userRepository.UpdateBalance(testUid, updatedBalance);
+                decimal actualBalance = userRepository.GetUserBalance(testUid);
                 Assert.Equal(updatedBalance, actualBalance);
             }
             finally
@@ -130,34 +130,34 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.UserMock
 
         private void SetupTestUser(int uid, string userName, decimal balance)
         {
-            using (var conn = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
-                conn.Open();
+                connection.Open();
 
-                new SqlCommand($"DELETE FROM [User] WHERE uid = {uid}", conn).ExecuteNonQuery();
-                new SqlCommand("SET IDENTITY_INSERT [User] ON", conn).ExecuteNonQuery();
+                new SqlCommand($"DELETE FROM [User] WHERE uid = {uid}", connection).ExecuteNonQuery();
+                new SqlCommand("SET IDENTITY_INSERT [User] ON", connection).ExecuteNonQuery();
 
-                var cmd = new SqlCommand(
+                var sqlCommand = new SqlCommand(
                     @"INSERT INTO [User] (uid, UserName, DisplayName, Country, City, Street, StreetNumber, AvatarUrl, Balance) 
                     VALUES (@uid, @un, @dn, 'Romania', 'Iasi', 'Street', '1', 'url', @balance)",
-                    conn);
+                    connection);
 
-                cmd.Parameters.AddWithValue("@uid", uid);
-                cmd.Parameters.AddWithValue("@un", userName);
-                cmd.Parameters.AddWithValue("@dn", userName + " Display");
-                cmd.Parameters.AddWithValue("@balance", balance);
+                sqlCommand.Parameters.AddWithValue("@uid", uid);
+                sqlCommand.Parameters.AddWithValue("@un", userName);
+                sqlCommand.Parameters.AddWithValue("@dn", userName + " Display");
+                sqlCommand.Parameters.AddWithValue("@balance", balance);
 
-                cmd.ExecuteNonQuery();
-                new SqlCommand("SET IDENTITY_INSERT [User] OFF", conn).ExecuteNonQuery();
+                sqlCommand.ExecuteNonQuery();
+                new SqlCommand("SET IDENTITY_INSERT [User] OFF", connection).ExecuteNonQuery();
             }
         }
 
         private void Cleanup(int uid)
         {
-            using (var conn = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
-                conn.Open();
-                new SqlCommand($"DELETE FROM [User] WHERE uid = {uid}", conn).ExecuteNonQuery();
+                connection.Open();
+                new SqlCommand($"DELETE FROM [User] WHERE uid = {uid}", connection).ExecuteNonQuery();
             }
         }
     }

@@ -13,10 +13,10 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.RequestMock
             var end = new DateTime(2023, 1, 5);
             var request = new Request(1, 2, 3, 4, start, end);
 
-            var expected = new { Id = 1, GameId = 2, ClientId = 3, OwnerId = 4, StartDate = start, EndDate = end };
-            var actual = new { request.Id, request.GameId, request.ClientId, request.OwnerId, request.StartDate, request.EndDate };
+            var expectedRequest = new { Id = 1, GameId = 2, ClientId = 3, OwnerId = 4, StartDate = start, EndDate = end };
+            var actualRequest = new { request.Id, request.GameId, request.ClientId, request.OwnerId, request.StartDate, request.EndDate };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedRequest, actualRequest);
         }
 
         [Fact]
@@ -33,10 +33,10 @@ namespace BookingBoardgamesLoveBan.Tests.Mocks.RequestMock
             request.StartDate = start;
             request.EndDate = end;
 
-            var expected = new { Id = 1, GameId = 2, ClientId = 3, OwnerId = 4, StartDate = start, EndDate = end };
-            var actual = new { request.Id, request.GameId, request.ClientId, request.OwnerId, request.StartDate, request.EndDate };
+            var expectedRequest = new { Id = 1, GameId = 2, ClientId = 3, OwnerId = 4, StartDate = start, EndDate = end };
+            var actualRequest = new { request.Id, request.GameId, request.ClientId, request.OwnerId, request.StartDate, request.EndDate };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedRequest, actualRequest);
         }
     }
 }

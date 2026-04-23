@@ -37,7 +37,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public void Validate_OneMissingField_ReturnsSpecificError()
         {
-            var expected = new[]
+            var expectedAddress = new[]
             {
                 new Dictionary<string, string> { { "Country", "Country is required" } },
                 new Dictionary<string, string> { { "City", "City is required" } },
@@ -45,7 +45,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
                 new Dictionary<string, string> { { "StreetNumber", "StreetNumber is required" } }
             };
 
-            var actual = new[]
+            var actualAddress = new[]
             {
                 addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", "Teodor Mihali", "58")),
                 addressValidator.Validate(new Address("Romania", string.Empty, "Teodor Mihali", "58")),
@@ -53,13 +53,13 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
                 addressValidator.Validate(new Address("Romania", "Cluj-Napoca", "Teodor Mihali", string.Empty))
             };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedAddress, actualAddress);
         }
 
         [Fact]
         public void Validate_TwoMissingFields_ReturnsSpecificErrors()
         {
-            var expected = new[]
+            var expectedAddress = new[]
             {
                 new Dictionary<string, string>
                 {
@@ -78,20 +78,20 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
                 }
             };
 
-            var actual = new[]
+            var actualAddress = new[]
             {
                 addressValidator.Validate(new Address(string.Empty, string.Empty, "Teodor Mihali", "58")),
                 addressValidator.Validate(new Address("Romania", "Cluj-Napoca", string.Empty, string.Empty)),
                 addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, "58"))
             };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedAddress, actualAddress);
         }
 
         [Fact]
         public void Validate_ThreeMissingFields_ReturnsSpecificErrors()
         {
-            var expected = new[]
+            var expectedAddress = new[]
             {
                 new Dictionary<string, string>
                 {
@@ -119,7 +119,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
                 }
             };
 
-            var actual = new[]
+            var actualAddress = new[]
             {
                 addressValidator.Validate(new Address("Romania", string.Empty, string.Empty, string.Empty)),
                 addressValidator.Validate(new Address(string.Empty, "Cluj-Napoca", string.Empty, string.Empty)),
@@ -127,7 +127,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
                 addressValidator.Validate(new Address(string.Empty, string.Empty, string.Empty, "58"))
             };
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(expectedAddress, actualAddress);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         private readonly FakeMapService fakeMapService;
         private readonly FakeUserService fakeUserService;
         private readonly FakeValidator fakeValidator;
-        private readonly DeliveryViewModel viewModel;
+        private readonly DeliveryViewModel deliveryViewModel;
 
         public DeliveryViewModelTests()
         {
@@ -25,7 +25,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             fakeUserService = new FakeUserService();
             fakeValidator = new FakeValidator();
 
-            viewModel = new DeliveryViewModel(
+            deliveryViewModel = new DeliveryViewModel(
                 currentUserId: 1,
                 mapService: fakeMapService,
                 userRepository: fakeUserService,
@@ -35,34 +35,34 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public void OpenMap_Invoked_SetsIsMapVisibleTrue()
         {
-            viewModel.OpenMap();
-            Assert.True(viewModel.IsMapVisible);
+            deliveryViewModel.OpenMap();
+            Assert.True(deliveryViewModel.IsMapVisible);
         }
 
         [Fact]
         public void OpenMap_Invoked_TriggersStateChanged()
         {
             bool fired = false;
-            viewModel.StateChanged += () => fired = true;
-            viewModel.OpenMap();
+            deliveryViewModel.StateChanged += () => fired = true;
+            deliveryViewModel.OpenMap();
             Assert.True(fired);
         }
 
         [Fact]
         public void CloseMap_Invoked_SetsIsMapVisibleFalse()
         {
-            viewModel.OpenMap();
-            viewModel.CloseMap();
+            deliveryViewModel.OpenMap();
+            deliveryViewModel.CloseMap();
 
-            Assert.False(viewModel.IsMapVisible);
+            Assert.False(deliveryViewModel.IsMapVisible);
         }
 
         [Fact]
         public void CloseMap_Invoked_TriggersStateChanged()
         {
             bool fired = false;
-            viewModel.StateChanged += () => fired = true;
-            viewModel.CloseMap();
+            deliveryViewModel.StateChanged += () => fired = true;
+            deliveryViewModel.CloseMap();
             Assert.True(fired);
         }
 
@@ -70,10 +70,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         public void SubmitDelivery_WithErrors_DoesNotNavigateToPayment()
         {
             bool navigated = false;
-            viewModel.OnNavigateToPayment = () => navigated = true;
+            deliveryViewModel.OnNavigateToPayment = () => navigated = true;
             fakeValidator.ErrorsToReturn = new Dictionary<string, string> { { "City", "City is required" } };
 
-            viewModel.SubmitDelivery();
+            deliveryViewModel.SubmitDelivery();
 
             Assert.False(navigated);
         }
@@ -82,10 +82,10 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         public void SubmitDelivery_WithNoErrors_NavigatesToPayment()
         {
             bool navigated = false;
-            viewModel.OnNavigateToPayment = () => navigated = true;
+            deliveryViewModel.OnNavigateToPayment = () => navigated = true;
             fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
 
-            viewModel.SubmitDelivery();
+            deliveryViewModel.SubmitDelivery();
 
             Assert.True(navigated);
         }
@@ -94,9 +94,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         public void SubmitDelivery_Always_TriggersStateChanged()
         {
             bool fired = false;
-            viewModel.StateChanged += () => fired = true;
+            deliveryViewModel.StateChanged += () => fired = true;
 
-            viewModel.SubmitDelivery();
+            deliveryViewModel.SubmitDelivery();
 
             Assert.True(fired);
         }
@@ -106,9 +106,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             fakeValidator.ErrorsToReturn = new Dictionary<string, string> { { "City", "City is required" } };
 
-            viewModel.SubmitDelivery();
+            deliveryViewModel.SubmitDelivery();
 
-            Assert.True(viewModel.ValidationErrors.ContainsKey("City"));
+            Assert.True(deliveryViewModel.ValidationErrors.ContainsKey("City"));
         }
 
         [Fact]
@@ -117,11 +117,11 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             fakeUserService.UserToReturn = new User(1, "name", "Romania", "Cluj", "street", "no");
             fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
 
-            var vm = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
-            vm.IsSaveAddress = true;
-            vm.OnNavigateToPayment = () => { };
+            var deliveryViewModel = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
+            deliveryViewModel.IsSaveAddress = true;
+            deliveryViewModel.OnNavigateToPayment = () => { };
 
-            var exception = Record.Exception(() => vm.SubmitDelivery());
+            var exception = Record.Exception(() => deliveryViewModel.SubmitDelivery());
 
             Assert.Null(exception);
             Assert.True(fakeUserService.SaveAddressCalled);
@@ -133,11 +133,11 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             fakeUserService.UserToReturn = new User(1, "name", "Romania", "Cluj", "street", "no");
             fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
 
-            var vm = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
-            vm.IsSaveAddress = false;
-            vm.OnNavigateToPayment = () => { };
+            var deliveryViewModel = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
+            deliveryViewModel.IsSaveAddress = false;
+            deliveryViewModel.OnNavigateToPayment = () => { };
 
-            vm.SubmitDelivery();
+            deliveryViewModel.SubmitDelivery();
 
             Assert.False(fakeUserService.SaveAddressCalled);
         }
@@ -148,11 +148,11 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
             fakeUserService.UserToReturn = null;
             fakeValidator.ErrorsToReturn = new Dictionary<string, string>();
 
-            var vm = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
-            vm.IsSaveAddress = true;
-            vm.OnNavigateToPayment = () => { };
+            var deliveryViewModel = new DeliveryViewModel(1, fakeMapService, fakeUserService, fakeValidator);
+            deliveryViewModel.IsSaveAddress = true;
+            deliveryViewModel.OnNavigateToPayment = () => { };
 
-            vm.SubmitDelivery();
+            deliveryViewModel.SubmitDelivery();
 
             Assert.False(fakeUserService.SaveAddressCalled);
         }
@@ -160,21 +160,21 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public void OnFieldChange_KeyExists_RemovesValidationError()
         {
-            viewModel.ValidationErrors["City"] = "City is required";
+            deliveryViewModel.ValidationErrors["City"] = "City is required";
 
-            viewModel.OnFieldChange("City", "Cluj-Napoca");
+            deliveryViewModel.OnFieldChange("City", "Cluj-Napoca");
 
-            Assert.False(viewModel.ValidationErrors.ContainsKey("City"));
+            Assert.False(deliveryViewModel.ValidationErrors.ContainsKey("City"));
         }
 
         [Fact]
         public void OnFieldChange_ErrorRemoved_TriggersStateChanged()
         {
-            viewModel.ValidationErrors["City"] = "City is required";
+            deliveryViewModel.ValidationErrors["City"] = "City is required";
             bool fired = false;
-            viewModel.StateChanged += () => fired = true;
+            deliveryViewModel.StateChanged += () => fired = true;
 
-            viewModel.OnFieldChange("City", "Cluj-Napoca");
+            deliveryViewModel.OnFieldChange("City", "Cluj-Napoca");
 
             Assert.True(fired);
         }
@@ -183,9 +183,9 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         public void OnFieldChange_NoErrorToRemove_DoesNotTriggerStateChanged()
         {
             bool fired = false;
-            viewModel.StateChanged += () => fired = true;
+            deliveryViewModel.StateChanged += () => fired = true;
 
-            viewModel.OnFieldChange("City", "Cluj-Napoca");
+            deliveryViewModel.OnFieldChange("City", "Cluj-Napoca");
 
             Assert.False(fired);
         }
@@ -193,23 +193,23 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         [Fact]
         public void OnFieldChange_ValidProperty_UpdatesFieldValue()
         {
-            viewModel.CurrentAddress.City = "Old City";
+            deliveryViewModel.CurrentAddress.City = "Old City";
 
-            viewModel.OnFieldChange("City", "New City");
+            deliveryViewModel.OnFieldChange("City", "New City");
 
-            Assert.Equal("New City", viewModel.CurrentAddress.City);
+            Assert.Equal("New City", deliveryViewModel.CurrentAddress.City);
         }
 
         [Fact]
         public void OnFieldChange_InvalidProperty_DoesNothing()
         {
             var originalAddress = new Address("Country", "City", "Street", "Number");
-            viewModel.CurrentAddress = new Address("Country", "City", "Street", "Number");
+            deliveryViewModel.CurrentAddress = new Address("Country", "City", "Street", "Number");
 
-            viewModel.OnFieldChange("NonExistentProperty", "New Value");
+            deliveryViewModel.OnFieldChange("NonExistentProperty", "New Value");
 
-            Assert.Equal(originalAddress.City, viewModel.CurrentAddress.City);
-            Assert.Equal(originalAddress.Country, viewModel.CurrentAddress.Country);
+            Assert.Equal(originalAddress.City, deliveryViewModel.CurrentAddress.City);
+            Assert.Equal(originalAddress.Country, deliveryViewModel.CurrentAddress.Country);
         }
 
         [Fact]
@@ -217,44 +217,44 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             fakeMapService.AddressToReturn = new Address("Romania", "Cluj-Napoca", "Strada Universitatii", "1");
 
-            await viewModel.ConfirmMapLocationAsync(46.77, 23.59);
+            await deliveryViewModel.ConfirmMapLocationAsync(46.77, 23.59);
 
             Assert.Equal(
                 new { Country = "Romania", City = "Cluj-Napoca" },
-                new { viewModel.CurrentAddress.Country, viewModel.CurrentAddress.City });
+                new { deliveryViewModel.CurrentAddress.Country, deliveryViewModel.CurrentAddress.City });
         }
 
         [Fact]
         public async Task ConfirmMapLocationAsync_ValidAddress_ClosesMap()
         {
             fakeMapService.AddressToReturn = new Address("Romania", "Cluj-Napoca", "Strada Universitatii", "1");
-            viewModel.OpenMap();
+            deliveryViewModel.OpenMap();
 
-            await viewModel.ConfirmMapLocationAsync(46.77, 23.59);
+            await deliveryViewModel.ConfirmMapLocationAsync(46.77, 23.59);
 
-            Assert.False(viewModel.IsMapVisible);
+            Assert.False(deliveryViewModel.IsMapVisible);
         }
 
         [Fact]
         public async Task ConfirmMapLocationAsync_NullAddress_DoesNotUpdateCurrentAddress()
         {
             fakeMapService.AddressToReturn = null;
-            var originalAddress = viewModel.CurrentAddress;
+            var originalAddress = deliveryViewModel.CurrentAddress;
 
-            await viewModel.ConfirmMapLocationAsync(0.1, 0.1);
+            await deliveryViewModel.ConfirmMapLocationAsync(0.1, 0.1);
 
-            Assert.Equal(originalAddress, viewModel.CurrentAddress);
+            Assert.Equal(originalAddress, deliveryViewModel.CurrentAddress);
         }
 
         [Fact]
         public async Task ConfirmMapLocationAsync_NullAddress_DoesNotCloseMap()
         {
             fakeMapService.AddressToReturn = null;
-            viewModel.OpenMap();
+            deliveryViewModel.OpenMap();
 
-            await viewModel.ConfirmMapLocationAsync(0.1, 0.1);
+            await deliveryViewModel.ConfirmMapLocationAsync(0.1, 0.1);
 
-            Assert.True(viewModel.IsMapVisible);
+            Assert.True(deliveryViewModel.IsMapVisible);
         }
 
         [Fact]
@@ -262,12 +262,12 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             fakeUserService.UserToReturn = new User(2, "name", "Romania", "Sibiu", "Strada Mare", "5");
 
-            viewModel.Initialize(2);
+            deliveryViewModel.Initialize(2);
 
-            Assert.Equal(2, viewModel.CurrentId);
+            Assert.Equal(2, deliveryViewModel.CurrentId);
             Assert.Equal(
                 new { Country = "Romania", City = "Sibiu" },
-                new { viewModel.CurrentAddress.Country, viewModel.CurrentAddress.City });
+                new { deliveryViewModel.CurrentAddress.Country, deliveryViewModel.CurrentAddress.City });
         }
 
         [Fact]
@@ -275,7 +275,7 @@ namespace BookingBoardgamesLoveBan.Tests.Delivery
         {
             fakeUserService.UserToReturn = null;
 
-            var exception = Record.Exception(() => viewModel.Initialize(99));
+            var exception = Record.Exception(() => deliveryViewModel.Initialize(99));
 
             Assert.Null(exception);
         }
